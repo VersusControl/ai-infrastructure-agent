@@ -65,49 +65,9 @@ A well-designed VPC forms the foundation of secure and scalable AWS infrastructu
 - **Internet Gateway**: For public subnet internet connectivity
 - **NAT Gateway**: For private subnet outbound internet access
 
-```mermaid
-graph TB
-    Internet((Internet))
-    
-    subgraph VPC["VPC: 10.0.0.0/16"]
-        IGW[Internet Gateway]
-        
-        subgraph AZ1["ap-southeast-5a"]
-            PubSub1["Public Subnet<br/>10.0.1.0/24<br/>(IGW Route)"]
-            NAT1[NAT Gateway 1]
-            PrivSub1["Private Subnet<br/>10.0.11.0/24<br/>(NAT Route)"]
-            
-            PubSub1 --> NAT1
-            NAT1 --> PrivSub1
-        end
-        
-        subgraph AZ2["ap-southeast-5b"]
-            PubSub2["Public Subnet<br/>10.0.2.0/24<br/>(IGW Route)"]
-            NAT2[NAT Gateway 2]
-            PrivSub2["Private Subnet<br/>10.0.12.0/24<br/>(NAT Route)"]
-            
-            PubSub2 --> NAT2
-            NAT2 --> PrivSub2
-        end
-        
-        IGW --> PubSub1
-        IGW --> PubSub2
-    end
-    
-    Internet <--> IGW
-    
-    style VPC fill:#e1f5ff,stroke:#333,stroke-width:2px
-    style AZ1 fill:#fff4e6,stroke:#333,stroke-width:1px
-    style AZ2 fill:#fff4e6,stroke:#333,stroke-width:1px
-    style PubSub1 fill:#d4edda,stroke:#333,stroke-width:1px
-    style PubSub2 fill:#d4edda,stroke:#333,stroke-width:1px
-    style PrivSub1 fill:#f8d7da,stroke:#333,stroke-width:1px
-    style PrivSub2 fill:#f8d7da,stroke:#333,stroke-width:1px
-    style IGW fill:#cce5ff,stroke:#333,stroke-width:2px
-    style NAT1 fill:#fff3cd,stroke:#333,stroke-width:1px
-    style NAT2 fill:#fff3cd,stroke:#333,stroke-width:1px
-    style Internet fill:#e2e3e5,stroke:#333,stroke-width:2px
-```
+<h1 align="center" style="border-bottom: none">
+    <img alt="VPC Architecture" src="../images/vpc-architecture.svg" width="500" height="500" />
+</h1>
 
 Let's build this infrastructure step by step using natural language commands.
 
