@@ -85,8 +85,6 @@ func (f *ToolFactoryImpl) CreateTool(toolType string, actionType string, depende
 		return NewListVPCsTool(deps.AWSClient, actionType, f.logger), nil
 	case "get-default-vpc":
 		return NewGetDefaultVPCTool(deps.AWSClient, actionType, f.logger), nil
-	case "get-default-subnet":
-		return NewGetDefaultSubnetTool(deps.AWSClient, actionType, f.logger), nil
 	case "create-subnet":
 		return NewCreateSubnetTool(deps.AWSClient, actionType, f.logger), nil
 	case "create-private-subnet":
@@ -95,8 +93,8 @@ func (f *ToolFactoryImpl) CreateTool(toolType string, actionType string, depende
 		return NewCreatePublicSubnetTool(deps.AWSClient, actionType, f.logger), nil
 	case "list-subnets":
 		return NewListSubnetsTool(deps.AWSClient, actionType, f.logger), nil
-	case "select-subnets-for-alb":
-		return NewSelectSubnetsForALBTool(deps.AWSClient, actionType, f.logger), nil
+	case "list-subnets-for-alb":
+		return NewListSubnetsForALBTool(deps.AWSClient, actionType, f.logger), nil
 	case "create-internet-gateway":
 		return NewCreateInternetGatewayTool(deps.AWSClient, actionType, f.logger), nil
 	case "create-nat-gateway":
@@ -236,9 +234,8 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"get-key-pair",
 			"list-vpcs",
 			"get-default-vpc",
-			"get-default-subnet",
 			"list-subnets",
-			"select-subnets-for-alb",
+			"list-subnets-for-alb",
 			"describe-nat-gateways",
 			"list-security-groups",
 			"list-auto-scaling-groups",

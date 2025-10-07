@@ -10,7 +10,6 @@ import (
 	"github.com/versus-control/ai-infrastructure-agent/internal/config"
 	"github.com/versus-control/ai-infrastructure-agent/internal/logging"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/agent/resources"
-	"github.com/versus-control/ai-infrastructure-agent/pkg/agent/retrieval"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/aws"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/types"
 
@@ -70,16 +69,12 @@ type StateAwareAgent struct {
 	capabilityMutex  sync.RWMutex
 
 	// Configuration-driven components
-	fieldResolver     *resources.FieldResolver
-	patternMatcher    *resources.PatternMatcher
-	valueTypeInferrer *resources.ValueTypeInferrer
+	fieldResolver  *resources.FieldResolver
+	patternMatcher *resources.PatternMatcher
 
 	// Extractor for resource identification
 	extractionConfig *config.ResourceExtractionConfig
 	idExtractor      *resources.IDExtractor
-
-	// Retrieval functions registry
-	registry retrieval.RetrievalRegistryInterface
 
 	// Test mode flag to bypass real MCP server startup
 	testMode bool

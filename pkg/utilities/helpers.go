@@ -2,6 +2,8 @@ package utilities
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"golang.org/x/text/cases"
@@ -108,4 +110,27 @@ func IsInternalField(fieldName string) bool {
 func Title(text string) string {
 	c := cases.Title(language.English)
 	return c.String(text)
+}
+
+// FindProjectRoot walks up the directory tree to find the project root (where go.mod exists)
+func FindProjectRoot(startPath string) string {
+	currentPath := startPath
+	for {
+		// Check if go.mod exists in current directory
+		goModPath := filepath.Join(currentPath, "go.mod")
+		if _, err := os.Stat(goModPath); err == nil {
+			return currentPath
+		}
+
+		// Move up one directory
+		parentPath := filepath.Dir(currentPath)
+
+		// If we've reached the root or can't go further up, stop
+		if parentPath == currentPath || parentPath == "/" {
+			break
+		}
+
+		currentPath = parentPath
+	}
+	return ""
 }

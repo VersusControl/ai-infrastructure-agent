@@ -21,7 +21,6 @@ type MockStateManager struct {
 
 	patternMatcher *resources.PatternMatcher
 	fieldResolver  *resources.FieldResolver
-	valueInferrer  *resources.ValueTypeInferrer
 
 	extractionConfig *config.ResourceExtractionConfig
 	idExtractor      *resources.IDExtractor
@@ -80,19 +79,12 @@ func NewMockStateManager() *MockStateManager {
 		idExtractor, _ = resources.NewIDExtractor(&config.ResourceExtractionConfig{})
 	}
 
-	valueInferrer, err := resources.NewValueTypeInferrer(resourcePatternConfig)
-	if err != nil {
-		// Fall back to empty value inferrer
-		valueInferrer, _ = resources.NewValueTypeInferrer(&config.ResourcePatternConfig{})
-	}
-
 	fieldResolver := resources.NewFieldResolver(fieldMappingConfig)
 
 	manager := &MockStateManager{
 		resources:        make(map[string]*types.ResourceState),
 		patternMatcher:   patternMatcher,
 		fieldResolver:    fieldResolver,
-		valueInferrer:    valueInferrer,
 		extractionConfig: extractionConfig,
 		idExtractor:      idExtractor,
 	}
@@ -145,7 +137,7 @@ func (m *MockStateManager) initializeDefaultResources() {
 
 	// Default subnet resource
 	defaultSubnet := &types.ResourceState{
-		ID:     "subnet-default123",
+		ID:     "subnet-0def123abc456789",
 		Type:   "subnet",
 		Status: "active",
 		Properties: map[string]interface{}{
@@ -155,14 +147,14 @@ func (m *MockStateManager) initializeDefaultResources() {
 			"availabilityZone": "us-west-2a",
 			"state":            "available",
 			"mcp_response": map[string]interface{}{
-				"subnetId": "subnet-default123",
+				"subnetId": "subnet-0def123abc456789",
 				"resource": map[string]interface{}{
-					"id": "subnet-default123",
+					"id": "subnet-0def123abc456789",
 				},
 			},
 		},
 	}
-	m.resources["subnet-default123"] = defaultSubnet
+	m.resources["subnet-0def123abc456789"] = defaultSubnet
 }
 
 // ExportState exports the current state
@@ -514,23 +506,10 @@ func (m *MockStateManager) AnalyzeResourceType(resourceId string, resourceName s
 	return ""
 }
 
-// InferValueType uses real value type inference from settings
-func (m *MockStateManager) InferValueType(description string, fieldName string) string {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
-	// Create a mock execution plan step for the inference
-	planStep := &types.ExecutionPlanStep{
-		Description: description,
-		Name:        fieldName,
-	}
-
-	// Use real value type inferrer
-	valueType, err := m.valueInferrer.InferValueType(planStep)
-	if err != nil {
-		return "" // Return empty string on error
-	}
-	return valueType
+// InferValueTypeFromDescription is deprecated - value type inference is no longer supported
+func (m *MockStateManager) InferValueTypeFromDescription(description, fieldName string) string {
+	// Value type inference is no longer supported - return empty string
+	return ""
 }
 
 // ResolveResourceField uses real field resolution from settings
@@ -639,11 +618,6 @@ func (m *MockStateManager) GetPatternMatcher() *resources.PatternMatcher {
 // GetFieldResolver returns the field resolver for external use
 func (m *MockStateManager) GetFieldResolver() *resources.FieldResolver {
 	return m.fieldResolver
-}
-
-// GetValueInferrer returns the value type inferrer for external use
-func (m *MockStateManager) GetValueInferrer() *resources.ValueTypeInferrer {
-	return m.valueInferrer
 }
 
 // GetIDExtractor returns the ID extractor for external use

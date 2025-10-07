@@ -61,16 +61,28 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 
 	parts := strings.Split(refContent, ".")
 
-	// Support multiple reference formats: {{step-1.resourceId}}, {{step-1}}, {{step-1.targetGroupArn}}, {{step-1.resourceId.0}}, etc.
+	// Support multiple reference formats: {{step-1.resourceId}}, {{step-1}}, {{step-1.targetGroupArn}}, {{step-1.resourceId.0}}, {{step-1.resourceId.[0]}}, etc.
 	var stepID string
 	var requestedField string
 	var arrayIndex int = -1
 
 	if len(parts) == 3 {
-		// Format: {{step-1.resourceId.0}} - array indexing
+		// Format: {{step-1.resourceId.0}} or {{step-1.resourceId.[0]}} - array indexing
 		stepID = parts[0]
 		requestedField = parts[1]
-		if idx, err := strconv.Atoi(parts[2]); err == nil {
+
+		// Handle both formats: "0" and "[0]"
+		indexPart := parts[2]
+		if strings.HasPrefix(indexPart, "[") && strings.HasSuffix(indexPart, "]") {
+			// Format: {{step-1.resourceId.[0]}}
+			indexStr := strings.TrimPrefix(strings.TrimSuffix(indexPart, "]"), "[")
+			if idx, err := strconv.Atoi(indexStr); err == nil {
+				arrayIndex = idx
+			} else {
+				return "", fmt.Errorf("invalid array index in reference: %s (expected numeric index)", reference)
+			}
+		} else if idx, err := strconv.Atoi(indexPart); err == nil {
+			// Format: {{step-1.resourceId.0}}
 			arrayIndex = idx
 		} else {
 			return "", fmt.Errorf("invalid array index in reference: %s (expected numeric index)", reference)
@@ -256,139 +268,134 @@ func (a *StateAwareAgent) resolveFromInfrastructureState(stepID, requestedField,
 
 // LEGACY FUNCTIONS - Using native MCP integration approach
 
-// resolveDefaultValue provides default values for required parameters
-func (a *StateAwareAgent) resolveDefaultValue(toolName, paramName string, params map[string]interface{}) interface{} {
-	switch toolName {
-	case "create-ec2-instance":
-		switch paramName {
-		case "instanceType":
-			// Use params to choose appropriate instance type based on workload
-			if workload, exists := params["workload_type"]; exists {
-				switch workload {
-				case "compute-intensive":
-					return "c5.large"
-				case "memory-intensive":
-					return "r5.large"
-				case "storage-intensive":
-					return "i3.large"
-				default:
-					return "t3.micro"
-				}
-			}
-			return "t3.micro"
-		case "imageId":
-			// Try to find AMI from a previous API retrieval step
-			if amiStepRef, exists := params["ami_step_ref"]; exists {
-				stepRef := fmt.Sprintf("%v", amiStepRef)
-				amiID, err := a.resolveDependencyReference(stepRef)
-				if err == nil {
-					a.Logger.WithFields(map[string]interface{}{
-						"ami_id":   amiID,
-						"step_ref": stepRef,
-						"source":   "api_retrieval_step",
-					}).Info("Using AMI ID from API retrieval step")
-					return amiID
-				}
+// // addMissingRequiredParameters adds intelligent defaults for missing required parameters
+// func (a *StateAwareAgent) addMissingRequiredParameters(toolName string, arguments map[string]interface{}, toolInfo MCPToolInfo) error {
+// 	if toolInfo.InputSchema == nil {
+// 		return nil // No schema to validate against
+// 	}
 
-				a.Logger.WithError(err).WithField("step_ref", stepRef).Error("Failed to resolve AMI step reference")
-				return nil
-			}
+// 	properties, ok := toolInfo.InputSchema["properties"].(map[string]interface{})
+// 	if !ok {
+// 		return nil
+// 	}
 
-			a.Logger.Error("No AMI ID available - ami_step_ref parameter is required")
-			return nil
-		case "keyName":
-			// Try to use key name from params if available
-			if keyName, exists := params["ssh_key"]; exists {
-				return keyName
-			}
-			return nil // Let AWS use account default
-		}
-	case "create-vpc":
-		switch paramName {
-		case "cidrBlock":
-			// Use params to determine appropriate CIDR block
-			if cidr, exists := params["cidr"]; exists {
-				return cidr
-			}
-			if environment, exists := params["environment"]; exists {
-				switch environment {
-				case "production":
-					return "10.0.0.0/16"
-				case "staging":
-					return "10.1.0.0/16"
-				case "development":
-					return "10.2.0.0/16"
-				default:
-					return "10.0.0.0/16"
-				}
-			}
-			return "10.0.0.0/16"
-		case "name":
-			// Generate name based on params
-			if name, exists := params["resource_name"]; exists {
-				return name
-			}
-			if environment, exists := params["environment"]; exists {
-				return fmt.Sprintf("vpc-%s", environment)
-			}
-			return "ai-agent-vpc"
-		}
-	case "create-security-group":
-		switch paramName {
-		case "description":
-			// Generate description based on params
-			if desc, exists := params["description"]; exists {
-				return desc
-			}
-			if purpose, exists := params["purpose"]; exists {
-				return fmt.Sprintf("Security group for %s", purpose)
-			}
-			return "Security group created by AI Agent"
-		}
-	}
-	return nil
-}
+// 	// Get required fields
+// 	requiredFields := make(map[string]bool)
+// 	if required, ok := toolInfo.InputSchema["required"].([]interface{}); ok {
+// 		for _, field := range required {
+// 			if fieldStr, ok := field.(string); ok {
+// 				requiredFields[fieldStr] = true
+// 			}
+// 		}
+// 	}
 
-// addMissingRequiredParameters adds intelligent defaults for missing required parameters
-func (a *StateAwareAgent) addMissingRequiredParameters(toolName string, arguments map[string]interface{}, toolInfo MCPToolInfo) error {
-	if toolInfo.InputSchema == nil {
-		return nil // No schema to validate against
-	}
+// 	// Add defaults for missing required fields
+// 	for paramName := range properties {
+// 		if requiredFields[paramName] {
+// 			if _, exists := arguments[paramName]; !exists {
+// 				// Parameter is required but missing, add default
+// 				if defaultValue := a.resolveDefaultValue(toolName, paramName, arguments); defaultValue != nil {
+// 					arguments[paramName] = defaultValue
+// 				}
+// 			}
+// 		}
+// 	}
 
-	properties, ok := toolInfo.InputSchema["properties"].(map[string]interface{})
-	if !ok {
-		return nil
-	}
+// 	return nil
+// }
 
-	// Get required fields
-	requiredFields := make(map[string]bool)
-	if required, ok := toolInfo.InputSchema["required"].([]interface{}); ok {
-		for _, field := range required {
-			if fieldStr, ok := field.(string); ok {
-				requiredFields[fieldStr] = true
-			}
-		}
-	}
+// // resolveDefaultValue provides default values for required parameters
+// func (a *StateAwareAgent) resolveDefaultValue(toolName, paramName string, params map[string]interface{}) interface{} {
+// 	switch toolName {
+// 	case "create-ec2-instance":
+// 		switch paramName {
+// 		case "instanceType":
+// 			// Use params to choose appropriate instance type based on workload
+// 			if workload, exists := params["workload_type"]; exists {
+// 				switch workload {
+// 				case "compute-intensive":
+// 					return "c5.large"
+// 				case "memory-intensive":
+// 					return "r5.large"
+// 				case "storage-intensive":
+// 					return "i3.large"
+// 				default:
+// 					return "t3.micro"
+// 				}
+// 			}
+// 			return "t3.micro"
+// 		case "imageId":
+// 			// Try to find AMI from a previous API retrieval step
+// 			if amiStepRef, exists := params["ami_step_ref"]; exists {
+// 				stepRef := fmt.Sprintf("%v", amiStepRef)
+// 				amiID, err := a.resolveDependencyReference(stepRef)
+// 				if err == nil {
+// 					a.Logger.WithFields(map[string]interface{}{
+// 						"ami_id":   amiID,
+// 						"step_ref": stepRef,
+// 						"source":   "api_retrieval_step",
+// 					}).Info("Using AMI ID from API retrieval step")
+// 					return amiID
+// 				}
 
-	// Add defaults for missing required fields
-	for paramName := range properties {
-		if requiredFields[paramName] {
-			if _, exists := arguments[paramName]; !exists {
-				// Parameter is required but missing, add default
-				if defaultValue := a.resolveDefaultValue(toolName, paramName, arguments); defaultValue != nil {
-					arguments[paramName] = defaultValue
-					a.Logger.WithFields(map[string]interface{}{
-						"tool_name":  toolName,
-						"param_name": paramName,
-						"default":    defaultValue,
-					}).Debug("Added default value for missing required parameter")
-				}
-			}
-		}
-	}
+// 				a.Logger.WithError(err).WithField("step_ref", stepRef).Error("Failed to resolve AMI step reference")
+// 				return nil
+// 			}
 
-	return nil
-}
+// 			a.Logger.Error("No AMI ID available - ami_step_ref parameter is required")
+// 			return nil
+// 		case "keyName":
+// 			// Try to use key name from params if available
+// 			if keyName, exists := params["ssh_key"]; exists {
+// 				return keyName
+// 			}
+// 			return nil // Let AWS use account default
+// 		}
+// 	case "create-vpc":
+// 		switch paramName {
+// 		case "cidrBlock":
+// 			// Use params to determine appropriate CIDR block
+// 			if cidr, exists := params["cidr"]; exists {
+// 				return cidr
+// 			}
+// 			if environment, exists := params["environment"]; exists {
+// 				switch environment {
+// 				case "production":
+// 					return "10.0.0.0/16"
+// 				case "staging":
+// 					return "10.1.0.0/16"
+// 				case "development":
+// 					return "10.2.0.0/16"
+// 				default:
+// 					return "10.0.0.0/16"
+// 				}
+// 			}
+// 			return "10.0.0.0/16"
+// 		case "name":
+// 			// Generate name based on params
+// 			if name, exists := params["resource_name"]; exists {
+// 				return name
+// 			}
+// 			if environment, exists := params["environment"]; exists {
+// 				return fmt.Sprintf("vpc-%s", environment)
+// 			}
+// 			return "ai-agent-vpc"
+// 		}
+// 	case "create-security-group":
+// 		switch paramName {
+// 		case "description":
+// 			// Generate description based on params
+// 			if desc, exists := params["description"]; exists {
+// 				return desc
+// 			}
+// 			if purpose, exists := params["purpose"]; exists {
+// 				return fmt.Sprintf("Security group for %s", purpose)
+// 			}
+// 			return "Security group created by AI Agent"
+// 		}
+// 	}
+// 	return nil
+// }
 
 // validateNativeMCPArguments validates arguments against the tool's schema
 func (a *StateAwareAgent) validateNativeMCPArguments(toolName string, arguments map[string]interface{}, toolInfo MCPToolInfo) error {

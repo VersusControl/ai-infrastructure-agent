@@ -52,7 +52,10 @@ resource_identification:
       - 'virtual machine'
       - 'compute instance'
       - 'server'
-      
+
+    listener:
+      - 'listener'
+
     load_balancer:
       - 'load balancer'
       - 'application load balancer'
@@ -60,11 +63,21 @@ resource_identification:
       - 'alb'
       - 'nlb'
       
+    target_group:
+      - 'target group'
+      - 'alb target group'
+      - 'load balancer target'
+      
     auto_scaling_group:
       - 'auto scaling'
       - 'autoscaling'
       - 'scaling group'
       - 'asg'
+      
+    launch_template:
+      - 'launch template'
+      - 'ec2 launch template'
+      - 'instance template'
       
     internet_gateway:
       - 'internet gateway'
@@ -82,6 +95,17 @@ resource_identification:
       - 'key pair'
       - 'ssh key'
       - 'ec2 key'
+      
+    ami:
+      - 'ami'
+      - 'amazon machine image'
+      - 'image'
+      - 'machine image'
+      
+    availability_zone:
+      - 'availability zone'
+      - 'az'
+      - 'zone'
       
     rds_instance:
       - 'rds'
@@ -106,8 +130,7 @@ tool_resource_patterns:
     - 'create-private-subnet'
     - 'create-public-subnet'
     - 'list-subnets'
-    - 'get-default-subnet'
-    - 'select-subnets-for-alb'
+    - 'list-subnets-for-alb'
     
   security_group:
     - 'create-security-group'

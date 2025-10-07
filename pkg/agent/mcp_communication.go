@@ -255,9 +255,6 @@ func (a *StateAwareAgent) setupMockMCPCapabilities() error {
 	}
 
 	a.mcpTools = mockTools
-	a.Logger.WithFields(map[string]interface{}{
-		"tool_count": len(mockTools),
-	}).Info("Mock MCP capabilities setup complete with real tools")
 
 	return nil
 }
@@ -534,6 +531,17 @@ func (a *StateAwareAgent) callMCPTool(name string, arguments map[string]interfac
 		result, err := a.mockMCPServer.CallTool(ctx, name, arguments)
 		if err != nil {
 			return nil, fmt.Errorf("mock MCP tool call failed: %w", err)
+		}
+
+		// Check if the result is an error response
+		if result.IsError {
+			if len(result.Content) > 0 {
+				if textContent, ok := result.Content[0].(*mcp.TextContent); ok {
+					return nil, fmt.Errorf("MCP tool returned error: %s", textContent.Text)
+				}
+			}
+
+			return nil, fmt.Errorf("MCP tool returned error response")
 		}
 
 		// Convert the mcp.CallToolResult to the expected format

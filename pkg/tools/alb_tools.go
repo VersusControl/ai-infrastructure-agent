@@ -58,13 +58,17 @@ func NewCreateLoadBalancerTool(awsClient *aws.Client, actionType string, logger 
 		"required": []string{"name"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-load-balancer",
+		"Create a new application load balancer",
+		"load-balancer",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreateLoadBalancerTool{
-		BaseTool: &BaseTool{
-			name:        "create-load-balancer",
-			description: "Create a new application load balancer",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
+		BaseTool:  baseTool,
 		adapter:   adapters.NewALBSpecializedAdapter(awsClient, logger),
 		awsClient: awsClient,
 	}
@@ -116,7 +120,7 @@ func (t *CreateLoadBalancerTool) Execute(ctx context.Context, arguments map[stri
 		t.logger.Info("Insufficient subnets provided, auto-selecting subnets for ALB creation")
 
 		// Create the subnet selection tool and call it
-		subnetSelector := NewSelectSubnetsForALBTool(t.awsClient, "query", t.logger)
+		subnetSelector := NewListSubnetsForALBTool(t.awsClient, "query", t.logger)
 		selectionArgs := map[string]interface{}{
 			"scheme": scheme,
 		}
@@ -296,14 +300,18 @@ func NewCreateTargetGroupTool(awsClient *aws.Client, actionType string, logger *
 		"required": []string{"name", "vpcId"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-target-group",
+		"Create a new target group",
+		"load-balancer",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreateTargetGroupTool{
-		BaseTool: &BaseTool{
-			name:        "create-target-group",
-			description: "Create a new target group",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewALBSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewALBSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -390,14 +398,18 @@ func NewCreateListenerTool(awsClient *aws.Client, actionType string, logger *log
 		"required": []string{"loadBalancerArn", "targetGroupArn"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-listener",
+		"Create a new listener for a load balancer",
+		"load-balancer",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreateListenerTool{
-		BaseTool: &BaseTool{
-			name:        "create-listener",
-			description: "Create a new listener for a load balancer",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewALBSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewALBSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -629,14 +641,18 @@ func NewRegisterTargetsTool(awsClient *aws.Client, actionType string, logger *lo
 		"required": []interface{}{"targetGroupArn", "targetIds"},
 	}
 
+	baseTool := NewBaseTool(
+		"register-targets",
+		"Register targets with a load balancer target group",
+		"load-balancer",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &RegisterTargetsTool{
-		BaseTool: &BaseTool{
-			name:        "register-targets",
-			description: "Register targets with a load balancer target group",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewALBSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewALBSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -710,14 +726,18 @@ func NewDeregisterTargetsTool(awsClient *aws.Client, actionType string, logger *
 		"required": []interface{}{"targetGroupArn", "targetIds"},
 	}
 
+	baseTool := NewBaseTool(
+		"deregister-targets",
+		"Deregister targets from a load balancer target group",
+		"load-balancer",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &DeregisterTargetsTool{
-		BaseTool: &BaseTool{
-			name:        "deregister-targets",
-			description: "Deregister targets from a load balancer target group",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewALBSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewALBSpecializedAdapter(awsClient, logger),
 	}
 }
 

@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -20,7 +19,7 @@ import (
 //   - simulatePlanExecution()          : Simulate plan execution for dry-run mode
 //   - executeExecutionStep()           : Execute individual plan steps
 //   - executeCreateAction()            : Execute create actions via MCP tools
-//   - executeAPIValueRetrieval()       : Execute AWS API retrieval operations
+//   - executeQueryAction()             : Execute query actions via MCP tools
 //   - executeNativeMCPTool()          : Execute native MCP tool calls
 //   - executeUpdateAction()            : Execute update actions on existing resources
 //   - executeDeleteAction()            : Execute delete actions on resources
@@ -452,7 +451,7 @@ func (a *StateAwareAgent) simulatePlanExecution(decision *types.AgentDecision, p
 }
 
 // executeExecutionStep executes a single step in the execution plan
-func (a *StateAwareAgent) executeExecutionStep(ctx context.Context, planStep *types.ExecutionPlanStep, execution *types.PlanExecution, progressChan chan<- *types.ExecutionUpdate) (*types.ExecutionStep, error) {
+func (a *StateAwareAgent) executeExecutionStep(planStep *types.ExecutionPlanStep, execution *types.PlanExecution, progressChan chan<- *types.ExecutionUpdate) (*types.ExecutionStep, error) {
 	startTime := time.Now()
 
 	step := &types.ExecutionStep{
@@ -482,14 +481,15 @@ func (a *StateAwareAgent) executeExecutionStep(ctx context.Context, planStep *ty
 	switch planStep.Action {
 	case "create":
 		result, err = a.executeCreateAction(planStep, progressChan, execution.ID)
+	case "query":
+		// Query action - executes MCP tools for data retrieval (unified with create)
+		result, err = a.executeQueryAction(planStep, progressChan, execution.ID)
 	// case "update":
 	// 	result, err = a.executeUpdateAction(ctx, planStep, progressChan, execution.ID)
 	// case "delete":
 	// 	result, err = a.executeDeleteAction(planStep, progressChan, execution.ID)
 	// case "validate":
 	// 	result, err = a.executeValidateAction(planStep, progressChan, execution.ID)
-	case "api_value_retrieval":
-		result, err = a.executeAPIValueRetrieval(ctx, planStep, progressChan, execution.ID)
 	default:
 		err = fmt.Errorf("unknown action type: %s", planStep.Action)
 	}
@@ -527,66 +527,21 @@ func (a *StateAwareAgent) executeCreateAction(planStep *types.ExecutionPlanStep,
 	return a.executeNativeMCPTool(planStep, progressChan, executionID)
 }
 
-// executeAPIValueRetrieval handles API calls to retrieve real values instead of AI-generated placeholders
-func (a *StateAwareAgent) executeAPIValueRetrieval(ctx context.Context, planStep *types.ExecutionPlanStep, progressChan chan<- *types.ExecutionUpdate, executionID string) (map[string]interface{}, error) {
+// executeQueryAction handles data retrieval/query operations using native MCP tool calls
+func (a *StateAwareAgent) executeQueryAction(planStep *types.ExecutionPlanStep, progressChan chan<- *types.ExecutionUpdate, executionID string) (map[string]interface{}, error) {
 	// Send progress update
 	if progressChan != nil {
 		progressChan <- &types.ExecutionUpdate{
 			Type:        "step_progress",
 			ExecutionID: executionID,
 			StepID:      planStep.ID,
-			Message:     fmt.Sprintf("Retrieving real values from AWS API: %s", planStep.Name),
+			Message:     fmt.Sprintf("Querying resource: %s", planStep.Name),
 			Timestamp:   time.Now(),
 		}
 	}
 
-	a.Logger.WithFields(map[string]interface{}{
-		"step_id":     planStep.ID,
-		"step_name":   planStep.Name,
-		"resource_id": planStep.ResourceID,
-		"parameters":  planStep.Parameters,
-	}).Info("Executing API value retrieval")
-
-	// Determine the type of value retrieval based on step parameters
-	valueType, exists := planStep.Parameters["value_type"]
-	if !exists {
-		// Use the configuration-driven value type inferrer
-		inferredType, err := a.valueTypeInferrer.InferValueType(planStep)
-		if err != nil {
-			return nil, fmt.Errorf("value_type parameter is required for API value retrieval. Unable to infer from description: '%s' and name: '%s'. Error: %w", planStep.Description, planStep.Name, err)
-		}
-
-		valueType = inferredType
-		a.Logger.WithField("step_id", planStep.ID).Warnf("Inferred value_type as '%s' from step description and name", inferredType)
-
-		// Store the inferred value_type back in parameters for consistency
-		if planStep.Parameters == nil {
-			planStep.Parameters = make(map[string]interface{})
-		}
-		planStep.Parameters["value_type"] = valueType
-	}
-
-	var result map[string]interface{}
-	var err error
-
-	// Use the registry system to retrieve the value
-	result, err = a.registry.Execute(ctx, valueType.(string), planStep)
-
-	if err != nil {
-		a.Logger.WithError(err).WithField("value_type", valueType).Error("API value retrieval failed")
-		return nil, fmt.Errorf("failed to retrieve %s: %w", valueType, err)
-	}
-
-	// Extract and store resource values for dependency reference resolution
-	a.extractAndStoreResourceMapping(planStep.ID, valueType.(string), result)
-
-	a.Logger.WithFields(map[string]interface{}{
-		"step_id":    planStep.ID,
-		"value_type": valueType,
-		"result":     result,
-	}).Info("API value retrieval completed successfully")
-
-	return result, nil
+	// Execute the MCP tool using the same path as create
+	return a.executeNativeMCPTool(planStep, progressChan, executionID)
 }
 
 // executeNativeMCPTool executes MCP tools directly with AI-provided parameters
@@ -627,31 +582,60 @@ func (a *StateAwareAgent) executeNativeMCPTool(planStep *types.ExecutionPlanStep
 	// Prepare tool arguments - start with AI-provided parameters
 	arguments := make(map[string]interface{})
 
-	// First, copy all AI-provided tool parameters
 	for key, value := range planStep.ToolParameters {
-		// Resolve dependency references like {{step-1.resourceId}}
 		if strValue, ok := value.(string); ok {
 			if strings.Contains(strValue, "{{") && strings.Contains(strValue, "}}") {
+				if strings.Count(strValue, "{{") > 1 && strings.Contains(strValue, "},{{") {
+					// Handles comma-separated: "{{ref1}},{{ref2}},{{ref3}}"
+					parts := strings.Split(strValue, ",")
+					resolvedParts := make([]string, 0, len(parts))
 
-				resolvedValue, err := a.resolveDependencyReference(strValue)
-				if err != nil {
-					return nil, fmt.Errorf("failed to resolve dependency reference %s for parameter %s: %w", strValue, key, err)
+					for _, part := range parts {
+						part = strings.TrimSpace(part)
+						if strings.Contains(part, "{{") && strings.Contains(part, "}}") {
+							resolvedValue, err := a.resolveDependencyReference(part)
+							if err != nil {
+								return nil, fmt.Errorf("failed to resolve dependency reference %s in comma-separated list for parameter %s: %w", part, key, err)
+							}
+							resolvedParts = append(resolvedParts, resolvedValue)
+						} else {
+							resolvedParts = append(resolvedParts, part)
+						}
+					}
+
+					// Join resolved values back with comma
+					arguments[key] = strings.Join(resolvedParts, ",")
+
+					if a.config.EnableDebug {
+						a.Logger.WithFields(map[string]interface{}{
+							"key":            key,
+							"original_value": strValue,
+							"resolved_value": arguments[key],
+							"parts_resolved": len(resolvedParts),
+						}).Info("Successfully resolved comma-separated dependency references")
+					}
+				} else {
+					// Handles single reference: "{{step-id.field}}"
+					resolvedValue, err := a.resolveDependencyReference(strValue)
+					if err != nil {
+						return nil, fmt.Errorf("failed to resolve dependency reference %s for parameter %s: %w", strValue, key, err)
+					}
+
+					if a.config.EnableDebug {
+						a.Logger.WithFields(map[string]interface{}{
+							"key":            key,
+							"original_value": strValue,
+							"resolved_value": resolvedValue,
+						}).Info("Successfully resolved dependency reference")
+					}
+
+					arguments[key] = resolvedValue
 				}
-
-				if a.config.EnableDebug {
-					a.Logger.WithFields(map[string]interface{}{
-						"key":            key,
-						"original_value": strValue,
-						"resolved_value": resolvedValue,
-					}).Info("Successfully resolved dependency reference")
-				}
-
-				arguments[key] = resolvedValue
 			} else {
 				arguments[key] = value
 			}
 		} else if arrayValue, ok := value.([]interface{}); ok {
-			// Handle arrays that might contain dependency references
+			// Handles array format: ["{{ref1}}", "{{ref2}}"]
 			resolvedArray := make([]interface{}, len(arrayValue))
 			for i, item := range arrayValue {
 				if strItem, ok := item.(string); ok && strings.Contains(strItem, "{{") && strings.Contains(strItem, "}}") {
@@ -672,9 +656,9 @@ func (a *StateAwareAgent) executeNativeMCPTool(planStep *types.ExecutionPlanStep
 	}
 
 	// Fill in missing required parameters with intelligent defaults
-	if err := a.addMissingRequiredParameters(toolName, arguments, toolInfo); err != nil {
-		return nil, fmt.Errorf("failed to add required parameters for tool %s: %w", toolName, err)
-	}
+	// if err := a.addMissingRequiredParameters(toolName, arguments, toolInfo); err != nil {
+	// 	return nil, fmt.Errorf("failed to add required parameters for tool %s: %w", toolName, err)
+	// }
 
 	// Validate arguments before MCP call
 	if err := a.validateNativeMCPArguments(toolName, arguments, toolInfo); err != nil {
@@ -916,6 +900,14 @@ func (a *StateAwareAgent) extractResourceTypeFromStep(planStep *types.ExecutionP
 	if rt, exists := planStep.Parameters["resource_type"]; exists {
 		if rtStr, ok := rt.(string); ok {
 			return rtStr
+		}
+	}
+
+	// Try to infer from MCP tool name using pattern matcher
+	if planStep.MCPTool != "" {
+		resourceType := a.patternMatcher.IdentifyResourceTypeFromToolName(planStep.MCPTool)
+		if resourceType != "" && resourceType != "unknown" {
+			return resourceType
 		}
 	}
 
@@ -1306,186 +1298,4 @@ func (a *StateAwareAgent) storeResourceMapping(stepID, resourceID string) {
 // StoreResourceMapping is a public wrapper for storeResourceMapping for external use
 func (a *StateAwareAgent) StoreResourceMapping(stepID, resourceID string) {
 	a.storeResourceMapping(stepID, resourceID)
-}
-
-// extractAndStoreResourceMapping extracts resource values from API retrieval results
-// and stores them in resource mappings for dependency reference resolution.
-// This function handles both single values and arrays, following the established
-// patterns for value extraction and storage in the agent architecture.
-// It also handles special cases for specific value types like availability zones and subnets.
-func (a *StateAwareAgent) extractAndStoreResourceMapping(stepID string, valueType string, result map[string]interface{}) {
-	// Extract and store the primary resource value from the "value" field
-	if resourceValue, exists := result["value"]; exists {
-		switch v := resourceValue.(type) {
-		case string:
-			// Handle single string values - direct storage
-			a.storeResourceMapping(stepID, v)
-
-		case []string:
-			// Handle arrays of strings (like subnet IDs for ALB)
-			if len(v) > 0 {
-				a.storeStringArrayValue(stepID, v)
-			}
-
-		case []interface{}:
-			// Handle []interface{} arrays (common in JSON parsing)
-			stringSlice := a.convertInterfaceArrayToStringSlice(v)
-			if len(stringSlice) > 0 {
-				a.storeStringArrayValue(stepID, stringSlice)
-			}
-		}
-	}
-
-	// Handle special cases for specific value types
-
-	// For availability zones, also store indexed values for array access
-	if valueType == "available_azs" {
-		if allZones, exists := result["all_zones"]; exists {
-			if zoneList, ok := allZones.([]string); ok {
-				for i, zone := range zoneList {
-					a.storeResourceMapping(fmt.Sprintf("%s.%d", stepID, i), zone)
-				}
-				a.Logger.WithFields(map[string]interface{}{
-					"step_id":    stepID,
-					"zone_count": len(zoneList),
-					"first_zone": zoneList[0],
-				}).Debug("Stored indexed availability zone mappings")
-			}
-		}
-	}
-
-	// For subnet retrieval, also store the VPC ID for security group creation
-	if valueType == "default_subnet" {
-		if vpcID, exists := result["vpc_id"]; exists {
-			if vpcIDStr, ok := vpcID.(string); ok {
-				a.storeResourceMapping(stepID+".vpcId", vpcIDStr)
-				a.Logger.WithFields(map[string]interface{}{
-					"step_id": stepID,
-					"vpc_id":  vpcIDStr,
-				}).Debug("Stored VPC ID mapping for subnet step")
-			}
-		}
-	}
-}
-
-// storeStringArrayValue stores array values using the established pattern:
-// - Individual items for indexed access (step-id.0, step-id.1, etc.)
-// - Entire array as JSON for complex references
-func (a *StateAwareAgent) storeStringArrayValue(stepID string, stringSlice []string) {
-	// Store individual items for indexed access
-	for i, item := range stringSlice {
-		a.storeResourceMapping(fmt.Sprintf("%s.%d", stepID, i), item)
-	}
-
-	// Store the entire array as JSON string for the main reference
-	if jsonBytes, err := json.Marshal(stringSlice); err == nil {
-		a.storeResourceMapping(stepID, string(jsonBytes))
-		a.Logger.WithFields(map[string]interface{}{
-			"step_id":          stepID,
-			"array_length":     len(stringSlice),
-			"stored_as_json":   string(jsonBytes),
-			"individual_items": stringSlice,
-		}).Debug("Stored array value in resource mappings")
-	} else {
-		a.Logger.WithError(err).WithField("step_id", stepID).Warn("Failed to marshal array to JSON for storage")
-	}
-}
-
-// convertInterfaceArrayToStringSlice converts []interface{} to []string
-// following the established pattern in the codebase for type conversion
-func (a *StateAwareAgent) convertInterfaceArrayToStringSlice(interfaceSlice []interface{}) []string {
-	stringSlice := make([]string, len(interfaceSlice))
-	for i, item := range interfaceSlice {
-		if itemStr, ok := item.(string); ok {
-			stringSlice[i] = itemStr
-		}
-	}
-	return stringSlice
-}
-
-// initializeRetrievalRegistry registers all existing retrieval functions with the registry
-func (a *StateAwareAgent) initializeRetrievalRegistry() {
-	// Direct registrations for exact matches
-	a.registry.RegisterRetrieval("latest_ami", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveLatestAMI(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("default_vpc", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveDefaultVPC(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("existing_vpc", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveExistingVPC(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("default_subnet", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveDefaultSubnet(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("subnets_in_vpc", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveSubnetsInVPC(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("available_azs", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveAvailabilityZones(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("select_subnets_for_alb", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveSelectSubnetsForALB(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("load_balancer_arn", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveLoadBalancerArn(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("target_group_arn", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveTargetGroupArn(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("launch_template_id", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveLaunchTemplateId(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("security_group_id_ref", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveSecurityGroupId(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("db_subnet_group_name", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveDBSubnetGroupName(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("auto_scaling_group_arn", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveAutoScalingGroupArn(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("auto_scaling_group_name", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveAutoScalingGroupName(ctx, planStep)
-	})
-
-	a.registry.RegisterRetrieval("rds_endpoint", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveRDSEndpoint(ctx, planStep)
-	})
-
-	// State-based retrievals
-	a.registry.RegisterRetrieval("vpc_id", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveExistingResourceFromState(planStep, "vpc")
-	})
-
-	a.registry.RegisterRetrieval("subnet_id", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveExistingResourceFromState(planStep, "subnet")
-	})
-
-	a.registry.RegisterRetrieval("security_group_id", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveExistingResourceFromState(planStep, "security_group")
-	})
-
-	a.registry.RegisterRetrieval("instance_id", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveExistingResourceFromState(planStep, "ec2_instance")
-	})
-
-	a.registry.RegisterRetrieval("existing_resource", func(ctx context.Context, planStep *types.ExecutionPlanStep) (map[string]interface{}, error) {
-		return a.retrieveExistingResourceFromState(planStep, "")
-	})
-
-	a.Logger.Info("Initialized retrieval registry with all agent functions")
 }

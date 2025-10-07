@@ -31,6 +31,7 @@ func setupRealConfiguration() (*config.Config, error) {
 	cfg.Agent.Provider = "gemini"
 	cfg.Agent.MaxTokens = 20000
 	cfg.Agent.Model = "gemini-2.5-flash-lite" // Use a valid model name
+	cfg.Agent.EnableDebug = true
 
 	return cfg, nil
 }
@@ -80,13 +81,11 @@ func setupAgentWithRealAI(cfg *config.Config, llmClient llms.Model) (*StateAware
 		mockMCPServer: mockSuite.MCPServer,
 
 		// Use real configuration-driven components from mock suite
-		patternMatcher:    mockSuite.StateManager.GetPatternMatcher(),
-		fieldResolver:     mockSuite.StateManager.GetFieldResolver(),
-		valueTypeInferrer: mockSuite.StateManager.GetValueInferrer(),
+		patternMatcher: mockSuite.StateManager.GetPatternMatcher(),
+		fieldResolver:  mockSuite.StateManager.GetFieldResolver(),
 
 		extractionConfig: mockSuite.StateManager.GetExtractionConfig(),
 		idExtractor:      mockSuite.StateManager.GetIDExtractor(),
-		registry:         mockSuite.Registry,
 	}
 
 	return agent, mockSuite, nil
@@ -455,8 +454,8 @@ func TestComprehensiveExecutionPipeline(t *testing.T) {
 		testRealAIWithComprehensiveThreeLayerPrompt(t)
 	})
 	// == State Handling Test ==
-	t.Run("RealAIWithComprehensiveEC2withALBPrompt", func(t *testing.T) {
-		testRealAIWithComprehensiveEC2withALBPrompt(t)
+	t.Run("RealAIWithRealStateEC2AndALBPrompt", func(t *testing.T) {
+		testRealAIWithRealStateEC2AndALBPrompt(t)
 	})
 }
 
@@ -515,7 +514,7 @@ func testRealAIWithComprehensiveEC2Prompt(t *testing.T) {
 
 	// Step 2: Validate AI-Generated Plan Structure
 	t.Logf("🔍 Step 2: Validating AI-generated execution plan structure...")
-	validateExecutionPlanStructure(t, decision)
+	validateExecutionPlanStructure(t, agent, decision)
 	t.Logf("✅ Step 2 Complete: Execution plan structure is valid")
 
 	// Step 3: Execute Full Flow with Mock Infrastructure
@@ -586,7 +585,7 @@ func testRealAIWithComprehensiveVPCPrompt(t *testing.T) {
 
 	// Step 2: Validate AI-Generated Plan Structure
 	t.Logf("🔍 Step 2: Validating AI-generated execution plan structure...")
-	validateExecutionPlanStructure(t, decision)
+	validateExecutionPlanStructure(t, agent, decision)
 	t.Logf("✅ Step 2 Complete: Execution plan structure is valid")
 
 	// Step 3: Execute Full Flow with Mock Infrastructure
@@ -657,7 +656,7 @@ func testRealAIWithComprehensiveVPCwithEC2Prompt(t *testing.T) {
 
 	// Step 2: Validate AI-Generated Plan Structure
 	t.Logf("🔍 Step 2: Validating AI-generated execution plan structure...")
-	validateExecutionPlanStructure(t, decision)
+	validateExecutionPlanStructure(t, agent, decision)
 	t.Logf("✅ Step 2 Complete: Execution plan structure is valid")
 
 	// Step 3: Enhanced Pre-Execution Validation
@@ -700,7 +699,7 @@ func testRealAIWithComprehensiveVPCwithEC2Prompt(t *testing.T) {
 
 // === Test Function for EC2 with ALB Prompt with State Handling ===
 
-func testRealAIWithComprehensiveEC2withALBPrompt(t *testing.T) {
+func testRealAIWithRealStateEC2AndALBPrompt(t *testing.T) {
 	// EC2 with ALB infrastructure prompt
 	comprehensivePrompt := comprehensiveEC2withALBPrompt()
 
@@ -742,6 +741,13 @@ func testRealAIWithComprehensiveEC2withALBPrompt(t *testing.T) {
 		if resourceCount > 3 {
 			t.Logf("📦 ... and %d more existing resources", resourceCount-3)
 		}
+
+		// Load the state into mock infrastructure and populate resource mappings
+		t.Logf("🔄 Loading state into mock infrastructure for dependency resolution...")
+		if err := mockSuite.LoadExistingState(existingState.Resources, agent); err != nil {
+			t.Fatalf("❌ Failed to load state into mock infrastructure: %v", err)
+		}
+		t.Logf("✅ State loaded into mock infrastructure with %d resource mappings", len(mockSuite.ResourceMappings))
 	}
 
 	// Create decision context using the loaded state - this is key for testing state handling
@@ -847,11 +853,11 @@ func validateExecutionPlanStructureForEC2ALB(t *testing.T, decision *types.Agent
 
 	// Validate basic plan structure
 	planValidActions := map[string]bool{
-		"create":              true,
-		"update":              true,
-		"delete":              true,
-		"validate":            true,
-		"api_value_retrieval": true,
+		"create": true,
+		"query":  true,
+		// "update":   true,
+		// "delete":   true,
+		// "validate": true,
 	}
 
 	for _, planStep := range decision.ExecutionPlan {
@@ -1235,7 +1241,7 @@ func testRealAIWithComprehensiveThreeLayerPrompt(t *testing.T) {
 
 	// Step 2: Validate AI-Generated Plan Structure
 	t.Logf("🔍 Step 2: Validating AI-generated execution plan structure...")
-	validateExecutionPlanStructure(t, decision)
+	validateExecutionPlanStructure(t, agent, decision)
 	t.Logf("✅ Step 2 Complete: Execution plan structure is valid")
 
 	// Step 3: Execute Full Flow with Mock Infrastructure
@@ -1251,22 +1257,45 @@ func testRealAIWithComprehensiveThreeLayerPrompt(t *testing.T) {
 	t.Logf("🎉 All tests completed successfully! Three-tier AI + Mock infrastructure integration validated.")
 }
 
-func validateExecutionPlanStructure(t *testing.T, decision *types.AgentDecision) {
+func validateExecutionPlanStructure(t *testing.T, agent *StateAwareAgent, decision *types.AgentDecision) {
 	if len(decision.ExecutionPlan) == 0 {
 		t.Fatal("❌ AI generated empty execution plan")
 	}
 
 	planValidActions := map[string]bool{
-		"create":              true,
-		"update":              true,
-		"delete":              true,
-		"validate":            true,
-		"api_value_retrieval": true,
+		"create": true,
+		"query":  true,
+		// "update":   true,
+		// "delete":   true,
+		// "validate": true,
 	}
 
-	for _, planStep := range decision.ExecutionPlan {
+	// Get available MCP tools for validation
+	agent.capabilityMutex.RLock()
+	availableTools := make(map[string]bool)
+	for toolName := range agent.mcpTools {
+		availableTools[toolName] = true
+	}
+	agent.capabilityMutex.RUnlock()
+
+	// Validate each plan step
+	for i, planStep := range decision.ExecutionPlan {
+		// Validate action type
 		if !planValidActions[planStep.Action] {
-			t.Fatalf("❌ Invalid plan action: %s", planStep.Action)
+			t.Fatalf("❌ Invalid plan action '%s' in step %d (%s)", planStep.Action, i+1, planStep.ID)
+		}
+
+		// Validate MCP tool exists if specified
+		if planStep.MCPTool != "" {
+			if !availableTools[planStep.MCPTool] {
+				availableToolsList := make([]string, 0, len(availableTools))
+				for tool := range availableTools {
+					availableToolsList = append(availableToolsList, tool)
+				}
+
+				t.Fatalf("❌ Invalid MCP tool '%s' in step %d (%s): tool not found in discovered capabilities. Available tools: %v",
+					planStep.MCPTool, i+1, planStep.ID, availableToolsList)
+			}
 		}
 	}
 
@@ -1358,10 +1387,8 @@ func testExecuteFullPlanWithMocks(t *testing.T, agent *StateAwareAgent, mockSuit
 			result, err = testExecuteDeleteActionWithMocks(t, mockSuite, planStep)
 		case "validate":
 			result, err = testExecuteValidateActionWithMocks(t, mockSuite, planStep)
-		case "api_value_retrieval":
-			// Use the real agent's executeAPIValueRetrieval method with mock registry
-			ctx := context.Background()
-			result, err = agent.executeAPIValueRetrieval(ctx, planStep, nil, execution.ID)
+		case "query":
+			result, err = agent.executeQueryAction(planStep, nil, execution.ID)
 		default:
 			err = fmt.Errorf("unknown action type: %s", planStep.Action)
 		}
@@ -1515,22 +1542,8 @@ func testValidateMockIntegration(t *testing.T, mockSuite *mocks.MockTestSuite, d
 	// Just verify it doesn't panic - AWS client functionality is tested in its own unit tests
 	t.Logf("✅ Mock AWS Client working")
 
-	// Test 4: Mock Retrieval Registry Integration
-	t.Logf("📚 Testing Mock Retrieval Registry...")
-	// Test that the registry has mock functions registered directly (no need for global registry)
-	registryResult, err := mockSuite.Registry.Execute(ctx, "latest_ami", &types.ExecutionPlanStep{
-		ID:         "test-ami-step",
-		ResourceID: "test-ami",
-		Name:       "Get Latest AMI",
-		Parameters: map[string]interface{}{
-			"owner": "amazon",
-		},
-	})
-	if err != nil {
-		t.Errorf("❌ Mock Retrieval Registry failed: %v", err)
-	} else {
-		t.Logf("✅ Mock Retrieval Registry working: got result with %d fields", len(registryResult))
-	}
+	// Note: Retrieval registry tests removed - retrieval functions are deprecated
+	// All resource queries now use MCP tools with "query" action
 
 	t.Logf("✅ All mock integration tests passed!")
 }

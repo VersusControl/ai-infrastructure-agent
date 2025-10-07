@@ -269,13 +269,6 @@ func NewCreateAutoScalingGroupTool(awsClient *aws.Client, actionType string, log
 				},
 				"description": "List of subnet IDs",
 			},
-			"subnetIds": map[string]interface{}{
-				"type": "array",
-				"items": map[string]interface{}{
-					"type": "string",
-				},
-				"description": "List of subnet IDs (legacy)",
-			},
 			"targetGroupARNs": map[string]interface{}{
 				"type": "array",
 				"items": map[string]interface{}{

@@ -13,7 +13,6 @@ import (
 	"github.com/versus-control/ai-infrastructure-agent/internal/config"
 	"github.com/versus-control/ai-infrastructure-agent/internal/logging"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/agent/resources"
-	"github.com/versus-control/ai-infrastructure-agent/pkg/agent/retrieval"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/aws"
 )
 
@@ -79,17 +78,8 @@ func NewStateAwareAgent(agentConfig *config.AgentConfig, awsClient *aws.Client, 
 		return nil, fmt.Errorf("failed to create pattern matcher: %w", err)
 	}
 
-	// Initialize value type inferrer
-	valueTypeInferrer, err := resources.NewValueTypeInferrer(resourcePatternConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create value type inferrer: %w", err)
-	}
-
 	fieldResolver := resources.NewFieldResolver(fieldMappingConfig)
 	fieldResolver.SetPatternMatcher(patternMatcher)
-
-	// Get global retrieval registry
-	registry := retrieval.GetGlobalRegistry()
 
 	agent := &StateAwareAgent{
 		// Common properties
@@ -110,15 +100,12 @@ func NewStateAwareAgent(agentConfig *config.AgentConfig, awsClient *aws.Client, 
 		mappingsMutex:   sync.RWMutex{},
 
 		// Configuration-driven components
-		patternMatcher:    patternMatcher,
-		valueTypeInferrer: valueTypeInferrer,
-		fieldResolver:     fieldResolver,
+		patternMatcher: patternMatcher,
+		fieldResolver:  fieldResolver,
 
 		// Extractor for resource identification
 		extractionConfig: extractionConfig,
 		idExtractor:      idExtractor,
-
-		registry: registry,
 	}
 
 	return agent, nil
@@ -133,9 +120,6 @@ func (a *StateAwareAgent) Initialize(ctx context.Context) error {
 		a.Logger.WithError(err).Error("LLM connectivity test failed")
 		return fmt.Errorf("LLM connectivity test failed: %w", err)
 	}
-
-	// Initialize retrieval registry and register all retrieval functions
-	a.initializeRetrievalRegistry()
 
 	// Start MCP process and discover capabilities early
 	if err := a.startMCPProcess(); err != nil {

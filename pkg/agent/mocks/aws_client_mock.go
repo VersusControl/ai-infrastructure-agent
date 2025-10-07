@@ -683,7 +683,7 @@ func (m *MockAWSClient) GetLatestUbuntuAMI(ctx context.Context, architecture str
 		return "", err
 	}
 
-	return "ami-ubuntu1234567890", nil // Mock AMI ID
+	return "ami-0abc123def456789", nil // Mock AMI ID
 }
 
 // GetLatestWindowsAMI finds the latest Windows Server AMI

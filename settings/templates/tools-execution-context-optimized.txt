@@ -7,10 +7,10 @@
 {{MCP_TOOLS_SCHEMAS}}
 
 ═══════════════════════════════════════════════════════════════════
-🔍 API VALUE RETRIEVAL PATTERNS
+🔍 QUERY ACTION PATTERNS
 ═══════════════════════════════════════════════════════════════════
 
-Use api_value_retrieval action to discover existing AWS resources dynamically.
+Use "query" action to discover existing AWS resources dynamically.
 These steps MUST be placed FIRST in your execution plan.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -71,7 +71,7 @@ METHOD A: Get default VPC (recommended):
   "id": "step-discover-vpc",
   "name": "Get default VPC",
   "description": "Find default VPC for resource placement",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "vpc",
   "mcpTool": "get-default-vpc",
   "toolParameters": {},
@@ -84,7 +84,7 @@ METHOD B: List all VPCs:
   "id": "step-discover-vpc",
   "name": "List VPCs",
   "description": "Find all VPCs in region",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "vpc",
   "mcpTool": "list-vpcs",
   "toolParameters": {},
@@ -97,61 +97,51 @@ Output: Returns vpcId field
 PATTERN 2: SUBNET DISCOVERY
 Discover subnets within a VPC
 
-METHOD A: Get default subnet (simple):
-{
-  "id": "step-discover-subnet",
-  "name": "Get default subnet",
-  "description": "Find default subnet for resource placement",
-  "action": "api_value_retrieval",
-  "resourceId": "subnet",
-  "mcpTool": "get-default-subnet",
-  "toolParameters": {},
-  "dependsOn": [],
-  "status": "pending"
-}
-
-METHOD B: List all subnets (returns all subnets in region):
+METHOD A: List subnets in VPC:
 {
   "id": "step-discover-subnets",
   "name": "List subnets",
-  "description": "Find all subnets in region",
-  "action": "api_value_retrieval",
+  "description": "Find all subnets in VPC",
+  "action": "query",
   "resourceId": "subnets",
   "mcpTool": "list-subnets",
-  "toolParameters": {},
-  "dependsOn": [],
+  "toolParameters": {
+    "vpcId": "{{step-discover-vpc.resourceId}}"
+  },
+  "dependsOn": ["step-discover-vpc"],
   "status": "pending"
 }
 
-METHOD C: Select subnets for ALB (auto-selects 2+ subnets in different AZs):
+METHOD B: Select subnets for ALB (auto-selects 2+ subnets in different AZs):
 {
   "id": "step-select-alb-subnets",
   "name": "Select subnets for ALB",
   "description": "Auto-select subnets for load balancer",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "alb-subnets",
-  "mcpTool": "select-subnets-for-alb",
+  "mcpTool": "list-subnets-for-alb",
   "toolParameters": {
-    "scheme": "internet-facing"
+    "vpcId": "{{step-discover-vpc.resourceId}}",
+    "minAZs": 2,
+    "requireMultiAZ": true
   },
-  "dependsOn": [],
+  "dependsOn": ["step-discover-vpc"],
   "status": "pending"
 }
 
-Output: Returns subnetId field
+Output: Returns subnetId field or array of subnet IDs
+Note: For single subnet needs, use list-subnets and select first result
+Note: For ALB deployments, always use list-subnets-for-alb to ensure multi-AZ compliance
 
 PATTERN 3: SECURITY GROUP DISCOVERY
 Discover security groups in a VPC
-
-PATTERN 3: SECURITY GROUP DISCOVERY
-Find security groups to attach to resources
 
 METHOD A: List all security groups:
 {
   "id": "step-discover-sg",
   "name": "List security groups",
   "description": "Find available security groups",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "security-group",
   "mcpTool": "list-security-groups",
   "toolParameters": {},
@@ -169,15 +159,12 @@ Common filters:
 PATTERN 4: AMI DISCOVERY
 Discover latest AMI for instance launch
 
-PATTERN 4: AMI DISCOVERY
-Find Amazon Machine Images for EC2 instances
-
 METHOD A: Get latest Ubuntu AMI:
 {
   "id": "step-get-ubuntu-ami",
   "name": "Get latest Ubuntu AMI",
   "description": "Find latest Ubuntu image",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "ubuntu-ami",
   "mcpTool": "get-latest-ubuntu-ami",
   "toolParameters": {
@@ -192,7 +179,7 @@ METHOD B: Get latest Amazon Linux AMI:
   "id": "step-get-amzn-ami",
   "name": "Get latest Amazon Linux AMI",
   "description": "Find latest Amazon Linux image",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "amzn-ami",
   "mcpTool": "get-latest-amazon-linux-ami",
   "toolParameters": {},
@@ -205,7 +192,7 @@ METHOD C: Get latest Windows AMI:
   "id": "step-get-windows-ami",
   "name": "Get latest Windows AMI",
   "description": "Find latest Windows Server image",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "windows-ami",
   "mcpTool": "get-latest-windows-ami",
   "toolParameters": {
@@ -233,14 +220,11 @@ Always use:
 PATTERN 5: INSTANCE DISCOVERY
 Discover existing EC2 instances
 
-PATTERN 5: EC2 INSTANCE DISCOVERY
-Find existing EC2 instances
-
 {
   "id": "step-list-instances",
   "name": "List EC2 instances",
   "description": "Find running EC2 instances",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "instances",
   "mcpTool": "list-ec2-instances",
   "toolParameters": {},
@@ -254,15 +238,12 @@ Lists all instances in the region with their status
 PATTERN 6: LOAD BALANCER DISCOVERY
 Discover existing load balancers
 
-PATTERN 6: LOAD BALANCER DISCOVERY
-Find existing load balancers
-
 METHOD A: List all load balancers:
 {
   "id": "step-list-albs",
   "name": "List load balancers",
   "description": "Find existing ALBs",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "albs",
   "mcpTool": "list-load-balancers",
   "toolParameters": {},
@@ -275,7 +256,7 @@ METHOD B: Get target groups:
   "id": "step-list-tg",
   "name": "List target groups",
   "description": "Find target groups",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "target-groups",
   "mcpTool": "list-target-groups",
   "toolParameters": {},
@@ -288,14 +269,11 @@ Output: Returns loadBalancerArn and targetGroupArn fields
 PATTERN 7: RDS INSTANCE DISCOVERY
 Discover existing RDS instances
 
-PATTERN 7: RDS DISCOVERY
-Find existing databases
-
 {
   "id": "step-list-databases",
   "name": "List RDS instances",
   "description": "Find existing databases",
-  "action": "api_value_retrieval",
+  "action": "query",
   "resourceId": "databases",
   "mcpTool": "list-db-instances",
   "toolParameters": {},
@@ -495,12 +473,12 @@ RDS Instance Creation:
 ⚠️ CRITICAL REMINDERS
 ═══════════════════════════════════════════════════════════════════
 
-1. ALL api_value_retrieval steps MUST be placed FIRST in execution plan
+1. ALL query steps MUST be placed FIRST in execution plan
 2. Discovery steps have NO dependencies (dependsOn: [])
 3. Only reference previous steps in the execution order
 4. Use exact field names from tool output schemas
 5. For multi-value parameters, always use arrays
 6. Include ALL referenced steps in dependsOn array
-7. Use only "create" and "api_value_retrieval" actions
+7. Use only "create" and "query" actions
 
 ═══════════════════════════════════════════════════════════════════
