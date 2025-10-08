@@ -202,11 +202,11 @@ func (ws *WebServer) setupRoutes() {
 
 	// Handler for React Router
 	// This serves index.html for all non-API routes to support client-side routing
-	ws.router.PathPrefix("/").HandlerFunc(ws.reactHandler).Methods("GET")
+	ws.router.PathPrefix("/").HandlerFunc(ws.webUiHandler).Methods("GET")
 }
 
-// reactHandler serves the React app for all non-API routes
-func (ws *WebServer) reactHandler(w http.ResponseWriter, r *http.Request) {
+// webUiHandler serves the React app for all non-API routes
+func (ws *WebServer) webUiHandler(w http.ResponseWriter, r *http.Request) {
 	indexPath := filepath.Join("web", "build", "index.html")
 
 	// Check if the file exists
@@ -313,25 +313,59 @@ func (ws *WebServer) discoverInfrastructureHandler(w http.ResponseWriter, r *htt
 func (ws *WebServer) getGraphHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	format := r.URL.Query().Get("format")
-	if format == "" {
-		format = "text"
+	// Force format to mermaid for front-end visualization
+	format := "mermaid"
+
+	// Get source parameter (state or live)
+	// Default: state (from state file)
+	// live: discover from AWS
+	source := r.URL.Query().Get("source")
+	if source == "" {
+		source = "state" // default to state file
+	}
+
+	if source != "state" && source != "live" {
+		http.Error(w, `Invalid source parameter. Use "state" (default) or "live"`, http.StatusBadRequest)
+		return
 	}
 
 	ctx := r.Context()
-	// Use MCP server to visualize dependency graph
-	visualization, bottlenecks, err := ws.aiAgent.VisualizeDependencyGraph(ctx, format, true)
+
+	// Check if AI agent is available
+	if ws.aiAgent == nil {
+		ws.aiAgent.Logger.Error("AI agent not available for graph visualization")
+		http.Error(w, "Graph visualization requires AI agent", http.StatusServiceUnavailable)
+		return
+	}
+
+	// Use MCP server to visualize dependency graph with source parameter
+	graphData, err := ws.aiAgent.VisualizeDependencyGraph(ctx, format, true, source)
 	if err != nil {
 		ws.aiAgent.Logger.WithError(err).Error("Failed to visualize dependency graph")
 		http.Error(w, "Graph visualization failed", http.StatusInternalServerError)
 		return
 	}
 
+	// Build response from the graph data
 	response := map[string]interface{}{
-		"visualization": visualization,
-		"format":        format,
-		"bottlenecks":   bottlenecks,
-		"timestamp":     time.Now(),
+		"format":    format,
+		"source":    source,
+		"timestamp": time.Now(),
+	}
+
+	// Extract and add mermaid visualization
+	if visualization, ok := graphData["visualization"].(string); ok {
+		response["mermaid"] = visualization
+	}
+
+	// Add graph structure
+	if graph, ok := graphData["graph"]; ok {
+		response["graph"] = graph
+	}
+
+	// Add metadata
+	if metadata, ok := graphData["metadata"]; ok {
+		response["metadata"] = metadata
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {

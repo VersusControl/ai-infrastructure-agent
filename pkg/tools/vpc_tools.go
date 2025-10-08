@@ -9,6 +9,7 @@ import (
 	"github.com/versus-control/ai-infrastructure-agent/pkg/adapters"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/aws"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/interfaces"
+	"github.com/versus-control/ai-infrastructure-agent/pkg/utilities"
 )
 
 // CreateVPCTool implements VPC creation using the VPC adapter
@@ -66,8 +67,8 @@ func (t *CreateVPCTool) Execute(ctx context.Context, arguments map[string]interf
 	// Extract parameters
 	cidrBlock, _ := arguments["cidrBlock"].(string)
 	name, _ := arguments["name"].(string)
-	enableDnsHostnames := getBoolValue(arguments, "enableDnsHostnames", true)
-	enableDnsSupport := getBoolValue(arguments, "enableDnsSupport", true)
+	enableDnsHostnames := utilities.GetBoolValue(arguments, "enableDnsHostnames", true)
+	enableDnsSupport := utilities.GetBoolValue(arguments, "enableDnsSupport", true)
 
 	// Build AWS parameters
 	createParams := aws.CreateVPCParams{
@@ -206,7 +207,7 @@ func (t *CreateSubnetTool) Execute(ctx context.Context, arguments map[string]int
 	cidrBlock, _ := arguments["cidrBlock"].(string)
 	availabilityZone, _ := arguments["availabilityZone"].(string)
 	name, _ := arguments["name"].(string)
-	mapPublicIpOnLaunch := getBoolValue(arguments, "mapPublicIpOnLaunch", false)
+	mapPublicIpOnLaunch := utilities.GetBoolValue(arguments, "mapPublicIpOnLaunch", false)
 
 	// Build AWS parameters
 	createParams := aws.CreateSubnetParams{
@@ -291,12 +292,4 @@ func (t *GetDefaultVPCTool) Execute(ctx context.Context, arguments map[string]in
 	}
 
 	return t.CreateSuccessResponse(message, data)
-}
-
-// Helper function for boolean values
-func getBoolValue(params map[string]interface{}, key string, defaultValue bool) bool {
-	if value, ok := params[key].(bool); ok {
-		return value
-	}
-	return defaultValue
 }

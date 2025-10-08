@@ -234,10 +234,15 @@ func (a *Analyzer) GenerateMermaidDiagram() string {
 	// Add styling
 	builder.WriteString("\n")
 	builder.WriteString("    classDef vpc fill:#e1f5fe\n")
+	builder.WriteString("    classDef subnet fill:#b3e5fc\n")
 	builder.WriteString("    classDef ec2 fill:#fff3e0\n")
 	builder.WriteString("    classDef sg fill:#f3e5f5\n")
 	builder.WriteString("    classDef lb fill:#e8f5e8\n")
 	builder.WriteString("    classDef asg fill:#fce4ec\n")
+	builder.WriteString("    classDef natgw fill:#e0f2f1\n")
+	builder.WriteString("    classDef tg fill:#f1f8e9\n")
+	builder.WriteString("    classDef rds fill:#fff9c4\n")
+	builder.WriteString("    classDef lt fill:#fce4ec\n")
 
 	return builder.String()
 }
@@ -265,6 +270,8 @@ func (a *Analyzer) getNodeStyle(resourceType string) string {
 	switch resourceType {
 	case "vpc":
 		return ":::vpc"
+	case "subnet":
+		return ":::subnet"
 	case "ec2_instance":
 		return ":::ec2"
 	case "security_group":
@@ -273,6 +280,14 @@ func (a *Analyzer) getNodeStyle(resourceType string) string {
 		return ":::lb"
 	case "auto_scaling_group":
 		return ":::asg"
+	case "nat_gateway":
+		return ":::natgw"
+	case "target_group":
+		return ":::tg"
+	case "rds_instance":
+		return ":::rds"
+	case "launch_template":
+		return ":::lt"
 	default:
 		return ""
 	}

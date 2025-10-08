@@ -107,6 +107,15 @@ func IsInternalField(fieldName string) bool {
 	return false
 }
 
+func GetBoolValue(args map[string]interface{}, key string, defaultValue bool) bool {
+	if val, exists := args[key]; exists {
+		if boolVal, ok := val.(bool); ok {
+			return boolVal
+		}
+	}
+	return defaultValue
+}
+
 func Title(text string) string {
 	c := cases.Title(language.English)
 	return c.String(text)
