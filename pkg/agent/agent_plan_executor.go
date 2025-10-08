@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -621,15 +622,45 @@ func (a *StateAwareAgent) executeNativeMCPTool(planStep *types.ExecutionPlanStep
 						return nil, fmt.Errorf("failed to resolve dependency reference %s for parameter %s: %w", strValue, key, err)
 					}
 
-					if a.config.EnableDebug {
-						a.Logger.WithFields(map[string]interface{}{
-							"key":            key,
-							"original_value": strValue,
-							"resolved_value": resolvedValue,
-						}).Info("Successfully resolved dependency reference")
-					}
+					// Check if the resolved value is a JSON array string
+					if strings.HasPrefix(resolvedValue, "[") && strings.HasSuffix(resolvedValue, "]") {
+						var arrayValue []interface{}
+						if err := json.Unmarshal([]byte(resolvedValue), &arrayValue); err == nil {
+							// Successfully parsed as JSON array - use it as array
+							arguments[key] = arrayValue
 
-					arguments[key] = resolvedValue
+							if a.config.EnableDebug {
+								a.Logger.WithFields(map[string]interface{}{
+									"key":            key,
+									"original_value": strValue,
+									"resolved_type":  "array",
+									"array_length":   len(arrayValue),
+								}).Info("Successfully resolved dependency reference as JSON array")
+							}
+						} else {
+							// Failed to parse - use as string
+							arguments[key] = resolvedValue
+
+							if a.config.EnableDebug {
+								a.Logger.WithFields(map[string]interface{}{
+									"key":            key,
+									"original_value": strValue,
+									"resolved_value": resolvedValue,
+								}).Info("Successfully resolved dependency reference as string")
+							}
+						}
+					} else {
+						// Not a JSON array - use as string
+						arguments[key] = resolvedValue
+
+						if a.config.EnableDebug {
+							a.Logger.WithFields(map[string]interface{}{
+								"key":            key,
+								"original_value": strValue,
+								"resolved_value": resolvedValue,
+							}).Info("Successfully resolved dependency reference")
+						}
+					}
 				}
 			} else {
 				arguments[key] = value
@@ -1288,11 +1319,6 @@ func (a *StateAwareAgent) storeResourceMapping(stepID, resourceID string) {
 	a.mappingsMutex.Lock()
 	defer a.mappingsMutex.Unlock()
 	a.resourceMappings[stepID] = resourceID
-
-	a.Logger.WithFields(map[string]interface{}{
-		"step_id":     stepID,
-		"resource_id": resourceID,
-	}).Debug("Stored resource mapping")
 }
 
 // StoreResourceMapping is a public wrapper for storeResourceMapping for external use

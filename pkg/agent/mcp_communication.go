@@ -812,7 +812,6 @@ func (a *StateAwareAgent) AnalyzeInfrastructureState(ctx context.Context, scanLi
 	if a.config.EnableDebug {
 		a.Logger.WithFields(map[string]interface{}{
 			"analysis_text":    analysisText,
-			"scan_live":        scanLive,
 			"managed_count":    len(currentState.Resources),
 			"discovered_count": len(discoveredResources),
 			"drift_count":      len(driftDetections),

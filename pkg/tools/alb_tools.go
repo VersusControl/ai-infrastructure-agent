@@ -96,7 +96,6 @@ func (t *CreateLoadBalancerTool) Execute(ctx context.Context, arguments map[stri
 	// Handle case where subnetIds might be passed as a JSON string (from dependency resolution)
 	if len(subnetIds) == 0 {
 		if subnetIdsStr, ok := arguments["subnetIds"].(string); ok && subnetIdsStr != "" {
-			t.logger.WithField("subnetIds_string", subnetIdsStr).Debug("Received subnetIds as string, attempting to parse as JSON")
 
 			// Try to parse as JSON array
 			var parsedSubnetIds []string
@@ -145,10 +144,6 @@ func (t *CreateLoadBalancerTool) Execute(ctx context.Context, arguments map[stri
 
 		// Extract subnet IDs from the selection result
 		if len(selectionResult.Content) > 0 {
-			t.logger.WithFields(map[string]interface{}{
-				"content_type": fmt.Sprintf("%T", selectionResult.Content[0]),
-				"content":      selectionResult.Content[0],
-			}).Debug("Analyzing subnet selection response content type")
 
 			// Try multiple approaches to extract text content
 			var textData string
@@ -158,25 +153,19 @@ func (t *CreateLoadBalancerTool) Execute(ctx context.Context, arguments map[stri
 			if textContent, ok := selectionResult.Content[0].(*mcp.TextContent); ok {
 				textData = textContent.Text
 				extractSuccess = true
-				t.logger.Debug("Successfully extracted text using TextContent type assertion")
 			} else if textContent, ok := selectionResult.Content[0].(mcp.TextContent); ok {
 				// Approach 2: Try value type assertion
 				textData = textContent.Text
 				extractSuccess = true
-				t.logger.Debug("Successfully extracted text using TextContent value assertion")
 			} else {
 				// Approach 3: Try to extract from any content with Text field
 				if contentInterface, ok := selectionResult.Content[0].(interface{ GetText() string }); ok {
 					textData = contentInterface.GetText()
 					extractSuccess = true
-					t.logger.Debug("Successfully extracted text using GetText method")
 				}
 			}
 
 			if extractSuccess {
-				t.logger.WithFields(map[string]interface{}{
-					"response_text": textData,
-				}).Debug("Parsing subnet selection response")
 
 				// Parse the JSON response to extract subnet IDs
 				var resultData map[string]interface{}
@@ -208,17 +197,12 @@ func (t *CreateLoadBalancerTool) Execute(ctx context.Context, arguments map[stri
 				return t.CreateErrorResponse("Invalid content type in subnet selection response")
 			}
 		} else {
-			t.logger.Error("Empty selection result content")
 			return t.CreateErrorResponse("Empty response from subnet selection")
 		}
 
 		// Re-validate that we now have sufficient subnets
 		subnetIds, _ = arguments["subnetIds"].([]interface{})
 		if len(subnetIds) < 2 {
-			t.logger.WithFields(map[string]interface{}{
-				"subnets_after_autoselect": len(subnetIds),
-				"required_minimum":         2,
-			}).Error("Auto-selection provided insufficient subnets")
 			return t.CreateErrorResponse(fmt.Sprintf("Failed to auto-select sufficient subnets for ALB creation. Got %d subnets, need at least 2", len(subnetIds)))
 		}
 	}

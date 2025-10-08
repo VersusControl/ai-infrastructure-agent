@@ -180,7 +180,6 @@ resource_id_extraction:
     # Query tools return arrays of resources - extract from first element or specific field
     patterns:
       # List tools return arrays - the query result itself may be what we need
-      # For example: list-subnets should return the subnet array, not extract an ID
       
       # For get-availability-zones - returns single zone name
       - field_paths: ["availabilityZone"]
@@ -191,7 +190,12 @@ resource_id_extraction:
       - field_paths: ["subnetId"]
         resource_types: ["subnet"]
         priority: 1
-        
+
+      # For list array of subnet IDs
+      - field_paths: ["subnetIds"]
+        resource_types: ["subnets"]
+        priority: 1
+
       # For get-vpc - returns single VPC
       - field_paths: ["vpcId"]
         resource_types: ["vpc"]
