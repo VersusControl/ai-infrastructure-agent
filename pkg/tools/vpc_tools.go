@@ -255,11 +255,17 @@ func NewGetDefaultVPCTool(awsClient *aws.Client, actionType string, logger *logg
 
 	baseTool := NewBaseTool(
 		"get-default-vpc",
-		"Get the default VPC in the current region",
+		"Get the default VPC ID in the current region. IMPORTANT: This tool ONLY returns the VPC ID (vpcId field). It does NOT return subnet IDs.",
 		"networking",
 		actionType,
 		inputSchema,
 		logger,
+	)
+
+	baseTool.AddExample(
+		"Get default VPC (returns ONLY vpcId, NOT subnets)",
+		map[string]interface{}{},
+		"Successfully retrieved default VPC vpc-12345678. Returns: { vpcId: \"vpc-12345678\" }.",
 	)
 
 	return &GetDefaultVPCTool{

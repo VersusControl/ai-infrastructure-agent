@@ -241,7 +241,7 @@ func NewListSubnetsTool(awsClient *aws.Client, actionType string, logger *loggin
 
 	baseTool := NewBaseTool(
 		"list-subnets",
-		"List all subnets",
+		"List subnets in the current region to get subnet IDs. IMPORTANT: Returns ONLY subnet information (subnetId, subnet_ids, subnets).",
 		"networking",
 		actionType,
 		inputSchema,
@@ -251,7 +251,7 @@ func NewListSubnetsTool(awsClient *aws.Client, actionType string, logger *loggin
 	baseTool.AddExample(
 		"List all subnets",
 		map[string]interface{}{},
-		"Found 5 subnets",
+		"Found 5 subnets. Returns: { subnetId: \"subnet-xxx\" (first subnet), subnet_ids: [array of all subnet IDs], subnets: [detailed info] }",
 	)
 
 	baseTool.AddExample(
@@ -259,7 +259,7 @@ func NewListSubnetsTool(awsClient *aws.Client, actionType string, logger *loggin
 		map[string]interface{}{
 			"vpcId": "vpc-12345678",
 		},
-		"Found 3 subnets in VPC vpc-12345678",
+		"Found 3 subnets in VPC vpc-12345678. Use {{step-id.subnetId}} to reference the first subnet ID in subsequent steps.",
 	)
 
 	// Cast to SubnetAdapter for type safety
