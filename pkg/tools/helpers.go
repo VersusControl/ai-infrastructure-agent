@@ -100,6 +100,18 @@ func (r *StepReferenceResolver) ExtractResourceID(stepRef *types.ResourceState) 
 				}
 			}
 		}
+
+		// If resource type is unknown (e.g., query tools), try all patterns
+		// This handles cases where mcp_response doesn't have a resource.type field
+		if resourceType == "" {
+			for _, pattern := range r.creationPatterns {
+				for _, fieldPath := range pattern.FieldPaths {
+					if value := r.extractFromPath(mcpResponse, fieldPath); value != "" {
+						return value
+					}
+				}
+			}
+		}
 	}
 
 	return ""

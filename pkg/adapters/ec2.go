@@ -223,7 +223,17 @@ func (e *EC2SpecializedAdapter) ExecuteSpecialOperation(ctx context.Context, ope
 
 	case "get-latest-amazon-linux-ami":
 		// Get latest Amazon Linux 2 AMI
-		amiID, err := e.client.GetLatestAmazonLinux2AMI(ctx)
+		amiParams, ok := params.(map[string]interface{})
+		if !ok {
+			amiParams = map[string]interface{}{"architecture": "x86_64"}
+		}
+
+		architecture, ok := amiParams["architecture"].(string)
+		if !ok {
+			architecture = "x86_64"
+		}
+
+		amiID, err := e.client.GetLatestAmazonLinux2AMI(ctx, architecture)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get latest Amazon Linux 2 AMI: %w", err)
 		}
@@ -233,10 +243,11 @@ func (e *EC2SpecializedAdapter) ExecuteSpecialOperation(ctx context.Context, ope
 			Type:  "ami",
 			State: "available",
 			Details: map[string]interface{}{
-				"amiId":       amiID,
-				"description": "Amazon Linux 2 AMI (HVM) - Kernel 5.x, SSD Volume Type",
-				"osType":      "Linux",
-				"platform":    "Amazon Linux 2",
+				"amiId":        amiID,
+				"architecture": architecture,
+				"description":  "Amazon Linux 2 AMI (HVM) - Kernel 5.x, SSD Volume Type",
+				"osType":       "Linux",
+				"platform":     "Amazon Linux 2",
 			},
 		}, nil
 

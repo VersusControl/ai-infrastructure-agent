@@ -589,13 +589,13 @@ func (c *Client) convertAMI(image ec2types.Image) *types.AWSResource {
 }
 
 // GetLatestAmazonLinux2AMI finds the latest Amazon Linux 2 AMI in the current region
-func (c *Client) GetLatestAmazonLinux2AMI(ctx context.Context) (string, error) {
+func (c *Client) GetLatestAmazonLinux2AMI(ctx context.Context, architecture string) (string, error) {
 	// Try multiple Amazon Linux patterns in order of preference
 	namePatterns := []string{
-		"amzn2-ami-hvm-*-x86_64-gp2",      // Amazon Linux 2 with GP2
-		"amzn2-ami-hvm-*-x86_64-gp3",      // Amazon Linux 2 with GP3
-		"al2023-ami-*-x86_64",             // Amazon Linux 2023 (newer)
-		"amzn2-ami-kernel-5.*-x86_64-gp2", // Amazon Linux 2 with specific kernel
+		"amzn2-ami-hvm-*-" + architecture + "-gp2",      // Amazon Linux 2 with GP2
+		"amzn2-ami-hvm-*-" + architecture + "-gp3",      // Amazon Linux 2 with GP3
+		"al2023-ami-*-" + architecture,                  // Amazon Linux 2023 (newer)
+		"amzn2-ami-kernel-5.*-" + architecture + "-gp2", // Amazon Linux 2 with specific kernel
 	}
 
 	var allImages []ec2types.Image
@@ -611,10 +611,6 @@ func (c *Client) GetLatestAmazonLinux2AMI(ctx context.Context) (string, error) {
 				{
 					Name:   aws.String("state"),
 					Values: []string{"available"},
-				},
-				{
-					Name:   aws.String("architecture"),
-					Values: []string{"x86_64"},
 				},
 			},
 		}
@@ -674,13 +670,20 @@ func (c *Client) GetLatestAmazonLinux2AMI(ctx context.Context) (string, error) {
 
 // GetLatestUbuntuAMI finds the latest Ubuntu LTS AMI in the current region
 func (c *Client) GetLatestUbuntuAMI(ctx context.Context, architecture string) (string, error) {
+	// Normalize architecture for Ubuntu naming convention
+	// AWS EC2 uses "x86_64" and "arm64", but Ubuntu AMI names use "amd64" and "arm64"
+	ubuntuArch := architecture
+	if architecture == "x86_64" {
+		ubuntuArch = "amd64"
+	}
+
 	// Try multiple Ubuntu LTS versions in order of preference
 	namePatterns := []string{
-		"ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-" + architecture + "-server-*",     // Ubuntu 22.04 LTS
-		"ubuntu/images/hvm-ssd/ubuntu-focal-20.04-" + architecture + "-server-*",     // Ubuntu 20.04 LTS
-		"ubuntu/images/hvm-ssd-gp3/ubuntu-jammy-22.04-" + architecture + "-server-*", // Ubuntu 22.04 with GP3
-		"ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-" + architecture + "-server-*",    // Ubuntu 18.04 LTS (older)
-		"ubuntu/images/hvm-ssd-gp3/ubuntu-focal-20.04-" + architecture + "-server-*", // Ubuntu 20.04 with GP3
+		"ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-" + ubuntuArch + "-server-*",     // Ubuntu 22.04 LTS
+		"ubuntu/images/hvm-ssd/ubuntu-focal-20.04-" + ubuntuArch + "-server-*",     // Ubuntu 20.04 LTS
+		"ubuntu/images/hvm-ssd-gp3/ubuntu-jammy-22.04-" + ubuntuArch + "-server-*", // Ubuntu 22.04 with GP3
+		"ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-" + ubuntuArch + "-server-*",    // Ubuntu 18.04 LTS (older)
+		"ubuntu/images/hvm-ssd-gp3/ubuntu-focal-20.04-" + ubuntuArch + "-server-*", // Ubuntu 20.04 with GP3
 	}
 
 	var allImages []ec2types.Image
@@ -698,52 +701,12 @@ func (c *Client) GetLatestUbuntuAMI(ctx context.Context, architecture string) (s
 					Name:   aws.String("state"),
 					Values: []string{"available"},
 				},
-				{
-					Name:   aws.String("architecture"),
-					Values: []string{architecture},
-				},
 			},
 		}
 
 		result, err := c.ec2.DescribeImages(ctx, input)
 		if err == nil && len(result.Images) > 0 {
 			allImages = append(allImages, result.Images...)
-		}
-	}
-
-	// If no images found with Canonical's owner ID, try without owner restriction
-	// This can find marketplace or community AMIs in newer regions
-	if len(allImages) == 0 {
-		for _, namePattern := range namePatterns {
-			input := &ec2.DescribeImagesInput{
-				Filters: []ec2types.Filter{
-					{
-						Name:   aws.String("name"),
-						Values: []string{namePattern},
-					},
-					{
-						Name:   aws.String("state"),
-						Values: []string{"available"},
-					},
-					{
-						Name:   aws.String("architecture"),
-						Values: []string{architecture},
-					},
-					{
-						Name:   aws.String("root-device-type"),
-						Values: []string{"ebs"},
-					},
-					{
-						Name:   aws.String("virtualization-type"),
-						Values: []string{"hvm"},
-					},
-				},
-			}
-
-			result, err := c.ec2.DescribeImages(ctx, input)
-			if err == nil && len(result.Images) > 0 {
-				allImages = append(allImages, result.Images...)
-			}
 		}
 	}
 
@@ -819,10 +782,6 @@ func (c *Client) GetLatestWindowsAMI(ctx context.Context, architecture string) (
 				{
 					Name:   aws.String("state"),
 					Values: []string{"available"},
-				},
-				{
-					Name:   aws.String("architecture"),
-					Values: []string{architecture},
 				},
 			},
 		}

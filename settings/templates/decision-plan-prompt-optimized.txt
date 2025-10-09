@@ -86,7 +86,7 @@ UNIVERSAL DEPENDENCY PRINCIPLES:
 
 DEPENDENCY PATTERNS (apply to ANY resource type):
 • Network-attached resources → Need: vpcId, subnetId(s), securityGroupIds
-• Compute resources → May need: imageId/AMI, instanceType, keyPair, userData
+• Compute resources → May need: subnetId, imageId/AMI, instanceType, keyPair, userData
 • Storage resources → May need: volumeType, size, encryption, KMS key
 • Database resources → May need: dbSubnetGroupName, engine, engineVersion, masterUser
 • Container resources → May need: clusterName, taskDefinition, serviceRole, executionRole
