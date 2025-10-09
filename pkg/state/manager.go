@@ -70,20 +70,7 @@ func (m *Manager) LoadState(ctx context.Context) error {
 	// Replace the current state with the newly loaded state
 	m.state = newState
 
-	m.logger.WithFields(map[string]interface{}{
-		"resource_count": len(m.state.Resources),
-		"resources":      getResourceKeys(m.state.Resources),
-	}).Info("Infrastructure state loaded successfully")
 	return nil
-}
-
-// Helper function to get resource keys for logging
-func getResourceKeys(resources map[string]*types.ResourceState) []string {
-	keys := make([]string, 0, len(resources))
-	for k := range resources {
-		keys = append(keys, k)
-	}
-	return keys
 }
 
 // SaveState saves infrastructure state to file

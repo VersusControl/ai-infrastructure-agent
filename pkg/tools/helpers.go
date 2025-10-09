@@ -1,6 +1,8 @@
 package tools
 
 import (
+	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/versus-control/ai-infrastructure-agent/internal/config"
@@ -16,8 +18,8 @@ var (
 
 // StepReferenceResolver handles resolution of step references to actual resource IDs
 type StepReferenceResolver struct {
-	fieldResolver *resources.FieldResolver
-	idExtractor   *resources.IDExtractor
+	fieldResolver    *resources.FieldResolver
+	creationPatterns []config.ExtractionPattern
 }
 
 // newStepReferenceResolver creates a new step reference resolver
@@ -38,14 +40,12 @@ func newStepReferenceResolver() (*StepReferenceResolver, error) {
 
 	fieldResolver := resources.NewFieldResolver(fieldMappingConfig)
 
-	idExtractor, err := resources.NewIDExtractor(extractionConfig)
-	if err != nil {
-		return nil, err
-	}
+	// Get creation patterns directly for step_reference extraction
+	creationPatterns := extractionConfig.ResourceIDExtraction.CreationTools.Patterns
 
 	return &StepReferenceResolver{
-		fieldResolver: fieldResolver,
-		idExtractor:   idExtractor,
+		fieldResolver:    fieldResolver,
+		creationPatterns: creationPatterns,
 	}, nil
 }
 
@@ -65,7 +65,7 @@ func GetStepReferenceResolver() *StepReferenceResolver {
 }
 
 // ExtractResourceID extracts the actual AWS resource ID from a step_reference resource
-// This uses the IDExtractor's configuration-driven extraction patterns
+// This uses configuration-driven extraction patterns from creation tools
 func (r *StepReferenceResolver) ExtractResourceID(stepRef *types.ResourceState) string {
 	if stepRef == nil || stepRef.Type != "step_reference" {
 		return ""
@@ -83,27 +83,59 @@ func (r *StepReferenceResolver) ExtractResourceID(stepRef *types.ResourceState) 
 			}
 		}
 
-		// Use IDExtractor with creation patterns (step_reference contains creation results)
-		// We'll use a dummy tool name since we're extracting from stored results
-		if resourceType != "" {
-			// Try to extract using configured patterns for this resource type
-			// We look at creation_tools patterns which contain all the field paths
-			extractedID, err := r.idExtractor.ExtractResourceID("", resourceType, nil, mcpResponse)
-			if err == nil && extractedID != "" {
-				return extractedID
-			}
-		}
+		// Normalize resource type: replace hyphens with underscores
+		// (mcp_response uses hyphens like "security-group", but config uses underscores like "security_group")
+		resourceType = strings.ReplaceAll(resourceType, "-", "_")
 
-		// Fallback: try nested resource.id field using FieldResolver
-		value := r.fieldResolver.ExtractFromPath(mcpResponse, "resource.id")
-		if strValue, ok := value.(string); ok && strValue != "" {
-			return strValue
+		// Try creation patterns for this resource type
+		// step_reference always contains creation results
+		if resourceType != "" {
+			for _, pattern := range r.creationPatterns {
+				if r.matchesResourceType(pattern.ResourceTypes, resourceType) {
+					for _, fieldPath := range pattern.FieldPaths {
+						if value := r.extractFromPath(mcpResponse, fieldPath); value != "" {
+							return value
+						}
+					}
+				}
+			}
 		}
 	}
 
-	// Fallback: check if there's a direct resource_id field
-	if resourceID, ok := stepRef.Properties["resource_id"].(string); ok && resourceID != "" {
-		return resourceID
+	return ""
+}
+
+// matchesResourceType checks if a resource type matches the pattern's resource types
+func (r *StepReferenceResolver) matchesResourceType(patternTypes []string, resourceType string) bool {
+	for _, patternType := range patternTypes {
+		if patternType == "*" || patternType == resourceType {
+			return true
+		}
+	}
+	return false
+}
+
+// extractFromPath extracts a value from nested data using dot notation
+func (r *StepReferenceResolver) extractFromPath(data map[string]interface{}, path string) string {
+	if data == nil {
+		return ""
+	}
+
+	parts := strings.Split(path, ".")
+	current := data
+
+	for _, part := range parts {
+		switch v := current[part].(type) {
+		case map[string]interface{}:
+			current = v
+		case string:
+			if len(parts) == 1 || part == parts[len(parts)-1] {
+				return v
+			}
+			return ""
+		default:
+			return ""
+		}
 	}
 
 	return ""
@@ -111,42 +143,10 @@ func (r *StepReferenceResolver) ExtractResourceID(stepRef *types.ResourceState) 
 
 // ExtractResourceIDFromStepReference is a helper function that extracts resource ID from step_reference
 // This is a convenience function that uses the global resolver instance
-func ExtractResourceIDFromStepReference(stepRef *types.ResourceState) string {
+func ExtractResourceIDFromStepReference(stepRef *types.ResourceState) (string, error) {
 	resolver := GetStepReferenceResolver()
 	if resolver == nil {
-		// Fallback: try direct extraction without resolver
-		return extractResourceIDFallback(stepRef)
+		return "", fmt.Errorf("step reference resolver failed to initialize")
 	}
-	return resolver.ExtractResourceID(stepRef)
-}
-
-// extractResourceIDFallback provides a simple fallback when resolver is not available
-func extractResourceIDFallback(stepRef *types.ResourceState) string {
-	if stepRef == nil || stepRef.Type != "step_reference" {
-		return ""
-	}
-
-	// Try to extract from common fields in mcp_response
-	if mcpResponse, ok := stepRef.Properties["mcp_response"].(map[string]interface{}); ok {
-		// Try direct ID fields
-		idFields := []string{
-			"subnetId", "vpcId", "instanceId", "groupId", "gatewayId",
-			"natGatewayId", "routeTableId", "allocationId", "associationId",
-		}
-
-		for _, field := range idFields {
-			if id, ok := mcpResponse[field].(string); ok && id != "" {
-				return id
-			}
-		}
-
-		// Try nested resource.id
-		if resource, ok := mcpResponse["resource"].(map[string]interface{}); ok {
-			if id, ok := resource["id"].(string); ok && id != "" {
-				return id
-			}
-		}
-	}
-
-	return ""
+	return resolver.ExtractResourceID(stepRef), nil
 }

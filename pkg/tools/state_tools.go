@@ -327,15 +327,6 @@ func (t *ExportStateTool) Execute(ctx context.Context, arguments map[string]inte
 		}
 	}
 
-	t.GetLogger().WithFields(map[string]interface{}{
-		"format":             format,
-		"include_discovered": includeDiscovered,
-		"include_managed":    includeManaged,
-		"resource_filter":    resourceFilter,
-		"deps_nil":           t.deps == nil,
-		"state_manager_nil":  t.deps == nil || t.deps.StateManager == nil,
-	}).Info("Exporting infrastructure state")
-
 	// Create structured data for export
 	exportData := map[string]interface{}{
 		"export_format":      format,
@@ -645,11 +636,6 @@ func (t *VisualizeDependencyGraphTool) ValidateArguments(args map[string]interfa
 
 // Execute performs the dependency graph visualization
 func (t *VisualizeDependencyGraphTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
-	format := "text"
-	if val, ok := args["format"].(string); ok {
-		format = val
-	}
-
 	includeBottlenecks := true
 	if val, ok := args["include_bottlenecks"].(bool); ok {
 		includeBottlenecks = val
@@ -710,13 +696,12 @@ func (t *VisualizeDependencyGraphTool) Execute(ctx context.Context, args map[str
 			for _, res := range state.Resources {
 				if res.Type == "step_reference" {
 					// Extract actual resource ID from step_reference using helper
-					actualResourceID := ExtractResourceIDFromStepReference(res)
+					actualResourceID, err := ExtractResourceIDFromStepReference(res)
+					if err != nil {
+						return nil, fmt.Errorf("failed to extract resource ID from step reference %s: %w", res.ID, err)
+					}
 					if actualResourceID != "" {
 						stepToResourceMap[res.ID] = actualResourceID
-						t.GetLogger().WithFields(map[string]interface{}{
-							"step_id":     res.ID,
-							"resource_id": actualResourceID,
-						}).Debug("Mapped step reference to resource ID")
 					}
 				}
 			}
@@ -751,14 +736,7 @@ func (t *VisualizeDependencyGraphTool) Execute(ctx context.Context, args map[str
 	}
 
 	analyzer := t.deps.GraphAnalyzer
-	var visualization string
-
-	switch format {
-	case "mermaid":
-		visualization = analyzer.GenerateMermaidDiagram()
-	default:
-		visualization = analyzer.GenerateTextualRepresentation()
-	}
+	visualization := analyzer.GenerateMermaidDiagram()
 
 	// Build structured graph data (nodes and edges)
 	nodes := make([]map[string]interface{}, 0)
