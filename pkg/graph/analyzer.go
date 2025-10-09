@@ -12,6 +12,26 @@ type Analyzer struct {
 	manager *Manager
 }
 
+// GraphComplexity represents complexity metrics of the dependency graph
+type GraphComplexity struct {
+	TotalNodes      int            `json:"totalNodes"`
+	TotalEdges      int            `json:"totalEdges"`
+	MaxDependencies int            `json:"maxDependencies"`
+	MaxDependents   int            `json:"maxDependents"`
+	Density         float64        `json:"density"`
+	DependencyCount map[string]int `json:"dependencyCount"`
+	DependentCount  map[string]int `json:"dependentCount"`
+}
+
+// Bottleneck represents a potential bottleneck in the dependency graph
+type Bottleneck struct {
+	ResourceID     string   `json:"resourceId"`
+	ResourceType   string   `json:"resourceType"`
+	DependentCount int      `json:"dependentCount"`
+	Dependents     []string `json:"dependents"`
+	Impact         string   `json:"impact"` // low, medium, high, critical
+}
+
 // NewAnalyzer creates a new graph analyzer
 func NewAnalyzer(manager *Manager) *Analyzer {
 	return &Analyzer{
@@ -93,7 +113,7 @@ func (a *Analyzer) FindBottlenecks() []Bottleneck {
 				ResourceType:   node.ResourceType,
 				DependentCount: count,
 				Dependents:     a.manager.GetDependents(nodeID),
-				Impact:         a.calculateImpact(nodeID, count),
+				Impact:         a.calculateImpact(count),
 			}
 			bottlenecks = append(bottlenecks, bottleneck)
 		}
@@ -103,7 +123,7 @@ func (a *Analyzer) FindBottlenecks() []Bottleneck {
 }
 
 // calculateImpact calculates the impact level of a bottleneck
-func (a *Analyzer) calculateImpact(nodeID string, dependentCount int) string {
+func (a *Analyzer) calculateImpact(dependentCount int) string {
 	if dependentCount >= 10 {
 		return "critical"
 	} else if dependentCount >= 5 {
@@ -166,44 +186,6 @@ func (a *Analyzer) FindCycles() [][]string {
 	return cycles
 }
 
-// GenerateTextualRepresentation generates a textual representation of the graph
-func (a *Analyzer) GenerateTextualRepresentation() string {
-	var builder strings.Builder
-	graph := a.manager.GetGraph()
-
-	builder.WriteString("Infrastructure Dependency Graph\n")
-	builder.WriteString("================================\n\n")
-
-	// Resource summary
-	builder.WriteString(fmt.Sprintf("Total Resources: %d\n", len(graph.Nodes)))
-	builder.WriteString(fmt.Sprintf("Total Dependencies: %d\n\n", a.getTotalEdges()))
-
-	// Group by resource type
-	typeGroups := make(map[string][]string)
-	for nodeID, node := range graph.Nodes {
-		typeGroups[node.ResourceType] = append(typeGroups[node.ResourceType], nodeID)
-	}
-
-	for resourceType, nodeIDs := range typeGroups {
-		builder.WriteString(fmt.Sprintf("%s (%d):\n", strings.ToUpper(resourceType), len(nodeIDs)))
-		for _, nodeID := range nodeIDs {
-			dependencies := graph.Edges[nodeID]
-			dependents := a.manager.GetDependents(nodeID)
-
-			builder.WriteString(fmt.Sprintf("  - %s\n", nodeID))
-			if len(dependencies) > 0 {
-				builder.WriteString(fmt.Sprintf("    Dependencies: %s\n", strings.Join(dependencies, ", ")))
-			}
-			if len(dependents) > 0 {
-				builder.WriteString(fmt.Sprintf("    Dependents: %s\n", strings.Join(dependents, ", ")))
-			}
-		}
-		builder.WriteString("\n")
-	}
-
-	return builder.String()
-}
-
 // GenerateMermaidDiagram generates a Mermaid diagram representation
 func (a *Analyzer) GenerateMermaidDiagram() string {
 	var builder strings.Builder
@@ -234,10 +216,15 @@ func (a *Analyzer) GenerateMermaidDiagram() string {
 	// Add styling
 	builder.WriteString("\n")
 	builder.WriteString("    classDef vpc fill:#e1f5fe\n")
+	builder.WriteString("    classDef subnet fill:#b3e5fc\n")
 	builder.WriteString("    classDef ec2 fill:#fff3e0\n")
 	builder.WriteString("    classDef sg fill:#f3e5f5\n")
 	builder.WriteString("    classDef lb fill:#e8f5e8\n")
 	builder.WriteString("    classDef asg fill:#fce4ec\n")
+	builder.WriteString("    classDef natgw fill:#e0f2f1\n")
+	builder.WriteString("    classDef tg fill:#f1f8e9\n")
+	builder.WriteString("    classDef rds fill:#fff9c4\n")
+	builder.WriteString("    classDef lt fill:#fce4ec\n")
 
 	return builder.String()
 }
@@ -265,6 +252,8 @@ func (a *Analyzer) getNodeStyle(resourceType string) string {
 	switch resourceType {
 	case "vpc":
 		return ":::vpc"
+	case "subnet":
+		return ":::subnet"
 	case "ec2_instance":
 		return ":::ec2"
 	case "security_group":
@@ -273,39 +262,15 @@ func (a *Analyzer) getNodeStyle(resourceType string) string {
 		return ":::lb"
 	case "auto_scaling_group":
 		return ":::asg"
+	case "nat_gateway":
+		return ":::natgw"
+	case "target_group":
+		return ":::tg"
+	case "rds_instance":
+		return ":::rds"
+	case "launch_template":
+		return ":::lt"
 	default:
 		return ""
 	}
-}
-
-// getTotalEdges returns the total number of edges in the graph
-func (a *Analyzer) getTotalEdges() int {
-	total := 0
-	graph := a.manager.GetGraph()
-	for _, edges := range graph.Edges {
-		total += len(edges)
-	}
-	return total
-}
-
-// Supporting types for analysis
-
-// GraphComplexity represents complexity metrics of the dependency graph
-type GraphComplexity struct {
-	TotalNodes      int            `json:"totalNodes"`
-	TotalEdges      int            `json:"totalEdges"`
-	MaxDependencies int            `json:"maxDependencies"`
-	MaxDependents   int            `json:"maxDependents"`
-	Density         float64        `json:"density"`
-	DependencyCount map[string]int `json:"dependencyCount"`
-	DependentCount  map[string]int `json:"dependentCount"`
-}
-
-// Bottleneck represents a potential bottleneck in the dependency graph
-type Bottleneck struct {
-	ResourceID     string   `json:"resourceId"`
-	ResourceType   string   `json:"resourceType"`
-	DependentCount int      `json:"dependentCount"`
-	Dependents     []string `json:"dependents"`
-	Impact         string   `json:"impact"` // low, medium, high, critical
 }

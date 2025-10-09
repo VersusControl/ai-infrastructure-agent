@@ -206,7 +206,6 @@ func (s *SubnetAdapter) GetSupportedOperations() []string {
 		"list",
 		"get",
 		"delete",
-		"get-default-subnet",
 	}
 }
 
@@ -229,9 +228,6 @@ func (s *SubnetAdapter) ValidateParams(operation string, params interface{}) err
 		if params == nil {
 			return fmt.Errorf("subnet ID is required for %s operation", operation)
 		}
-		return nil
-	case "get-default-subnet":
-		// No parameters required for get-default-subnet
 		return nil
 	default:
 		return fmt.Errorf("unsupported operation: %s", operation)

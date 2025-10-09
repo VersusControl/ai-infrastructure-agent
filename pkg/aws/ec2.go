@@ -589,74 +589,73 @@ func (c *Client) convertAMI(image ec2types.Image) *types.AWSResource {
 }
 
 // GetLatestAmazonLinux2AMI finds the latest Amazon Linux 2 AMI in the current region
-func (c *Client) GetLatestAmazonLinux2AMI(ctx context.Context) (string, error) {
-	c.logger.WithField("region", c.cfg.Region).Info("Starting DescribeImages API call for latest Amazon Linux 2 AMI")
-
-	input := &ec2.DescribeImagesInput{
-		Owners: []string{"amazon"},
-		Filters: []ec2types.Filter{
-			{
-				Name:   aws.String("name"),
-				Values: []string{"amzn2-ami-hvm-*-x86_64-gp2"},
-			},
-			{
-				Name:   aws.String("state"),
-				Values: []string{"available"},
-			},
-		},
+func (c *Client) GetLatestAmazonLinux2AMI(ctx context.Context, architecture string) (string, error) {
+	// Try multiple Amazon Linux patterns in order of preference
+	namePatterns := []string{
+		"amzn2-ami-hvm-*-" + architecture + "-gp2",      // Amazon Linux 2 with GP2
+		"amzn2-ami-hvm-*-" + architecture + "-gp3",      // Amazon Linux 2 with GP3
+		"al2023-ami-*-" + architecture,                  // Amazon Linux 2023 (newer)
+		"amzn2-ami-kernel-5.*-" + architecture + "-gp2", // Amazon Linux 2 with specific kernel
 	}
 
-	c.logger.WithFields(logrus.Fields{
-		"owners":  input.Owners,
-		"filters": input.Filters,
-	}).Debug("Making DescribeImages API call with parameters")
+	var allImages []ec2types.Image
 
-	result, err := c.ec2.DescribeImages(ctx, input)
-	if err != nil {
-		c.logger.WithError(err).Error("DescribeImages API call failed")
-		return "", fmt.Errorf("failed to describe AMIs: %w", err)
+	for _, namePattern := range namePatterns {
+		input := &ec2.DescribeImagesInput{
+			Owners: []string{"amazon"},
+			Filters: []ec2types.Filter{
+				{
+					Name:   aws.String("name"),
+					Values: []string{namePattern},
+				},
+				{
+					Name:   aws.String("state"),
+					Values: []string{"available"},
+				},
+			},
+		}
+
+		result, err := c.ec2.DescribeImages(ctx, input)
+		if err != nil {
+			continue
+		}
+
+		if len(result.Images) > 0 {
+			allImages = append(allImages, result.Images...)
+		}
 	}
 
-	c.logger.WithField("images_count", len(result.Images)).Info("DescribeImages API call successful")
-
-	if len(result.Images) == 0 {
-		c.logger.Error("No Amazon Linux 2 AMIs found in current region")
-		return "", fmt.Errorf("no Amazon Linux 2 AMIs found")
+	if len(allImages) == 0 {
+		c.logger.WithFields(logrus.Fields{
+			"region":   c.cfg.Region,
+			"patterns": namePatterns,
+		}).Error("No Amazon Linux AMIs found in current region with any pattern")
+		return "", fmt.Errorf("no Amazon Linux AMIs found in region %s", c.cfg.Region)
 	}
 
 	// Find the most recent AMI by creation date
 	var latestAMI ec2types.Image
 	var latestTime time.Time
 
-	c.logger.Debug("Processing AMI images to find latest")
-	for i, image := range result.Images {
+	for _, image := range allImages {
 		if image.CreationDate == nil {
-			c.logger.WithField("ami_index", i).Warn("AMI has no creation date, skipping")
 			continue
 		}
 
 		creationTime, err := time.Parse(time.RFC3339, *image.CreationDate)
 		if err != nil {
-			c.logger.WithError(err).WithField("ami", *image.ImageId).Warn("Failed to parse AMI creation date")
 			continue
 		}
-
-		c.logger.WithFields(logrus.Fields{
-			"ami_id":        *image.ImageId,
-			"name":          aws.ToString(image.Name),
-			"creation_date": *image.CreationDate,
-		}).Debug("Processing AMI candidate")
 
 		if creationTime.After(latestTime) {
 			latestTime = creationTime
 			latestAMI = image
-			c.logger.WithField("new_latest_ami", *image.ImageId).Debug("Found newer AMI")
 		}
 	}
 
 	if latestAMI.ImageId == nil {
-		c.logger.Error("No valid Amazon Linux 2 AMI found after processing all images")
-		return "", fmt.Errorf("no valid Amazon Linux 2 AMI found")
+		c.logger.Error("No valid Amazon Linux AMI found after processing all images")
+		return "", fmt.Errorf("no valid Amazon Linux AMI found with valid creation date")
 	}
 
 	c.logger.WithFields(logrus.Fields{
@@ -671,56 +670,66 @@ func (c *Client) GetLatestAmazonLinux2AMI(ctx context.Context) (string, error) {
 
 // GetLatestUbuntuAMI finds the latest Ubuntu LTS AMI in the current region
 func (c *Client) GetLatestUbuntuAMI(ctx context.Context, architecture string) (string, error) {
-	c.logger.WithFields(logrus.Fields{
-		"region":       c.cfg.Region,
-		"architecture": architecture,
-	}).Info("Starting DescribeImages API call for latest Ubuntu LTS AMI")
-
-	// Ubuntu AMI name pattern for LTS versions
-	namePattern := "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-" + architecture + "-server-*"
-	if architecture == "arm64" {
-		namePattern = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*"
+	// Normalize architecture for Ubuntu naming convention
+	// AWS EC2 uses "x86_64" and "arm64", but Ubuntu AMI names use "amd64" and "arm64"
+	ubuntuArch := architecture
+	if architecture == "x86_64" {
+		ubuntuArch = "amd64"
 	}
 
-	input := &ec2.DescribeImagesInput{
-		Owners: []string{"099720109477"}, // Canonical's AWS account ID
-		Filters: []ec2types.Filter{
-			{
-				Name:   aws.String("name"),
-				Values: []string{namePattern},
+	// Try multiple Ubuntu LTS versions in order of preference
+	namePatterns := []string{
+		"ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-" + ubuntuArch + "-server-*",     // Ubuntu 22.04 LTS
+		"ubuntu/images/hvm-ssd/ubuntu-focal-20.04-" + ubuntuArch + "-server-*",     // Ubuntu 20.04 LTS
+		"ubuntu/images/hvm-ssd-gp3/ubuntu-jammy-22.04-" + ubuntuArch + "-server-*", // Ubuntu 22.04 with GP3
+		"ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-" + ubuntuArch + "-server-*",    // Ubuntu 18.04 LTS (older)
+		"ubuntu/images/hvm-ssd-gp3/ubuntu-focal-20.04-" + ubuntuArch + "-server-*", // Ubuntu 20.04 with GP3
+	}
+
+	var allImages []ec2types.Image
+
+	// First, try with Canonical's official owner ID
+	for _, namePattern := range namePatterns {
+		input := &ec2.DescribeImagesInput{
+			Owners: []string{"099720109477"}, // Canonical's AWS account ID
+			Filters: []ec2types.Filter{
+				{
+					Name:   aws.String("name"),
+					Values: []string{namePattern},
+				},
+				{
+					Name:   aws.String("state"),
+					Values: []string{"available"},
+				},
 			},
-			{
-				Name:   aws.String("state"),
-				Values: []string{"available"},
-			},
-		},
+		}
+
+		result, err := c.ec2.DescribeImages(ctx, input)
+		if err == nil && len(result.Images) > 0 {
+			allImages = append(allImages, result.Images...)
+		}
 	}
 
-	result, err := c.ec2.DescribeImages(ctx, input)
-	if err != nil {
-		c.logger.WithError(err).Error("DescribeImages API call failed for Ubuntu AMI")
-		return "", fmt.Errorf("failed to describe Ubuntu AMIs: %w", err)
-	}
+	if len(allImages) == 0 {
+		c.logger.WithFields(logrus.Fields{
+			"region":       c.cfg.Region,
+			"architecture": architecture,
+		}).Error("No Ubuntu AMIs available in this region")
 
-	c.logger.WithField("images_count", len(result.Images)).Info("DescribeImages API call successful for Ubuntu")
-
-	if len(result.Images) == 0 {
-		c.logger.Error("No Ubuntu AMIs found in current region")
-		return "", fmt.Errorf("no Ubuntu AMIs found")
+		return "", fmt.Errorf("no Ubuntu AMIs found in region %s for architecture %s. Ubuntu may not be available in this region yet. Consider using 'get-latest-amazon-linux-ami' or 'get-latest-windows-ami' instead, or choose a different region", c.cfg.Region, architecture)
 	}
 
 	// Find the most recent AMI by creation date
 	var latestAMI ec2types.Image
 	var latestTime time.Time
 
-	for _, image := range result.Images {
+	for _, image := range allImages {
 		if image.CreationDate == nil {
 			continue
 		}
 
 		creationTime, err := time.Parse(time.RFC3339, *image.CreationDate)
 		if err != nil {
-			c.logger.WithError(err).WithField("ami", *image.ImageId).Warn("Failed to parse Ubuntu AMI creation date")
 			continue
 		}
 
@@ -731,72 +740,82 @@ func (c *Client) GetLatestUbuntuAMI(ctx context.Context, architecture string) (s
 	}
 
 	if latestAMI.ImageId == nil {
-		return "", fmt.Errorf("no valid Ubuntu AMI found")
+		return "", fmt.Errorf("no valid Ubuntu AMI found with valid creation date")
 	}
 
 	c.logger.WithFields(logrus.Fields{
 		"amiId":        *latestAMI.ImageId,
 		"name":         aws.ToString(latestAMI.Name),
 		"creationDate": aws.ToString(latestAMI.CreationDate),
+		"owner":        aws.ToString(latestAMI.OwnerId),
 		"region":       c.cfg.Region,
-	}).Info("Successfully found latest Ubuntu LTS AMI via AWS API")
+	}).Info("Successfully found Ubuntu LTS AMI")
 
 	return *latestAMI.ImageId, nil
 }
 
 // GetLatestWindowsAMI finds the latest Windows Server AMI in the current region
 func (c *Client) GetLatestWindowsAMI(ctx context.Context, architecture string) (string, error) {
-	c.logger.WithFields(logrus.Fields{
-		"region":       c.cfg.Region,
-		"architecture": architecture,
-	}).Info("Starting DescribeImages API call for latest Windows Server AMI")
-
-	// Windows Server 2022 Base AMI pattern
-	namePattern := "Windows_Server-2022-English-Full-Base-*"
-
-	input := &ec2.DescribeImagesInput{
-		Owners: []string{"amazon"},
-		Filters: []ec2types.Filter{
-			{
-				Name:   aws.String("name"),
-				Values: []string{namePattern},
-			},
-			{
-				Name:   aws.String("state"),
-				Values: []string{"available"},
-			},
-			{
-				Name:   aws.String("architecture"),
-				Values: []string{architecture},
-			},
-		},
+	// Try multiple Windows Server versions in order of preference
+	namePatterns := []string{
+		"Windows_Server-2022-English-Full-Base-*", // Windows Server 2022
+		"Windows_Server-2019-English-Full-Base-*", // Windows Server 2019
+		"Windows_Server-2022-English-Core-Base-*", // Windows Server 2022 Core
+		"Windows_Server-2019-English-Core-Base-*", // Windows Server 2019 Core
 	}
 
-	result, err := c.ec2.DescribeImages(ctx, input)
-	if err != nil {
-		c.logger.WithError(err).Error("DescribeImages API call failed for Windows AMI")
-		return "", fmt.Errorf("failed to describe Windows AMIs: %w", err)
+	var allImages []ec2types.Image
+
+	for _, namePattern := range namePatterns {
+		c.logger.WithFields(logrus.Fields{
+			"pattern": namePattern,
+			"region":  c.cfg.Region,
+		}).Debug("Trying Windows Server AMI pattern")
+
+		input := &ec2.DescribeImagesInput{
+			Owners: []string{"amazon"},
+			Filters: []ec2types.Filter{
+				{
+					Name:   aws.String("name"),
+					Values: []string{namePattern},
+				},
+				{
+					Name:   aws.String("state"),
+					Values: []string{"available"},
+				},
+			},
+		}
+
+		result, err := c.ec2.DescribeImages(ctx, input)
+		if err != nil {
+			continue
+		}
+
+		if len(result.Images) > 0 {
+			allImages = append(allImages, result.Images...)
+		}
 	}
 
-	c.logger.WithField("images_count", len(result.Images)).Info("DescribeImages API call successful for Windows")
-
-	if len(result.Images) == 0 {
-		c.logger.Error("No Windows Server AMIs found in current region")
-		return "", fmt.Errorf("no Windows Server AMIs found")
+	if len(allImages) == 0 {
+		c.logger.WithFields(logrus.Fields{
+			"region":       c.cfg.Region,
+			"architecture": architecture,
+			"patterns":     namePatterns,
+		}).Error("No Windows Server AMIs found in current region with any pattern")
+		return "", fmt.Errorf("no Windows Server AMIs found in region %s for architecture %s", c.cfg.Region, architecture)
 	}
 
 	// Find the most recent AMI by creation date
 	var latestAMI ec2types.Image
 	var latestTime time.Time
 
-	for _, image := range result.Images {
+	for _, image := range allImages {
 		if image.CreationDate == nil {
 			continue
 		}
 
 		creationTime, err := time.Parse(time.RFC3339, *image.CreationDate)
 		if err != nil {
-			c.logger.WithError(err).WithField("ami", *image.ImageId).Warn("Failed to parse Windows AMI creation date")
 			continue
 		}
 
@@ -807,7 +826,7 @@ func (c *Client) GetLatestWindowsAMI(ctx context.Context, architecture string) (
 	}
 
 	if latestAMI.ImageId == nil {
-		return "", fmt.Errorf("no valid Windows Server AMI found")
+		return "", fmt.Errorf("no valid Windows Server AMI found with valid creation date")
 	}
 
 	c.logger.WithFields(logrus.Fields{

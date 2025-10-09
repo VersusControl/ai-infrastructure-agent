@@ -41,6 +41,12 @@ resource_identification:
       - 'private subnet'
       - 'database subnet'
       
+    subnets:
+      - 'subnets'
+      - 'multiple subnets'
+      - 'subnet list'
+      - 'subnet array'
+      
     security_group:
       - 'security group'
       - 'firewall rules'
@@ -52,7 +58,10 @@ resource_identification:
       - 'virtual machine'
       - 'compute instance'
       - 'server'
-      
+
+    listener:
+      - 'listener'
+
     load_balancer:
       - 'load balancer'
       - 'application load balancer'
@@ -60,11 +69,21 @@ resource_identification:
       - 'alb'
       - 'nlb'
       
+    target_group:
+      - 'target group'
+      - 'alb target group'
+      - 'load balancer target'
+      
     auto_scaling_group:
       - 'auto scaling'
       - 'autoscaling'
       - 'scaling group'
       - 'asg'
+      
+    launch_template:
+      - 'launch template'
+      - 'ec2 launch template'
+      - 'instance template'
       
     internet_gateway:
       - 'internet gateway'
@@ -83,6 +102,17 @@ resource_identification:
       - 'ssh key'
       - 'ec2 key'
       
+    ami:
+      - 'ami'
+      - 'amazon machine image'
+      - 'image'
+      - 'machine image'
+      
+    availability_zone:
+      - 'availability zone'
+      - 'az'
+      - 'zone'
+      
     rds_instance:
       - 'rds'
       - 'database'
@@ -97,97 +127,99 @@ resource_identification:
 # These are verified against pkg/tools/factory.go
 tool_resource_patterns:
   vpc:
-    - 'create-vpc'
-    - 'list-vpcs'
-    - 'get-default-vpc'
+    - '^create-vpc$'
+    - '^list-vpcs$'
+    - '^get-default-vpc$'
     
   subnet:
-    - 'create-subnet'
-    - 'create-private-subnet'
-    - 'create-public-subnet'
-    - 'list-subnets'
-    - 'get-default-subnet'
-    - 'select-subnets-for-alb'
+    - '^create-subnet$'
+    - '^create-private-subnet$'
+    - '^create-public-subnet$'
+    - '^list-subnets$'
+    
+  subnets:
+    - '^list-subnets-for-alb$'
     
   security_group:
-    - 'create-security-group'
-    - 'list-security-groups'
-    - 'add-security-group-ingress-rule'
-    - 'add-security-group-egress-rule'
-    - 'delete-security-group'
+    - '^create-security-group$'
+    - '^list-security-groups$'
+    - '^add-security-group-ingress-rule$'
+    - '^add-security-group-egress-rule$'
+    - '^delete-security-group$'
     
   ec2_instance:
-    - 'create-ec2-instance'
-    - 'list-ec2-instances'
-    - 'start-ec2-instance'
-    - 'stop-ec2-instance'
-    - 'terminate-ec2-instance'
+    - '^create-ec2-instance$'
+    - '^list-ec2-instances$'
+    - '^start-ec2-instance$'
+    - '^stop-ec2-instance$'
+    - '^terminate-ec2-instance$'
     
   load_balancer:
-    - 'create-load-balancer'
-    - 'list-load-balancers'
+    - '^create-load-balancer$'
+    - '^list-load-balancers$'
     
   target_group:
-    - 'create-target-group'
-    - 'list-target-groups'
-    - 'register-targets'
-    - 'deregister-targets'
+    - '^create-target-group$'
+    - '^list-target-groups$'
+    - '^register-targets$'
+    - '^deregister-targets$'
     
   listener:
-    - 'create-listener'
+    - '^create-listener$'
     
   auto_scaling_group:
-    - 'create-auto-scaling-group'
-    - 'list-auto-scaling-groups'
+    - '^create-auto-scaling-group$'
+    - '^list-auto-scaling-groups$'
     
   launch_template:
-    - 'create-launch-template'
-    - 'list-launch-templates'
+    - '^create-launch-template$'
+    - '^list-launch-templates$'
     
   internet_gateway:
-    - 'create-internet-gateway'
+    - '^create-internet-gateway$'
     
   nat_gateway:
-    - 'create-nat-gateway'
-    - 'describe-nat-gateways'
+    - '^create-nat-gateway$'
+    - '^describe-nat-gateways$'
     
   route_table:
-    - 'create-public-route-table'
-    - 'create-private-route-table'
-    - 'associate-route-table'
-    - 'add-route'
+    - '^create-public-route-table$'
+    - '^create-private-route-table$'
+    - '^associate-route-table$'
+    - '^add-route$'
     
   key_pair:
-    - 'create-key-pair'
-    - 'list-key-pairs'
-    - 'get-key-pair'
-    - 'import-key-pair'
+    - '^create-key-pair$'
+    - '^list-key-pairs$'
+    - '^get-key-pair$'
+    - '^import-key-pair$'
     
   rds_instance:
-    - 'create-db-instance'
-    - 'list-db-instances'
-    - 'start-db-instance'
-    - 'stop-db-instance'
-    - 'delete-db-instance'
+    - '^create-db-instance$'
+    - '^list-db-instances$'
+    - '^start-db-instance$'
+    - '^stop-db-instance$'
+    - '^delete-db-instance$'
     
   db_subnet_group:
-    - 'create-db-subnet-group'
+    - '^create-db-subnet-group$'
     
   ami:
-    - 'get-latest-amazon-linux-ami'
-    - 'get-latest-ubuntu-ami'
-    - 'get-latest-windows-ami'
-    - 'list-amis'
-    - 'create-ami-from-instance'
+    - '^get-latest-amazon-linux-ami$'
+    - '^get-latest-ubuntu-ami$'
+    - '^get-latest-windows-ami$'
+    - '^list-amis$'
+    - '^create-ami-from-instance$'
     
   availability_zone:
-    - 'get-availability-zones'
+    - '^get-availability-zones$'
 
 # Resource hierarchy and relationships
 resource_relationships:
   # Parent -> Children mapping
   vpc:
     - subnet
+    - subnets
     - security_group  
     - internet_gateway
     - route_table
@@ -216,6 +248,7 @@ resource_relationships:
   # Dependencies (what this resource typically needs)
   dependencies:
     subnet: [vpc]
+    subnets: [vpc]
     security_group: [vpc]
     ec2_instance: [subnet, security_group, ami, key_pair]
     load_balancer: [subnet, security_group]
@@ -228,212 +261,12 @@ resource_relationships:
     route_table: [vpc]
     listener: [load_balancer, target_group]
 
-# Value Type Inference Patterns
-value_type_inference:
-  default_vpc:
-    description_patterns:
-      - "default.*vpc"
-      - "vpc.*default"
-    name_patterns:
-      - "default.*vpc"
-      - "vpc.*default"
-    required_terms: ["vpc"]
-    optional_terms: ["default"]
-
-  existing_vpc:
-    description_patterns:
-      - "existing.*vpc"
-      - "vpc.*id"
-    name_patterns:
-      - "existing.*vpc"
-      - "vpc.*id"
-    required_terms: ["vpc"]
-    optional_terms: ["existing", "id"]
-
-  default_subnet:
-    description_patterns:
-      - "default.*subnet"
-      - "subnet.*default"
-    name_patterns:
-      - "default.*subnet"
-      - "subnet.*default"
-    required_terms: ["subnet"]
-    optional_terms: ["default"]
-
-  subnets_in_vpc:
-    description_patterns:
-      - "subnet.*vpc"
-      - "subnets.*vpc"
-    name_patterns:
-      - "subnet.*vpc"
-      - "subnets.*vpc"
-    required_terms: ["subnet", "vpc"]
-    optional_terms: []
-
-  latest_ami:
-    description_patterns:
-      - "latest.*ami"
-      - "ami.*latest"
-      - "recent.*ami"
-    name_patterns:
-      - "latest.*ami"
-      - "ami.*latest"
-    required_terms: ["ami"]
-    optional_terms: ["latest", "recent"]
-
-  available_azs:
-    description_patterns:
-      - "availability.*zone"
-      - "available.*zone"
-    name_patterns:
-      - "availability.*zone"
-    required_terms: ["availability", "zone"]
-    optional_terms: []
-
-  select_subnets_for_alb:
-    description_patterns:
-      - "select.*subnet.*alb"
-      - "select.*subnet.*load.*balancer"
-      - "subnet.*across.*az"
-      - "subnets.*multiple.*zone"
-    name_patterns:
-      - "select.*subnet"
-      - "alb.*subnet"
-    required_terms: ["subnet"]
-    optional_terms: ["select", "alb", "load", "balancer", "across"]
-
-  load_balancer_arn:
-    description_patterns:
-      - "load.*balancer.*arn"
-      - "alb.*arn"
-    name_patterns:
-      - "load.*balancer.*arn"
-      - "alb.*arn"
-    required_terms: ["arn"]
-    optional_terms: ["load", "balancer"]
-
-  target_group_arn:
-    description_patterns:
-      - "target.*group.*arn"
-    name_patterns:
-      - "target.*group.*arn"
-    required_terms: ["target", "group", "arn"]
-    optional_terms: []
-
-  launch_template_id:
-    description_patterns:
-      - "launch.*template.*id"
-    name_patterns:
-      - "launch.*template.*id"
-    required_terms: ["launch", "template", "id"]
-    optional_terms: []
-
-  security_group_id_ref:
-    description_patterns:
-      - "security.*group.*id"
-    name_patterns:
-      - "security.*group.*id"
-    required_terms: ["security", "group", "id"]
-    optional_terms: []
-
-  db_subnet_group_name:
-    description_patterns:
-      - "db.*subnet.*group.*name"
-      - "database.*subnet.*group.*name"
-    name_patterns:
-      - "db.*subnet.*group.*name"
-    required_terms: ["subnet", "group", "name"]
-    optional_terms: ["db", "database"]
-
-  auto_scaling_group_name:
-    description_patterns:
-      - "auto.*scaling.*group"
-      - "asg"
-    name_patterns:
-      - "auto.*scaling.*group"
-      - "asg"
-    required_terms: ["auto", "scaling", "group"]
-    optional_terms: []
-
-  auto_scaling_group_arn:
-    description_patterns:
-      - "auto.*scaling.*group.*arn"
-      - "asg.*arn"
-    name_patterns:
-      - "asg.*arn"
-      - "auto.*scaling.*arn"
-    required_terms: ["arn"]
-    optional_terms: ["auto", "scaling", "group", "asg"]
-
-  rds_endpoint:
-    description_patterns:
-      - "rds.*endpoint"
-      - "database.*endpoint"
-      - "db.*endpoint"
-    name_patterns:
-      - "rds.*endpoint"
-      - "database.*endpoint"
-    required_terms: ["endpoint"]
-    optional_terms: ["rds", "database", "db"]
-
-  # State-based retrieval patterns
-  vpc_id:
-    description_patterns:
-      - "vpc.*id.*state"
-      - "retrieve.*vpc.*id"
-      - "existing.*vpc.*id"
-    name_patterns:
-      - "vpc.*id"
-    required_terms: ["vpc", "id"]
-    optional_terms: ["state", "retrieve", "existing"]
-
-  subnet_id:
-    description_patterns:
-      - "subnet.*id.*state"
-      - "retrieve.*subnet.*id"
-      - "existing.*subnet.*id"
-    name_patterns:
-      - "subnet.*id"
-    required_terms: ["subnet", "id"]
-    optional_terms: ["state", "retrieve", "existing"]
-
-  security_group_id:
-    description_patterns:
-      - "security.*group.*id.*state"
-      - "retrieve.*security.*group.*id"
-      - "existing.*security.*group"
-    name_patterns:
-      - "security.*group.*id"
-    required_terms: ["security", "group", "id"]
-    optional_terms: ["state", "retrieve", "existing"]
-
-  instance_id:
-    description_patterns:
-      - "instance.*id.*state"
-      - "retrieve.*instance.*id"
-      - "ec2.*id.*state"
-      - "existing.*instance"
-    name_patterns:
-      - "instance.*id"
-      - "ec2.*id"
-    required_terms: ["instance", "id"]
-    optional_terms: ["state", "retrieve", "existing", "ec2"]
-
-  existing_resource:
-    description_patterns:
-      - "existing.*resource"
-      - "retrieve.*resource.*state"
-      - "resource.*from.*state"
-    name_patterns:
-      - "existing.*resource"
-    required_terms: ["resource"]
-    optional_terms: ["existing", "retrieve", "state"]
-
 # Tool Category Mapping
 tool_categories:
   networking:
     - vpc
     - subnet
+    - subnets
     - internet_gateway
     - nat_gateway
     - route_table

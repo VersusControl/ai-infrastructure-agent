@@ -255,9 +255,6 @@ func (a *StateAwareAgent) setupMockMCPCapabilities() error {
 	}
 
 	a.mcpTools = mockTools
-	a.Logger.WithFields(map[string]interface{}{
-		"tool_count": len(mockTools),
-	}).Info("Mock MCP capabilities setup complete with real tools")
 
 	return nil
 }
@@ -536,6 +533,17 @@ func (a *StateAwareAgent) callMCPTool(name string, arguments map[string]interfac
 			return nil, fmt.Errorf("mock MCP tool call failed: %w", err)
 		}
 
+		// Check if the result is an error response
+		if result.IsError {
+			if len(result.Content) > 0 {
+				if textContent, ok := result.Content[0].(*mcp.TextContent); ok {
+					return nil, fmt.Errorf("MCP tool returned error: %s", textContent.Text)
+				}
+			}
+
+			return nil, fmt.Errorf("MCP tool returned error response")
+		}
+
 		// Convert the mcp.CallToolResult to the expected format
 		if len(result.Content) > 0 {
 			// Extract the first content item using robust content extraction
@@ -804,7 +812,6 @@ func (a *StateAwareAgent) AnalyzeInfrastructureState(ctx context.Context, scanLi
 	if a.config.EnableDebug {
 		a.Logger.WithFields(map[string]interface{}{
 			"analysis_text":    analysisText,
-			"scan_live":        scanLive,
 			"managed_count":    len(currentState.Resources),
 			"discovered_count": len(discoveredResources),
 			"drift_count":      len(driftDetections),
@@ -858,34 +865,45 @@ func (a *StateAwareAgent) PlanInfrastructureDeployment(ctx context.Context, targ
 }
 
 // VisualizeDependencyGraph calls the MCP server to visualize dependency graph
-func (a *StateAwareAgent) VisualizeDependencyGraph(ctx context.Context, format string, includeBottlenecks bool) (string, []string, error) {
+func (a *StateAwareAgent) VisualizeDependencyGraph(ctx context.Context, format string, includeBottlenecks bool, source string) (map[string]interface{}, error) {
 	result, err := a.callMCPTool("visualize-dependency-graph", map[string]interface{}{
 		"format":              format,
 		"include_bottlenecks": includeBottlenecks,
+		"source":              source,
 	})
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to visualize dependency graph: %w", err)
+		return nil, fmt.Errorf("failed to visualize dependency graph: %w", err)
 	}
 
-	// Extract visualization from response - it comes as text from MCP tool
-	visualization := ""
-	if text, exists := result["text"]; exists {
+	// Extract the complete response from MCP tool
+	// The tool can return data in two formats:
+	// 1. Direct map with visualization, graph, and metadata keys (from mock MCP server)
+	// 2. JSON string in "text" field (from real MCP server via stdio)
+	var graphResponse map[string]interface{}
+
+	// First, check if the result already has the expected keys (direct format)
+	if _, hasViz := result["visualization"]; hasViz {
+		graphResponse = result
+	} else if text, exists := result["text"]; exists {
+		// Otherwise, try to parse from text field
 		if textStr, ok := text.(string); ok {
-			visualization = textStr
-		}
-	} else if vis, exists := result["visualization"]; exists {
-		// Fallback: check for "visualization" field
-		if visStr, ok := vis.(string); ok {
-			visualization = visStr
+
+			// Parse the JSON response
+			if err := json.Unmarshal([]byte(textStr), &graphResponse); err != nil {
+				// If parsing fails, return the text as visualization only
+				a.Logger.WithError(err).Warn("Failed to parse graph response JSON, returning basic structure")
+				return map[string]interface{}{
+					"visualization": textStr,
+				}, nil
+			}
 		}
 	}
 
-	// Parse bottlenecks if included (for now, return empty since they're part of the text)
-	var bottlenecks []string
+	if len(graphResponse) == 0 {
+		return nil, fmt.Errorf("graph visualization returned empty response")
+	}
 
-	a.Logger.WithField("response", result).Info("Dependency graph visualization completed")
-
-	return visualization, bottlenecks, nil
+	return graphResponse, nil
 }
 
 // ExportInfrastructureState calls the MCP server to export infrastructure state

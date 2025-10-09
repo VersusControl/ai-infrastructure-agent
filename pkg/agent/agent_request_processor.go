@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/tmc/langchaingo/llms"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/types"
+	"github.com/versus-control/ai-infrastructure-agent/pkg/utilities"
 )
 
 // ========== Interface defines ==========
@@ -238,16 +240,44 @@ func (a *StateAwareAgent) validateDecision(decision *types.AgentDecision, contex
 
 	planValidActions := map[string]bool{
 		"create": true,
-		// "update":              true,
-		// "add":                 true,
-		// "delete":              true,
-		// "validate":            true,
-		"api_value_retrieval": true,
+		"query":  true,
+		// "validate": true,
+		// "update":   true,
+		// "delete":   true,
 	}
 
-	for _, planStep := range decision.ExecutionPlan {
+	// Get available MCP tools for validation
+	a.capabilityMutex.RLock()
+	availableTools := make(map[string]bool)
+	for toolName := range a.mcpTools {
+		availableTools[toolName] = true
+	}
+	a.capabilityMutex.RUnlock()
+
+	// Validate each plan step
+	for i, planStep := range decision.ExecutionPlan {
+		// Validate action type
 		if !planValidActions[planStep.Action] {
-			return fmt.Errorf("invalid plan action: %s", planStep.Action)
+			return fmt.Errorf("invalid plan action '%s' in step %d (%s)", planStep.Action, i+1, planStep.ID)
+		}
+
+		// Validate MCP tool exists if specified
+		if planStep.MCPTool != "" {
+			if !availableTools[planStep.MCPTool] {
+				// Get list of available tools for error message
+				availableToolsList := make([]string, 0, len(availableTools))
+				for tool := range availableTools {
+					availableToolsList = append(availableToolsList, tool)
+				}
+
+				return fmt.Errorf(
+					"invalid MCP tool '%s' in step %d (%s): tool not found in discovered capabilities. Available tools: %v",
+					planStep.MCPTool,
+					i+1,
+					planStep.ID,
+					availableToolsList,
+				)
+			}
 		}
 	}
 
@@ -364,7 +394,7 @@ func (a *StateAwareAgent) buildDecisionWithPlanPrompt(request string, context *D
 	}
 
 	// Load decision guidelines from template file
-	decisionTemplate, err := a.loadTemplate("settings/templates/decision-plan-prompt-ultra-optimized.txt")
+	decisionTemplate, err := a.loadTemplate("settings/templates/decision-plan-prompt-optimized.txt")
 	if err != nil {
 		a.Logger.WithError(err).Error("Failed to load decision template")
 		return "", fmt.Errorf("failed to load decision template: %w", err)
@@ -494,10 +524,28 @@ func (a *StateAwareAgent) parseAIResponseWithPlan(decisionID, request, response 
 
 // loadTemplate loads a template file from the filesystem
 func (a *StateAwareAgent) loadTemplate(templatePath string) (string, error) {
+	// Try to read from the given path first
 	data, err := os.ReadFile(templatePath)
 	if err != nil {
+		// If file not found then try to find project root and read from there
+		if os.IsNotExist(err) {
+			// Get current working directory
+			cwd, _ := os.Getwd()
+
+			// Try to find project root by looking for go.mod
+			projectRoot := utilities.FindProjectRoot(cwd)
+			if projectRoot != "" {
+				absolutePath := filepath.Join(projectRoot, templatePath)
+				data, err = os.ReadFile(absolutePath)
+				if err == nil {
+					return string(data), nil
+				}
+			}
+		}
+
 		return "", fmt.Errorf("failed to read template file %s: %w", templatePath, err)
 	}
+
 	return string(data), nil
 }
 

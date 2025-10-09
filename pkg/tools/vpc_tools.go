@@ -9,6 +9,7 @@ import (
 	"github.com/versus-control/ai-infrastructure-agent/pkg/adapters"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/aws"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/interfaces"
+	"github.com/versus-control/ai-infrastructure-agent/pkg/utilities"
 )
 
 // CreateVPCTool implements VPC creation using the VPC adapter
@@ -66,8 +67,8 @@ func (t *CreateVPCTool) Execute(ctx context.Context, arguments map[string]interf
 	// Extract parameters
 	cidrBlock, _ := arguments["cidrBlock"].(string)
 	name, _ := arguments["name"].(string)
-	enableDnsHostnames := getBoolValue(arguments, "enableDnsHostnames", true)
-	enableDnsSupport := getBoolValue(arguments, "enableDnsSupport", true)
+	enableDnsHostnames := utilities.GetBoolValue(arguments, "enableDnsHostnames", true)
+	enableDnsSupport := utilities.GetBoolValue(arguments, "enableDnsSupport", true)
 
 	// Build AWS parameters
 	createParams := aws.CreateVPCParams{
@@ -206,7 +207,7 @@ func (t *CreateSubnetTool) Execute(ctx context.Context, arguments map[string]int
 	cidrBlock, _ := arguments["cidrBlock"].(string)
 	availabilityZone, _ := arguments["availabilityZone"].(string)
 	name, _ := arguments["name"].(string)
-	mapPublicIpOnLaunch := getBoolValue(arguments, "mapPublicIpOnLaunch", false)
+	mapPublicIpOnLaunch := utilities.GetBoolValue(arguments, "mapPublicIpOnLaunch", false)
 
 	// Build AWS parameters
 	createParams := aws.CreateSubnetParams{
@@ -254,11 +255,17 @@ func NewGetDefaultVPCTool(awsClient *aws.Client, actionType string, logger *logg
 
 	baseTool := NewBaseTool(
 		"get-default-vpc",
-		"Get the default VPC in the current region",
+		"Get the default VPC ID in the current region. IMPORTANT: This tool ONLY returns the VPC ID (vpcId field). It does NOT return subnet IDs.",
 		"networking",
 		actionType,
 		inputSchema,
 		logger,
+	)
+
+	baseTool.AddExample(
+		"Get default VPC (returns ONLY vpcId, NOT subnets)",
+		map[string]interface{}{},
+		"Successfully retrieved default VPC vpc-12345678. Returns: { vpcId: \"vpc-12345678\" }.",
 	)
 
 	return &GetDefaultVPCTool{
@@ -291,67 +298,4 @@ func (t *GetDefaultVPCTool) Execute(ctx context.Context, arguments map[string]in
 	}
 
 	return t.CreateSuccessResponse(message, data)
-}
-
-// GetDefaultSubnetTool implements getting the default subnet using the Subnet adapter
-type GetDefaultSubnetTool struct {
-	*BaseTool
-	client *aws.Client
-}
-
-// NewGetDefaultSubnetTool creates a new get default subnet tool
-func NewGetDefaultSubnetTool(awsClient *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	inputSchema := map[string]interface{}{
-		"type":       "object",
-		"properties": map[string]interface{}{},
-	}
-
-	baseTool := NewBaseTool(
-		"get-default-subnet",
-		"Get the default subnet in the current region",
-		"networking",
-		actionType,
-		inputSchema,
-		logger,
-	)
-
-	return &GetDefaultSubnetTool{
-		BaseTool: baseTool,
-		client:   awsClient,
-	}
-}
-
-// Execute gets the default subnet using the AWS client
-func (t *GetDefaultSubnetTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	// Get default subnet info using AWS client
-	subnetInfo, err := t.client.GetDefaultSubnet(ctx)
-	if err != nil {
-		return t.CreateErrorResponse(fmt.Sprintf("Failed to get default subnet: %s", err.Error()))
-	}
-
-	// Get full subnet details using the adapter
-	adapter := adapters.NewSubnetAdapter(t.client, t.logger)
-	subnet, err := adapter.Get(ctx, subnetInfo.SubnetID)
-	if err != nil {
-		return t.CreateErrorResponse(fmt.Sprintf("Failed to get subnet details for %s: %s", subnetInfo.SubnetID, err.Error()))
-	}
-
-	// Return success result with structured data
-	message := fmt.Sprintf("Successfully retrieved default subnet %s in VPC %s", subnet.ID, subnetInfo.VpcID)
-	data := map[string]interface{}{
-		"subnetId": subnet.ID,
-		"vpcId":    subnetInfo.VpcID,
-		"subnet":   subnet,
-		"resource": subnet,
-	}
-
-	return t.CreateSuccessResponse(message, data)
-}
-
-// Helper function for boolean values
-func getBoolValue(params map[string]interface{}, key string, defaultValue bool) bool {
-	if value, ok := params[key].(bool); ok {
-		return value
-	}
-	return defaultValue
 }

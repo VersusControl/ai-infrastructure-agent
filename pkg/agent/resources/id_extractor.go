@@ -1,6 +1,7 @@
 package resources
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -144,6 +145,13 @@ func (e *IDExtractor) extractFromPath(data map[string]interface{}, path string) 
 		if i == len(parts)-1 {
 			// Last part - return the value
 			if value, ok := current[part]; ok {
+				// Check if the value is an array - serialize it as JSON
+				if arrayValue, isArray := value.([]interface{}); isArray {
+					jsonBytes, err := json.Marshal(arrayValue)
+					if err == nil {
+						return string(jsonBytes)
+					}
+				}
 				return fmt.Sprintf("%v", value)
 			}
 		} else {

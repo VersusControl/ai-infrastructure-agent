@@ -41,14 +41,18 @@ func NewCreateDBSubnetGroupTool(awsClient *aws.Client, actionType string, logger
 		"required": []string{"dbSubnetGroupName", "description", "subnetIds"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-db-subnet-group",
+		"Create a new DB subnet group",
+		"database",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreateDBSubnetGroupTool{
-		BaseTool: &BaseTool{
-			name:        "create-db-subnet-group",
-			description: "Create a new DB subnet group",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewRDSSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewRDSSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -133,14 +137,18 @@ func NewCreateDBInstanceTool(awsClient *aws.Client, actionType string, logger *l
 		"required": []string{"dbInstanceIdentifier", "masterUsername", "masterUserPassword"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-db-instance",
+		"Create a new RDS DB instance",
+		"database",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreateDBInstanceTool{
-		BaseTool: &BaseTool{
-			name:        "create-db-instance",
-			description: "Create a new RDS DB instance",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewRDSSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewRDSSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -208,14 +216,18 @@ func NewStartDBInstanceTool(awsClient *aws.Client, actionType string, logger *lo
 		"required": []string{"dbInstanceIdentifier"},
 	}
 
+	baseTool := NewBaseTool(
+		"start-db-instance",
+		"Start a stopped DB instance",
+		"database",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &StartDBInstanceTool{
-		BaseTool: &BaseTool{
-			name:        "start-db-instance",
-			description: "Start a stopped DB instance",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewRDSSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewRDSSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -260,14 +272,18 @@ func NewStopDBInstanceTool(awsClient *aws.Client, actionType string, logger *log
 		"required": []string{"dbInstanceIdentifier"},
 	}
 
+	baseTool := NewBaseTool(
+		"stop-db-instance",
+		"Stop a running DB instance",
+		"database",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &StopDBInstanceTool{
-		BaseTool: &BaseTool{
-			name:        "stop-db-instance",
-			description: "Stop a running DB instance",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewRDSSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewRDSSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -317,14 +333,18 @@ func NewDeleteDBInstanceTool(awsClient *aws.Client, actionType string, logger *l
 		"required": []string{"dbInstanceIdentifier"},
 	}
 
+	baseTool := NewBaseTool(
+		"delete-db-instance",
+		"Delete a DB instance",
+		"database",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &DeleteDBInstanceTool{
-		BaseTool: &BaseTool{
-			name:        "delete-db-instance",
-			description: "Delete a DB instance",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewRDSSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewRDSSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -380,14 +400,18 @@ func NewCreateDBSnapshotTool(awsClient *aws.Client, actionType string, logger *l
 		"required": []string{"dbInstanceIdentifier", "dbSnapshotIdentifier"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-db-snapshot",
+		"Create a snapshot of a DB instance",
+		"database",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreateDBSnapshotTool{
-		BaseTool: &BaseTool{
-			name:        "create-db-snapshot",
-			description: "Create a snapshot of a DB instance",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewRDSSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewRDSSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -506,14 +530,18 @@ func NewListDBSnapshotsTool(awsClient *aws.Client, actionType string, logger *lo
 		},
 	}
 
+	baseTool := NewBaseTool(
+		"list-db-snapshots",
+		"List all DB snapshots",
+		"database",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &ListDBSnapshotsTool{
-		BaseTool: &BaseTool{
-			name:        "list-db-snapshots",
-			description: "List all DB snapshots",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewRDSSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewRDSSpecializedAdapter(awsClient, logger),
 	}
 }
 

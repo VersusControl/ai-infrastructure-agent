@@ -13,6 +13,7 @@ import (
 	"github.com/versus-control/ai-infrastructure-agent/pkg/aws"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/interfaces"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/types"
+	"github.com/versus-control/ai-infrastructure-agent/pkg/utilities"
 )
 
 // =============================================================================
@@ -109,7 +110,7 @@ func (t *AnalyzeStateTool) Execute(ctx context.Context, arguments map[string]int
 		}
 	}
 
-	scanLive := getBoolValue(arguments, "scan_live", true)
+	scanLive := utilities.GetBoolValue(arguments, "scan_live", true)
 
 	// Get resource filter if provided
 	var resourceFilter map[string]bool
@@ -310,8 +311,8 @@ func (t *ExportStateTool) Execute(ctx context.Context, arguments map[string]inte
 		format = "json"
 	}
 
-	includeDiscovered := getBoolValue(arguments, "include_discovered", false)
-	includeManaged := getBoolValue(arguments, "include_managed", true)
+	includeDiscovered := utilities.GetBoolValue(arguments, "include_discovered", false)
+	includeManaged := utilities.GetBoolValue(arguments, "include_managed", true)
 
 	// Get resource filter if provided
 	var resourceFilter map[string]bool
@@ -325,15 +326,6 @@ func (t *ExportStateTool) Execute(ctx context.Context, arguments map[string]inte
 			}
 		}
 	}
-
-	t.GetLogger().WithFields(map[string]interface{}{
-		"format":             format,
-		"include_discovered": includeDiscovered,
-		"include_managed":    includeManaged,
-		"resource_filter":    resourceFilter,
-		"deps_nil":           t.deps == nil,
-		"state_manager_nil":  t.deps == nil || t.deps.StateManager == nil,
-	}).Info("Exporting infrastructure state")
 
 	// Create structured data for export
 	exportData := map[string]interface{}{
@@ -567,6 +559,12 @@ func NewVisualizeDependencyGraphTool(deps *ToolDependencies, actionType string, 
 				"description": "Include bottleneck analysis",
 				"default":     true,
 			},
+			"source": map[string]interface{}{
+				"type":        "string",
+				"description": "Source of resources: 'state' (from state file, default) or 'live' (discover from AWS)",
+				"enum":        []string{"state", "live"},
+				"default":     "state",
+			},
 		},
 	}
 
@@ -580,12 +578,23 @@ func NewVisualizeDependencyGraphTool(deps *ToolDependencies, actionType string, 
 	)
 
 	baseTool.AddExample(
-		"Generate text dependency graph",
+		"Generate text dependency graph from state file",
 		map[string]interface{}{
 			"format":              "text",
 			"include_bottlenecks": true,
+			"source":              "state",
 		},
-		"Dependency graph generated with bottleneck analysis",
+		"Dependency graph generated from state file with bottleneck analysis",
+	)
+
+	baseTool.AddExample(
+		"Generate Mermaid dependency graph from live AWS",
+		map[string]interface{}{
+			"format":              "mermaid",
+			"include_bottlenecks": true,
+			"source":              "live",
+		},
+		"Mermaid diagram generated from live AWS discovery with bottleneck analysis",
 	)
 
 	return &VisualizeDependencyGraphTool{
@@ -611,29 +620,34 @@ func (t *VisualizeDependencyGraphTool) ValidateArguments(args map[string]interfa
 			return fmt.Errorf("include_bottlenecks must be a boolean")
 		}
 	}
+
+	if source, exists := args["source"]; exists {
+		if sourceStr, ok := source.(string); ok {
+			if sourceStr != "state" && sourceStr != "live" {
+				return fmt.Errorf("source must be 'state' or 'live'")
+			}
+		} else {
+			return fmt.Errorf("source must be a string")
+		}
+	}
+
 	return nil
 }
 
 // Execute performs the dependency graph visualization
 func (t *VisualizeDependencyGraphTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
-	format := "text"
-	if val, ok := args["format"].(string); ok {
-		format = val
-	}
-
 	includeBottlenecks := true
 	if val, ok := args["include_bottlenecks"].(bool); ok {
 		includeBottlenecks = val
 	}
 
-	t.GetLogger().WithFields(map[string]interface{}{
-		"format":              format,
-		"include_bottlenecks": includeBottlenecks,
-	}).Info("Visualizing dependency graph")
+	source := "state" // default to state file
+	if val, ok := args["source"].(string); ok {
+		source = val
+	}
 
 	// Check if advanced dependencies are available
-	if t.deps == nil || t.deps.DiscoveryScanner == nil || t.deps.GraphManager == nil || t.deps.GraphAnalyzer == nil {
-		t.GetLogger().Warn("Advanced dependency graph dependencies not available")
+	if t.deps == nil || t.deps.GraphManager == nil || t.deps.GraphAnalyzer == nil {
 
 		// Return a basic response indicating dependency graph visualization requires advanced tools
 		return &mcp.CallToolResult{
@@ -645,41 +659,189 @@ func (t *VisualizeDependencyGraphTool) Execute(ctx context.Context, args map[str
 		}, nil
 	}
 
-	// Discover infrastructure to build graph
-	discoveredResources, err := t.deps.DiscoveryScanner.DiscoverInfrastructure(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to discover infrastructure: %w", err)
+	// Get resources based on source parameter
+	var stateResources []*types.ResourceState
+
+	if source == "live" {
+		// Live AWS discovery mode
+
+		if t.deps.DiscoveryScanner == nil {
+			return nil, fmt.Errorf("discovery scanner not available for live mode")
+		}
+
+		discoveredResources, err := t.deps.DiscoveryScanner.DiscoverInfrastructure(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to discover infrastructure: %w", err)
+		}
+		stateResources = discoveredResources
+
+	} else {
+		// State file mode (default)
+
+		if t.deps.StateManager == nil {
+			return nil, fmt.Errorf("state manager not available for state mode")
+		}
+
+		// Load fresh state from file
+		if err := t.deps.StateManager.LoadState(ctx); err != nil {
+			return nil, fmt.Errorf("failed to load state from file: %w", err)
+		}
+
+		// Get all resources from state
+		state := t.deps.StateManager.GetState()
+		if state != nil && state.Resources != nil {
+			// Build mapping from step_reference IDs to actual resource IDs
+			stepToResourceMap := make(map[string]string)
+
+			for _, res := range state.Resources {
+				if res.Type == "step_reference" {
+					// Extract actual resource ID from step_reference using helper
+					actualResourceID, err := ExtractResourceIDFromStepReference(res)
+					if err != nil {
+						return nil, fmt.Errorf("failed to extract resource ID from step reference %s: %w", res.ID, err)
+					}
+					if actualResourceID != "" {
+						stepToResourceMap[res.ID] = actualResourceID
+					}
+				}
+			}
+
+			// Collect resources and resolve dependencies
+			for _, res := range state.Resources {
+				// Filter out step_reference type resources
+				if res.Type != "step_reference" {
+					// Resolve dependencies from step IDs to actual resource IDs
+					resolvedDeps := make([]string, 0, len(res.Dependencies))
+					for _, depID := range res.Dependencies {
+						if actualID, exists := stepToResourceMap[depID]; exists {
+							resolvedDeps = append(resolvedDeps, actualID)
+						} else {
+							// Keep original dependency if no mapping found
+							resolvedDeps = append(resolvedDeps, depID)
+						}
+					}
+
+					// Create a copy with resolved dependencies
+					resolvedResource := *res
+					resolvedResource.Dependencies = resolvedDeps
+					stateResources = append(stateResources, &resolvedResource)
+				}
+			}
+		}
 	}
 
 	// Build dependency graph
-	if err := t.deps.GraphManager.BuildGraph(ctx, discoveredResources); err != nil {
+	if err := t.deps.GraphManager.BuildGraph(ctx, stateResources); err != nil {
 		return nil, fmt.Errorf("failed to build dependency graph: %w", err)
 	}
 
 	analyzer := t.deps.GraphAnalyzer
-	var visualization string
+	visualization := analyzer.GenerateMermaidDiagram()
 
-	switch format {
-	case "mermaid":
-		visualization = analyzer.GenerateMermaidDiagram()
-	default:
-		visualization = analyzer.GenerateTextualRepresentation()
-	}
+	// Build structured graph data (nodes and edges)
+	nodes := make([]map[string]interface{}, 0)
+	edges := make([]map[string]interface{}, 0)
+	nodeMap := make(map[string]bool)
+	resourceTypeCounts := make(map[string]int)
+	dependentCounts := make(map[string]int)
 
-	if includeBottlenecks {
-		bottlenecks := analyzer.FindBottlenecks()
-		if len(bottlenecks) > 0 {
-			visualization += "\n\nBottlenecks:\n"
-			for _, bottleneck := range bottlenecks {
-				visualization += fmt.Sprintf("- %v\n", bottleneck)
+	// First pass: create nodes
+	for _, resource := range stateResources {
+		if resource.ID == "" {
+			continue
+		}
+
+		nodeMap[resource.ID] = true
+		resourceTypeCounts[resource.Type]++
+
+		node := map[string]interface{}{
+			"id":     resource.ID,
+			"type":   resource.Type,
+			"status": resource.Status,
+		}
+
+		// Add name if available
+		if resource.Name != "" {
+			node["name"] = resource.Name
+		} else if name, ok := resource.Properties["name"]; ok {
+			if nameStr, ok := name.(string); ok && nameStr != "" {
+				node["name"] = nameStr
 			}
 		}
+
+		// Add tags if available
+		if len(resource.Tags) > 0 {
+			node["tags"] = resource.Tags
+		} else if tags, ok := resource.Properties["tags"]; ok {
+			node["tags"] = tags
+		}
+
+		nodes = append(nodes, node)
+	}
+
+	// Second pass: create edges and count dependents
+	for _, resource := range stateResources {
+		if resource.ID == "" {
+			continue
+		}
+
+		for _, depID := range resource.Dependencies {
+			if depID == "" {
+				continue
+			}
+
+			// Only create edge if both nodes exist
+			if nodeMap[resource.ID] && nodeMap[depID] {
+				edges = append(edges, map[string]interface{}{
+					"source": resource.ID,
+					"target": depID,
+				})
+				dependentCounts[depID]++
+			}
+		}
+	}
+
+	// Get bottlenecks from analyzer and merge with dependent counts
+	var bottlenecksData []map[string]interface{}
+	if includeBottlenecks {
+		bottlenecks := analyzer.FindBottlenecks()
+		bottlenecksData = make([]map[string]interface{}, 0, len(bottlenecks))
+		for _, b := range bottlenecks {
+			bottlenecksData = append(bottlenecksData, map[string]interface{}{
+				"resourceId":     b.ResourceID,
+				"resourceType":   b.ResourceType,
+				"dependentCount": b.DependentCount,
+				"dependents":     b.Dependents,
+				"impact":         b.Impact,
+			})
+		}
+	}
+
+	// Build complete response structure
+	responseData := map[string]interface{}{
+		"visualization": visualization,
+		"graph": map[string]interface{}{
+			"nodes": nodes,
+			"edges": edges,
+		},
+		"metadata": map[string]interface{}{
+			"nodeCount":          len(nodes),
+			"edgeCount":          len(edges),
+			"resourceTypeCounts": resourceTypeCounts,
+			"bottlenecks":        bottlenecksData,
+		},
+	}
+
+	// Convert to JSON and return as text content
+	responseJSON, err := json.Marshal(responseData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal graph response: %w", err)
 	}
 
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			&mcp.TextContent{
-				Text: visualization,
+				Text: string(responseJSON),
 			},
 		},
 	}, nil

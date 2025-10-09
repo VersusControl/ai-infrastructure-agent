@@ -31,8 +31,6 @@ cp config.bedrock.yaml.example config.yaml
 ### Step 3: Run with Docker
 
 ```bash
-# Build and start the container
-docker build -t ai-infrastructure-agent .
 docker run -d \
   -p 8080:8080 \
   -v $(pwd)/config.yaml:/app/config.yaml \

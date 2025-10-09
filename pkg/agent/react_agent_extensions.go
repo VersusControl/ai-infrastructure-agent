@@ -55,7 +55,7 @@ func (a *StateAwareAgent) ExecuteStepWithRecoveryAndCoordinator(
 	// Note: step_started message is already sent by the main execution loop
 
 	startTime := time.Now()
-	step, err := a.executeExecutionStep(ctx, planStep, execution, progressChan)
+	step, err := a.executeExecutionStep(planStep, execution, progressChan)
 
 	if err == nil {
 		// Success on first attempt - send completion message
@@ -273,7 +273,7 @@ func (a *StateAwareAgent) ExecuteStepWithRecoveryAndCoordinator(
 	}
 
 	// Fallback to original behavior if no coordinator
-	return a.executeExecutionStep(ctx, planStep, execution, progressChan)
+	return a.executeExecutionStep(planStep, execution, progressChan)
 }
 
 // ConsultAIForRecovery asks the AI model for recovery advice
@@ -465,7 +465,7 @@ func (a *StateAwareAgent) executeMultiStepRecovery(ctx context.Context, modified
 	}
 
 	// Single step recovery - use normal execution
-	return a.executeExecutionStep(ctx, modifiedStep, execution, progressChan)
+	return a.executeExecutionStep(modifiedStep, execution, progressChan)
 }
 
 // executeMultiStepRecoveryPlan executes a multi-step recovery plan designed by AI
@@ -503,7 +503,7 @@ func (a *StateAwareAgent) executeMultiStepRecoveryPlan(ctx context.Context, modi
 
 		// Execute this recovery step using the main execution system
 		// This automatically handles dependency resolution using resolveDependencyReference()
-		executedStep, err := a.executeExecutionStep(ctx, recoveryExecStep, execution, progressChan)
+		executedStep, err := a.executeExecutionStep(recoveryExecStep, execution, progressChan)
 		if err != nil {
 			return nil, fmt.Errorf("recovery step %d (%s) failed: %w", stepNum, recoveryStepID, err)
 		}

@@ -58,13 +58,17 @@ func NewCreateLoadBalancerTool(awsClient *aws.Client, actionType string, logger 
 		"required": []string{"name"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-load-balancer",
+		"Create a new application load balancer",
+		"load-balancer",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreateLoadBalancerTool{
-		BaseTool: &BaseTool{
-			name:        "create-load-balancer",
-			description: "Create a new application load balancer",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
+		BaseTool:  baseTool,
 		adapter:   adapters.NewALBSpecializedAdapter(awsClient, logger),
 		awsClient: awsClient,
 	}
@@ -92,7 +96,6 @@ func (t *CreateLoadBalancerTool) Execute(ctx context.Context, arguments map[stri
 	// Handle case where subnetIds might be passed as a JSON string (from dependency resolution)
 	if len(subnetIds) == 0 {
 		if subnetIdsStr, ok := arguments["subnetIds"].(string); ok && subnetIdsStr != "" {
-			t.logger.WithField("subnetIds_string", subnetIdsStr).Debug("Received subnetIds as string, attempting to parse as JSON")
 
 			// Try to parse as JSON array
 			var parsedSubnetIds []string
@@ -116,7 +119,7 @@ func (t *CreateLoadBalancerTool) Execute(ctx context.Context, arguments map[stri
 		t.logger.Info("Insufficient subnets provided, auto-selecting subnets for ALB creation")
 
 		// Create the subnet selection tool and call it
-		subnetSelector := NewSelectSubnetsForALBTool(t.awsClient, "query", t.logger)
+		subnetSelector := NewListSubnetsForALBTool(t.awsClient, "query", t.logger)
 		selectionArgs := map[string]interface{}{
 			"scheme": scheme,
 		}
@@ -141,10 +144,6 @@ func (t *CreateLoadBalancerTool) Execute(ctx context.Context, arguments map[stri
 
 		// Extract subnet IDs from the selection result
 		if len(selectionResult.Content) > 0 {
-			t.logger.WithFields(map[string]interface{}{
-				"content_type": fmt.Sprintf("%T", selectionResult.Content[0]),
-				"content":      selectionResult.Content[0],
-			}).Debug("Analyzing subnet selection response content type")
 
 			// Try multiple approaches to extract text content
 			var textData string
@@ -154,25 +153,19 @@ func (t *CreateLoadBalancerTool) Execute(ctx context.Context, arguments map[stri
 			if textContent, ok := selectionResult.Content[0].(*mcp.TextContent); ok {
 				textData = textContent.Text
 				extractSuccess = true
-				t.logger.Debug("Successfully extracted text using TextContent type assertion")
 			} else if textContent, ok := selectionResult.Content[0].(mcp.TextContent); ok {
 				// Approach 2: Try value type assertion
 				textData = textContent.Text
 				extractSuccess = true
-				t.logger.Debug("Successfully extracted text using TextContent value assertion")
 			} else {
 				// Approach 3: Try to extract from any content with Text field
 				if contentInterface, ok := selectionResult.Content[0].(interface{ GetText() string }); ok {
 					textData = contentInterface.GetText()
 					extractSuccess = true
-					t.logger.Debug("Successfully extracted text using GetText method")
 				}
 			}
 
 			if extractSuccess {
-				t.logger.WithFields(map[string]interface{}{
-					"response_text": textData,
-				}).Debug("Parsing subnet selection response")
 
 				// Parse the JSON response to extract subnet IDs
 				var resultData map[string]interface{}
@@ -204,17 +197,12 @@ func (t *CreateLoadBalancerTool) Execute(ctx context.Context, arguments map[stri
 				return t.CreateErrorResponse("Invalid content type in subnet selection response")
 			}
 		} else {
-			t.logger.Error("Empty selection result content")
 			return t.CreateErrorResponse("Empty response from subnet selection")
 		}
 
 		// Re-validate that we now have sufficient subnets
 		subnetIds, _ = arguments["subnetIds"].([]interface{})
 		if len(subnetIds) < 2 {
-			t.logger.WithFields(map[string]interface{}{
-				"subnets_after_autoselect": len(subnetIds),
-				"required_minimum":         2,
-			}).Error("Auto-selection provided insufficient subnets")
 			return t.CreateErrorResponse(fmt.Sprintf("Failed to auto-select sufficient subnets for ALB creation. Got %d subnets, need at least 2", len(subnetIds)))
 		}
 	}
@@ -296,14 +284,18 @@ func NewCreateTargetGroupTool(awsClient *aws.Client, actionType string, logger *
 		"required": []string{"name", "vpcId"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-target-group",
+		"Create a new target group",
+		"load-balancer",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreateTargetGroupTool{
-		BaseTool: &BaseTool{
-			name:        "create-target-group",
-			description: "Create a new target group",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewALBSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewALBSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -390,14 +382,18 @@ func NewCreateListenerTool(awsClient *aws.Client, actionType string, logger *log
 		"required": []string{"loadBalancerArn", "targetGroupArn"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-listener",
+		"Create a new listener for a load balancer",
+		"load-balancer",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreateListenerTool{
-		BaseTool: &BaseTool{
-			name:        "create-listener",
-			description: "Create a new listener for a load balancer",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewALBSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewALBSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -629,14 +625,18 @@ func NewRegisterTargetsTool(awsClient *aws.Client, actionType string, logger *lo
 		"required": []interface{}{"targetGroupArn", "targetIds"},
 	}
 
+	baseTool := NewBaseTool(
+		"register-targets",
+		"Register targets with a load balancer target group",
+		"load-balancer",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &RegisterTargetsTool{
-		BaseTool: &BaseTool{
-			name:        "register-targets",
-			description: "Register targets with a load balancer target group",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewALBSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewALBSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -710,14 +710,18 @@ func NewDeregisterTargetsTool(awsClient *aws.Client, actionType string, logger *
 		"required": []interface{}{"targetGroupArn", "targetIds"},
 	}
 
+	baseTool := NewBaseTool(
+		"deregister-targets",
+		"Deregister targets from a load balancer target group",
+		"load-balancer",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &DeregisterTargetsTool{
-		BaseTool: &BaseTool{
-			name:        "deregister-targets",
-			description: "Deregister targets from a load balancer target group",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewALBSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewALBSpecializedAdapter(awsClient, logger),
 	}
 }
 

@@ -241,7 +241,7 @@ func NewListSubnetsTool(awsClient *aws.Client, actionType string, logger *loggin
 
 	baseTool := NewBaseTool(
 		"list-subnets",
-		"List all subnets",
+		"List subnets in the current region to get subnet IDs. IMPORTANT: Returns ONLY subnet information (subnetId, subnet_ids, subnets).",
 		"networking",
 		actionType,
 		inputSchema,
@@ -251,7 +251,7 @@ func NewListSubnetsTool(awsClient *aws.Client, actionType string, logger *loggin
 	baseTool.AddExample(
 		"List all subnets",
 		map[string]interface{}{},
-		"Found 5 subnets",
+		"Found 5 subnets. Returns: { subnetId: \"subnet-xxx\" (first subnet), subnet_ids: [array of all subnet IDs], subnets: [detailed info] }",
 	)
 
 	baseTool.AddExample(
@@ -259,7 +259,7 @@ func NewListSubnetsTool(awsClient *aws.Client, actionType string, logger *loggin
 		map[string]interface{}{
 			"vpcId": "vpc-12345678",
 		},
-		"Found 3 subnets in VPC vpc-12345678",
+		"Found 3 subnets in VPC vpc-12345678. Use {{step-id.subnetId}} to reference the first subnet ID in subsequent steps.",
 	)
 
 	// Cast to SubnetAdapter for type safety
@@ -314,8 +314,7 @@ func (t *ListSubnetsTool) Execute(ctx context.Context, arguments map[string]inte
 	}
 
 	if vpcID != "" {
-		data["vpcId"] = vpcID  // VPC ID
-		data["vpc_id"] = vpcID // Alternative format for consistency
+		data["vpcId"] = vpcID // VPC ID
 	}
 
 	return t.CreateSuccessResponse(message, data)
@@ -334,7 +333,7 @@ func NewCreateInternetGatewayTool(awsClient *aws.Client, actionType string, logg
 		"properties": map[string]interface{}{
 			"vpcId": map[string]interface{}{
 				"type":        "string",
-				"description": "The VPC ID to attach the internet gateway to",
+				"description": "The VPC ID where the internet gateway will be created and attached",
 			},
 			"name": map[string]interface{}{
 				"type":        "string",
@@ -346,7 +345,7 @@ func NewCreateInternetGatewayTool(awsClient *aws.Client, actionType string, logg
 
 	baseTool := NewBaseTool(
 		"create-internet-gateway",
-		"Create and attach an internet gateway to a VPC",
+		"Create an internet gateway and automatically attach it to the specified VPC in a single operation. NOTE: There is no separate attach operation needed.",
 		"networking",
 		actionType,
 		inputSchema,
@@ -426,14 +425,18 @@ func NewCreateNATGatewayTool(awsClient *aws.Client, actionType string, logger *l
 		"required": []string{"subnetId"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-nat-gateway",
+		"Create a NAT gateway and automatically allocate an Elastic IP for it in a single operation. The Elastic IP is allocated internally - no separate allocation step is needed.",
+		"networking",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreateNATGatewayTool{
-		BaseTool: &BaseTool{
-			name:        "create-nat-gateway",
-			description: "Create a new NAT gateway",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewVPCSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewVPCSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -486,14 +489,18 @@ func NewCreatePublicRouteTableTool(awsClient *aws.Client, actionType string, log
 		"required": []string{"vpcId"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-public-route-table",
+		"Create a new public route table",
+		"networking",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreatePublicRouteTableTool{
-		BaseTool: &BaseTool{
-			name:        "create-public-route-table",
-			description: "Create a new public route table",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewVPCSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewVPCSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -547,14 +554,18 @@ func NewCreatePrivateRouteTableTool(awsClient *aws.Client, actionType string, lo
 		"required": []string{"vpcId"},
 	}
 
+	baseTool := NewBaseTool(
+		"create-private-route-table",
+		"Create a new private route table",
+		"networking",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &CreatePrivateRouteTableTool{
-		BaseTool: &BaseTool{
-			name:        "create-private-route-table",
-			description: "Create a new private route table",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewVPCSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewVPCSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -615,14 +626,18 @@ func NewAssociateRouteTableTool(awsClient *aws.Client, actionType string, logger
 		"required": []string{"routeTableId", "subnetId"},
 	}
 
+	baseTool := NewBaseTool(
+		"associate-route-table",
+		"Associate a route table with a subnet",
+		"networking",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &AssociateRouteTableTool{
-		BaseTool: &BaseTool{
-			name:        "associate-route-table",
-			description: "Associate a route table with a subnet",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewVPCSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewVPCSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -688,14 +703,18 @@ func NewAddRouteTool(awsClient *aws.Client, actionType string, logger *logging.L
 		"required": []string{"routeTableId", "destinationCidrBlock"},
 	}
 
+	baseTool := NewBaseTool(
+		"add-route",
+		"Add a route to a route table. Use this to attach internet gateways (IGW) to public route tables or NAT gateways to private route tables.",
+		"networking",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
 	return &AddRouteTool{
-		BaseTool: &BaseTool{
-			name:        "add-route",
-			description: "Add a route to a route table",
-			inputSchema: inputSchema,
-			logger:      logger,
-		},
-		adapter: adapters.NewVPCSpecializedAdapter(awsClient, logger),
+		BaseTool: baseTool,
+		adapter:  adapters.NewVPCSpecializedAdapter(awsClient, logger),
 	}
 }
 
@@ -774,8 +793,8 @@ type SelectSubnetsForALBTool struct {
 	awsClient *aws.Client
 }
 
-// NewSelectSubnetsForALBTool creates a new subnet selection tool for ALB
-func NewSelectSubnetsForALBTool(awsClient *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+// NewListSubnetsForALBTool creates a new subnet selection tool for ALB
+func NewListSubnetsForALBTool(awsClient *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
 	inputSchema := map[string]interface{}{
 		"type": "object",
 		"properties": map[string]interface{}{
@@ -792,7 +811,7 @@ func NewSelectSubnetsForALBTool(awsClient *aws.Client, actionType string, logger
 	}
 
 	baseTool := NewBaseTool(
-		"select-subnets-for-alb",
+		"list-subnets-for-alb",
 		"Select at least two subnets in different Availability Zones for ALB creation",
 		"networking",
 		actionType,
@@ -829,16 +848,9 @@ func (t *SelectSubnetsForALBTool) Execute(ctx context.Context, arguments map[str
 		scheme = "internet-facing"
 	}
 
-	// Get VPC ID with logging
 	vpcID, exists := arguments["vpcId"].(string)
 	if !exists || vpcID == "" {
-		t.logger.WithField("arguments", arguments).Warn("No VPC ID provided, falling back to default VPC")
-		// Get default VPC
-		defaultVPC, err := t.awsClient.GetDefaultVPC(ctx)
-		if err != nil {
-			return t.CreateErrorResponse(fmt.Sprintf("Failed to get default VPC: %v", err))
-		}
-		vpcID = defaultVPC
+		return t.CreateErrorResponse(fmt.Sprintln("No VPC ID provided for the ALB."))
 	}
 
 	// Get all subnets in the VPC
@@ -847,41 +859,15 @@ func (t *SelectSubnetsForALBTool) Execute(ctx context.Context, arguments map[str
 		return t.CreateErrorResponse(fmt.Sprintf("Failed to describe subnets: %v", err))
 	}
 
-	t.logger.WithFields(map[string]interface{}{
-		"total_subnets": len(subnets),
-		"vpcId":         vpcID,
-		"scheme":        scheme,
-	}).Info("Starting subnet selection for ALB")
-
 	// Filter subnets by VPC and collect by availability zone
 	subnetsByAZ := make(map[string][]*types.AWSResource)
 	for _, subnet := range subnets {
 		if subnetVPC, ok := subnet.Details["vpcId"].(string); ok && subnetVPC == vpcID {
 			if az, ok := subnet.Details["availabilityZone"].(string); ok {
-				// For internet-facing ALBs, prefer public subnets
-				// For internal ALBs, prefer private subnets
-				isPublic := false
-				if mapPublic, ok := subnet.Details["mapPublicIpOnLaunch"].(bool); ok {
-					isPublic = mapPublic
-				}
-
-				t.logger.WithFields(map[string]interface{}{
-					"subnet_id": subnet.ID,
-					"az":        az,
-					"is_public": isPublic,
-					"scheme":    scheme,
-				}).Debug("Evaluating subnet for ALB selection")
-
-				// Be more flexible with subnet selection - add all available subnets first
 				subnetsByAZ[az] = append(subnetsByAZ[az], subnet)
 			}
 		}
 	}
-
-	t.logger.WithFields(map[string]interface{}{
-		"subnets_by_az": len(subnetsByAZ),
-		"vpcId":         vpcID,
-	}).Info("Grouped subnets by availability zone")
 
 	// Ensure we have at least 2 different AZs
 	if len(subnetsByAZ) < 2 {
@@ -893,7 +879,7 @@ func (t *SelectSubnetsForALBTool) Execute(ctx context.Context, arguments map[str
 	var selectedAZs []string
 	count := 0
 
-	// First pass: try to select preferred subnet type (public for internet-facing, private for internal)
+	// Select preferred subnet type (public for internet-facing, private for internal)
 	for az, subnetsInAZ := range subnetsByAZ {
 		if count >= 2 {
 			break

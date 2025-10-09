@@ -26,7 +26,7 @@ func NewGetLatestAmazonLinuxAMITool(awsClient *aws.Client, actionType string, lo
 
 	baseTool := NewBaseTool(
 		"get-latest-amazon-linux-ami",
-		"Find the latest Amazon Linux 2 AMI ID in the current region",
+		"Find the latest Amazon Linux 2 AMI ID to use for launching EC2 instances.",
 		"ec2",
 		actionType,
 		inputSchema,
@@ -36,7 +36,7 @@ func NewGetLatestAmazonLinuxAMITool(awsClient *aws.Client, actionType string, lo
 	baseTool.AddExample(
 		"Get latest Amazon Linux 2 AMI",
 		map[string]interface{}{},
-		"Found latest Amazon Linux 2 AMI: ami-0abcdef1234567890",
+		"Found latest Amazon Linux 2 AMI: ami-0abcdef1234567890. Returns: { amiId: \"ami-0abcdef1234567890\", osType: \"Linux\", platform: \"Amazon Linux\" }.",
 	)
 
 	// Use EC2 specialized adapter for AMI operations
@@ -94,7 +94,7 @@ func NewGetLatestUbuntuAMITool(awsClient *aws.Client, actionType string, logger 
 
 	baseTool := NewBaseTool(
 		"get-latest-ubuntu-ami",
-		"Find the latest Ubuntu LTS AMI ID in the current region",
+		"Find the latest Ubuntu LTS AMI ID to use for launching EC2 instances.",
 		"ec2",
 		actionType,
 		inputSchema,
@@ -106,7 +106,7 @@ func NewGetLatestUbuntuAMITool(awsClient *aws.Client, actionType string, logger 
 		map[string]interface{}{
 			"architecture": "x86_64",
 		},
-		"Found latest Ubuntu LTS AMI: ami-0987654321abcdef0",
+		"Found latest Ubuntu LTS AMI: ami-0987654321abcdef0. Returns: { amiId: \"ami-0987654321abcdef0\", architecture: \"x86_64\", osType: \"Linux\", platform: \"Ubuntu\" }.",
 	)
 
 	// Use EC2 specialized adapter for AMI operations
@@ -175,7 +175,7 @@ func NewGetLatestWindowsAMITool(awsClient *aws.Client, actionType string, logger
 
 	baseTool := NewBaseTool(
 		"get-latest-windows-ami",
-		"Find the latest Windows Server AMI ID in the current region",
+		"Find the latest Windows Server AMI ID to use for launching EC2 instances.",
 		"ec2",
 		actionType,
 		inputSchema,
@@ -187,7 +187,7 @@ func NewGetLatestWindowsAMITool(awsClient *aws.Client, actionType string, logger
 		map[string]interface{}{
 			"architecture": "x86_64",
 		},
-		"Found latest Windows Server AMI: ami-0fedcba9876543210",
+		"Found latest Windows Server AMI: ami-0fedcba9876543210. Returns: { amiId: \"ami-0fedcba9876543210\", architecture: \"x86_64\", osType: \"Windows\", platform: \"Windows Server\" }.",
 	)
 
 	// Use EC2 specialized adapter for AMI operations

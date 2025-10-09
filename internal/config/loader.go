@@ -82,11 +82,10 @@ type FieldTransformations struct {
 
 // ResourcePatternConfig represents the resource pattern configuration structure
 type ResourcePatternConfig struct {
-	ResourceIdentification ResourceIdentification      `yaml:"resource_identification"`
-	ToolResourcePatterns   map[string][]string         `yaml:"tool_resource_patterns"`
-	ResourceRelationships  ResourceRelationships       `yaml:"resource_relationships"`
-	ValueTypeInference     map[string]ValueTypePattern `yaml:"value_type_inference"`
-	ToolCategories         map[string][]string         `yaml:"tool_categories"`
+	ResourceIdentification ResourceIdentification `yaml:"resource_identification"`
+	ToolResourcePatterns   map[string][]string    `yaml:"tool_resource_patterns"`
+	ResourceRelationships  ResourceRelationships  `yaml:"resource_relationships"`
+	ToolCategories         map[string][]string    `yaml:"tool_categories"`
 }
 
 // ResourceIdentification contains patterns for identifying resource types
@@ -105,14 +104,6 @@ type ResourceRelationships struct {
 	AutoScalingGroup []string            `yaml:"auto_scaling_group"`
 	LaunchTemplate   []string            `yaml:"launch_template"`
 	Dependencies     map[string][]string `yaml:"dependencies"`
-}
-
-// ValueTypePattern represents patterns for inferring value types from descriptions
-type ValueTypePattern struct {
-	DescriptionPatterns []string `yaml:"description_patterns"`
-	NamePatterns        []string `yaml:"name_patterns"`
-	RequiredTerms       []string `yaml:"required_terms"`
-	OptionalTerms       []string `yaml:"optional_terms"`
 }
 
 // ResourceExtractionConfig represents the resource extraction configuration structure
