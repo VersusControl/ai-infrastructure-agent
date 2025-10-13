@@ -1,0 +1,238 @@
+# Resource Field Mapping Configuration
+
+resource_fields:
+  # ALB/Load Balancer resources
+  load_balancer:
+    arn: [loadBalancerArn, arn, loadBalancerId, resourceId]
+    id: [loadBalancerId, resourceId, loadBalancerArn]
+    dns_name: [dnsName, hostname]
+    name: [loadBalancerName, name]
+    
+  target_group:
+    arn: [targetGroupArn, arn, resourceId]
+    id: [targetGroupId, resourceId]
+    name: [targetGroupName, name]
+    
+  # Compute resources
+  ec2_instance:
+    id: [instanceId, resourceId]
+    public_ip: [publicIpAddress, publicIP]
+    private_ip: [privateIpAddress, privateIP]
+    state: [state, status, instanceState]
+    type: [instanceType, type]
+    
+  auto_scaling_group:
+    name: [autoScalingGroupName, name]
+    arn: [autoScalingGroupArn, arn]
+    id: [autoScalingGroupId, resourceId]
+    
+  launch_template:
+    id: [launchTemplateId, templateId, resourceId]
+    name: [launchTemplateName, name]
+    version: [version, latestVersion, templateVersion]
+    
+  # Networking resources
+  vpc:
+    id: [vpcId, resourceId]
+    cidr: [cidrBlock, cidr]
+    state: [state, status, vpcState]
+    
+  subnet:
+    id: [subnetId, resourceId]
+    cidr: [cidrBlock, cidr]
+    az: [availabilityZone, az]
+    vpc_id: [vpcId, vpc]
+    type: [subnetType, type] # public/private
+    
+  security_group:
+    id: [securityGroupId, groupId, resourceId]
+    name: [groupName, name]
+    description: [description, groupDescription]
+    vpc_id: [vpcId, vpc]
+    
+  # Networking infrastructure
+  internet_gateway:
+    id: [internetGatewayId, igwId, resourceId]
+    vpc_id: [vpcId, vpc]
+    state: [state, status, attachmentState]
+    
+  nat_gateway:
+    id: [natGatewayId, resourceId]
+    subnet_id: [subnetId, subnet]
+    state: [state, status, natGatewayState]
+    public_ip: [natGatewayAddress, publicIp, elasticIp]
+    
+  route_table:
+    id: [routeTableId, resourceId]
+    vpc_id: [vpcId, vpc]
+    
+  # Database resources
+  rds_instance:
+    id: [dbInstanceId, instanceId, resourceId]
+    identifier: [dbInstanceIdentifier, identifier]
+    endpoint: [endpoint, dbEndpoint, address]
+    port: [port, dbPort]
+    engine: [engine, dbEngine, databaseEngine]
+    status: [dbInstanceStatus, status]
+    
+  db_subnet_group:
+    name: [dbSubnetGroupName, name]
+    id: [dbSubnetGroupId, resourceId]
+    description: [dbSubnetGroupDescription, description]
+    vpc_id: [vpcId, vpc]
+    
+  # Key Pair resources
+  key_pair:
+    id: [keyPairId, resourceId]
+    name: [keyName, name]
+    fingerprint: [keyFingerprint, fingerprint]
+    
+  # AMI resources
+  ami:
+    id: [imageId, amiId, resourceId]
+    name: [imageName, name]
+    description: [description, imageDescription]
+    state: [state, imageState]
+    
+  # Availability Zone resources
+  availability_zone:
+    name: [zoneName, availabilityZone, name]
+    id: [zoneId, resourceId]
+    region: [regionName, region]
+    state: [state, zoneState]
+
+# Special field transformations
+field_transformations:
+  # Convert state values to standard format
+  state:
+    available: [available, active, running, ready]
+    pending: [pending, creating, launching]
+    stopped: [stopped, terminated]
+    
+  # Convert boolean strings to actual booleans
+  boolean_fields: [isDefault, enabled, disabled, mapPublicIpOnLaunch]
+  
+  # Fields that should be treated as arrays
+  array_fields: [subnets, instances, rules, targets, attachments, subnetIds, securityGroupIds, instanceIds]
+
+# Field type definitions for validation
+field_types:
+  string_fields:
+    - vpcId
+    - subnetId
+    - instanceId
+    - securityGroupId
+    - groupId
+    - loadBalancerArn
+    - targetGroupArn
+    - dbInstanceIdentifier
+    - keyName
+    - imageId
+    - cidrBlock
+    - availabilityZone
+    
+  integer_fields:
+    - port
+    - fromPort
+    - toPort
+    - allocatedStorage
+    - minSize
+    - maxSize
+    - desiredCapacity
+    
+  boolean_fields:
+    - isDefault
+    - enabled
+    - disabled
+    - mapPublicIpOnLaunch
+    - enableDnsHostnames
+    - enableDnsSupport
+    - publiclyAccessible
+    - multiAZ
+    
+  array_fields:
+    - subnetIds
+    - securityGroupIds
+    - instanceIds
+    - targetGroupArns
+    - vpcZoneIdentifiers
+    - ipPermissions
+
+# Resource to tool output field mapping
+# Maps logical resource fields to actual tool output fields
+output_field_mapping:
+  vpc:
+    id: vpcId
+    cidr: cidrBlock
+    name: name
+    
+  subnet:
+    id: subnetId
+    vpc_id: vpcId
+    cidr: cidrBlock
+    az: availabilityZone
+    
+  ec2_instance:
+    id: instanceId
+    type: instanceType
+    image: imageId
+    subnet: subnetId
+    security_groups: securityGroupIds
+    
+  security_group:
+    id: securityGroupId
+    group_id: groupId
+    name: groupName
+    vpc_id: vpcId
+    
+  load_balancer:
+    arn: loadBalancerArn
+    name: loadBalancerName
+    dns: dnsName
+    subnets: subnetIds
+    security_groups: securityGroupIds
+    
+  target_group:
+    arn: targetGroupArn
+    name: targetGroupName
+    vpc_id: vpcId
+    
+  rds_instance:
+    id: dbInstanceId
+    identifier: dbInstanceIdentifier
+    endpoint: endpoint
+    port: port
+    engine: engine
+    
+  db_subnet_group:
+    name: dbSubnetGroupName
+    vpc_id: vpcId
+    subnets: subnetIds
+    
+  auto_scaling_group:
+    name: autoScalingGroupName
+    arn: autoScalingGroupArn
+    launch_template: launchTemplateId
+    subnets: vpcZoneIdentifiers
+    target_groups: targetGroupARNs
+    
+  launch_template:
+    id: launchTemplateId
+    name: launchTemplateName
+    version: version
+    
+  key_pair:
+    id: keyPairId
+    name: keyName
+    
+  internet_gateway:
+    id: internetGatewayId
+    vpc_id: vpcId
+    
+  nat_gateway:
+    id: natGatewayId
+    subnet_id: subnetId
+    
+  route_table:
+    id: routeTableId
+    vpc_id: vpcId

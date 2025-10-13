@@ -1,0 +1,214 @@
+name: Dev CI/CD Pipeline
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [ "main" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/versuscontrol/ai-infrastructure-agent
+
+jobs:
+  # Phase 1: Build check for PRs - verify image builds successfully without pushing
+  pr-build-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Extract metadata for PR build check
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=pr,prefix=pr-
+        labels: |
+          org.opencontainers.image.title=AI Infrastructure Agent (PR Build Check)
+          org.opencontainers.image.description=AI-powered infrastructure discovery and management agent - PR build verification
+          org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          org.opencontainers.image.url=https://github.com/${{ github.repository }}
+
+    - name: Build Docker image (no push)
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: linux/amd64,linux/arm64
+        push: false
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          VERSION=pr-${{ github.event.number }}
+          BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+          COMMIT_SHA=${{ github.sha }}
+
+    - name: Comment PR with build status
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('Docker Build Status')
+          );
+          
+          const body = `## Docker Build Status
+          
+          **Build Successful** for PR #${{ github.event.number }}
+          
+          ### Build Details
+          - **Platforms**: linux/amd64, linux/arm64
+          - **Tags**: \`${{ steps.meta.outputs.tags }}\`
+          - **Commit**: ${{ github.sha }}
+          - **Version**: pr-${{ github.event.number }}
+          
+          ### Next Steps
+          - Image build verification passed
+          - Ready for code review and merge
+          - Upon merge to main, dev image will be built and pushed automatically
+          
+          ---
+          *Updated at: ${{ github.event.head_commit.timestamp }}*`;
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: body
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+          }
+
+    - name: Build summary
+      run: |
+        echo "## Docker Build Check Summary" >> $GITHUB_STEP_SUMMARY
+        echo "**Build Status**: SUCCESS" >> $GITHUB_STEP_SUMMARY
+        echo "**PR Number**: #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
+        echo "**Tags**: ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Next**: Image will be pushed when PR is merged to main" >> $GITHUB_STEP_SUMMARY
+
+  # Phase 2: Build and push dev image when PR is merged to main
+  dev-build-push:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata for dev image
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.IMAGE_NAME }}
+        tags: |
+          type=raw,value=dev
+          type=raw,value=dev-{{sha}}
+          type=raw,value=dev-{{date 'YYYYMMDD-HHmmss'}}
+        labels: |
+          org.opencontainers.image.title=AI Infrastructure Agent (Development)
+          org.opencontainers.image.description=AI-powered infrastructure discovery and management agent - Development build
+          org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          org.opencontainers.image.url=https://github.com/${{ github.repository }}
+          org.opencontainers.image.documentation=https://github.com/${{ github.repository }}/blob/main/README.md
+
+    - name: Build and push dev image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          VERSION=dev-${{ github.sha }}
+          BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+          COMMIT_SHA=${{ github.sha }}
+
+    - name: Inspect dev image
+      run: |
+        echo "Inspecting published dev image..."
+        docker buildx imagetools inspect ${{ env.IMAGE_NAME }}:dev
+
+    - name: Create deployment summary
+      run: |
+        echo "## Dev Image Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "**Status**: Successfully built and pushed" >> $GITHUB_STEP_SUMMARY
+        echo "**Registry**: ${{ env.REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Available Tags**:" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.meta.outputs.tags }}" | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Docker Pull Commands" >> $GITHUB_STEP_SUMMARY
+        echo '```bash' >> $GITHUB_STEP_SUMMARY
+        echo "# Latest dev image" >> $GITHUB_STEP_SUMMARY
+        echo "docker pull ${{ env.IMAGE_NAME }}:dev" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "# Specific commit" >> $GITHUB_STEP_SUMMARY
+        echo "docker pull ${{ env.IMAGE_NAME }}:dev-${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Image Details" >> $GITHUB_STEP_SUMMARY
+        echo "- **Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version**: dev-${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
+        echo "- **Build Time**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+
+    - name: Post deployment notification
+      run: |
+        echo "Dev image successfully deployed!"
+        echo "Image location: ${{ env.IMAGE_NAME }}:dev"
+        echo "Registry: ${{ env.REGISTRY }}"
+        echo "Platforms: linux/amd64, linux/arm64"
+        echo ""
+        echo "Available tags:"
+        echo "${{ steps.meta.outputs.tags }}" | sed 's/^/  - /'

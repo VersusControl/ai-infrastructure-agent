@@ -1,0 +1,40 @@
+# Development configuration for AWS MCP Server
+server:
+  port: 3000
+  host: "localhost"
+
+aws:
+  region: "us-west-2"
+
+mcp:
+  server_name: "aws-infrastructure-server"
+  version: "1.0.0"
+
+agent:
+  provider: "openai"          # openai, gemini, anthropic
+  model: "gpt-4"
+  max_tokens: 4000
+  temperature: 0.1
+  dry_run: true
+  auto_resolve_conflicts: false
+  # Note: Set API keys via environment variables:
+  # OPENAI_API_KEY for OpenAI
+  # GEMINI_API_KEY for Google AI (Gemini)
+  # ANTHROPIC_API_KEY for Anthropic
+
+logging:
+  level: "debug"
+  format: "text"
+  output: "stdout"
+
+state:
+  file_path: "./states/infrastructure-state.json"
+  backup_enabled: true
+  backup_dir: "./backups"
+
+web:
+  port: 8080
+  host: "localhost"
+  template_dir: "web/templates"
+  static_dir: "web/static"
+  enable_websockets: true

@@ -1,0 +1,240 @@
+# Resource ID Extraction Configuration  
+
+resource_id_extraction:
+  # Define extraction patterns by tool action type
+  creation_tools:
+    # Tools that create resources return flat JSON with resource IDs at top level
+    patterns:
+      # VPC - returns vpcId at top level
+      - field_paths: ["vpcId"]
+        resource_types: ["vpc"]
+        priority: 1
+        
+      # Subnet - returns subnetId at top level  
+      - field_paths: ["subnetId"]
+        resource_types: ["subnet"]
+        priority: 1
+        
+      # EC2 Instance - returns instanceId at top level
+      - field_paths: ["instanceId"]
+        resource_types: ["ec2_instance"]
+        priority: 1
+        
+      # Security Group - returns securityGroupId at top level
+      - field_paths: ["securityGroupId", "groupId"]
+        resource_types: ["security_group"]
+        priority: 1
+        
+      # Load Balancer - returns loadBalancerArn at top level
+      - field_paths: ["loadBalancerArn"]
+        resource_types: ["load_balancer", "alb", "nlb"]
+        priority: 1
+        
+      # Target Group - returns targetGroupArn at top level
+      - field_paths: ["targetGroupArn"]
+        resource_types: ["target_group"]
+        priority: 1
+        
+      # Auto Scaling Group - returns autoScalingGroupArn or autoScalingGroupName
+      - field_paths: ["autoScalingGroupArn", "autoScalingGroupName"]
+        resource_types: ["auto_scaling_group"]
+        priority: 1
+        
+      # Launch Template - returns launchTemplateId at top level
+      - field_paths: ["launchTemplateId"]
+        resource_types: ["launch_template"]
+        priority: 1
+        
+      # Key Pair - returns keyName as primary identifier
+      - field_paths: ["keyName", "keyPairId"]
+        resource_types: ["key_pair"]
+        priority: 1
+        
+      # Internet Gateway - returns internetGatewayId at top level
+      - field_paths: ["internetGatewayId"]
+        resource_types: ["internet_gateway"]
+        priority: 1
+        
+      # NAT Gateway - returns natGatewayId at top level
+      - field_paths: ["natGatewayId"]
+        resource_types: ["nat_gateway"]  
+        priority: 1
+        
+      # Route Table - returns routeTableId at top level
+      - field_paths: ["routeTableId"]
+        resource_types: ["route_table"]
+        priority: 1
+        
+      # RDS Instance - returns dbInstanceIdentifier at top level
+      - field_paths: ["dbInstanceIdentifier", "dbInstanceId"]
+        resource_types: ["rds_instance"]
+        priority: 1
+        
+      # DB Subnet Group - returns dbSubnetGroupName at top level
+      - field_paths: ["dbSubnetGroupName"]
+        resource_types: ["db_subnet_group"]
+        priority: 1
+        
+      # Listener - returns listenerId at top level
+      - field_paths: ["listenerId"]
+        resource_types: ["listener"]
+        priority: 1
+        
+      # AMI - returns amiId at top level
+      - field_paths: ["amiId", "imageId"]
+        resource_types: ["ami"]
+        priority: 1
+        
+      # DB Snapshot - returns snapshotId or dbSnapshotIdentifier at top level
+      - field_paths: ["snapshotId", "dbSnapshotIdentifier"]
+        resource_types: ["db_snapshot"]
+        priority: 1
+        
+      # Route Table Association - returns associationId at top level
+      - field_paths: ["associationId"]
+        resource_types: ["route_table_association"]
+        priority: 1
+        
+      # Universal fallback for any creation tool - try resourceId or id
+      - field_paths: ["resourceId", "id"]
+        resource_types: ["*"]
+        priority: 10
+        
+  modification_tools:
+    # Tools that modify existing resources receive IDs in parameters
+    patterns:
+      # VPC modification
+      - field_paths: ["vpcId"]
+        resource_types: ["vpc"]
+        priority: 1
+        
+      # Instance modification (parameters may have single ID or array)
+      - field_paths: ["instanceId", "instanceIds[0]"]
+        resource_types: ["ec2_instance"]
+        priority: 1
+        
+      # Security Group modification
+      - field_paths: ["groupId", "securityGroupId"]
+        resource_types: ["security_group"]
+        priority: 1
+        
+      # Load Balancer modification
+      - field_paths: ["loadBalancerArn"]
+        resource_types: ["load_balancer"]
+        priority: 1
+        
+      # Target Group modification
+      - field_paths: ["targetGroupArn"]
+        resource_types: ["target_group"]
+        priority: 1
+        
+      # Auto Scaling Group modification
+      - field_paths: ["autoScalingGroupName"]
+        resource_types: ["auto_scaling_group"]
+        priority: 1
+        
+      # RDS Instance modification (start/stop)
+      - field_paths: ["dbInstanceIdentifier", "dbInstanceId"]
+        resource_types: ["rds_instance"]
+        priority: 1
+        
+      # Universal fallback for modification tools
+      - field_paths: ["resourceId", "id"]
+        resource_types: ["*"]
+        priority: 10
+        
+  deletion_tools:
+    # Tools that delete resources receive IDs in parameters (same as modification)
+    patterns:
+      # VPC deletion
+      - field_paths: ["vpcId"]
+        resource_types: ["vpc"]
+        priority: 1
+        
+      # Instance deletion
+      - field_paths: ["instanceId", "instanceIds[0]"]
+        resource_types: ["ec2_instance"]
+        priority: 1
+        
+      # Security Group deletion
+      - field_paths: ["groupId", "securityGroupId"]
+        resource_types: ["security_group"]
+        priority: 1
+        
+      # Load Balancer deletion
+      - field_paths: ["loadBalancerArn"]
+        resource_types: ["load_balancer"]
+        priority: 1
+        
+      # RDS Instance deletion
+      - field_paths: ["dbInstanceIdentifier", "dbInstanceId"]
+        resource_types: ["rds_instance"]
+        priority: 1
+        
+      # Universal fallback for deletion tools
+      - field_paths: ["resourceId", "id"]
+        resource_types: ["*"]  
+        priority: 10
+        
+  query_tools:
+    # Query tools return arrays of resources - extract from first element or specific field
+    patterns:
+      # List tools return arrays - the query result itself may be what we need
+      # For example: list-subnets should return the subnet array, not extract an ID
+      
+      # For get-availability-zones - returns single zone name
+      - field_paths: ["availabilityZone"]
+        resource_types: ["availability_zone"]
+        priority: 1
+        
+      # For get-subnet - returns single subnet
+      - field_paths: ["subnetId"]
+        resource_types: ["subnet"]
+        priority: 1
+        
+      # For get-vpc - returns single VPC
+      - field_paths: ["vpcId"]
+        resource_types: ["vpc"]
+        priority: 1
+
+      - field_paths: ["amiId", "imageId"]
+        resource_types: ["ami"]
+        priority: 1
+
+      # For get-key-pair
+      - field_paths: ["keyName", "keyPairId"]
+        resource_types: ["key_pair"]
+        priority: 1
+        
+      # Universal fallback for query tools
+      - field_paths: ["resourceId", "id"]
+        resource_types: ["*"]
+        priority: 10
+        
+  association_tools:
+    # Association tools create new associations and return association IDs at top level
+    patterns:
+      # Security group rules
+      - field_paths: ["groupId", "securityGroupId"]
+        resource_types: ["security_group"]
+        priority: 1
+        
+      # Route table association - returns associationId
+      - field_paths: ["associationId"]
+        resource_types: ["route_table_association"]
+        priority: 2
+        
+      # Route table - for add-route operations, the route table ID is in parameters
+      - field_paths: ["routeTableId"]
+        resource_types: ["route_table", "route"]
+        priority: 2
+        
+      # Target group - for register/deregister-targets operations
+      - field_paths: ["targetGroupArn"]
+        resource_types: ["target_group"]
+        priority: 2
+        
+      # Universal fallback for association tools
+      - field_paths: ["resourceId", "id"]
+        resource_types: ["*"]
+        priority: 10

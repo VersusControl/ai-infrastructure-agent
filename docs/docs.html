@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Infrastructure Agent - Documentation</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="AI Infrastructure Agent Documentation - Intelligent AWS infrastructure management through natural language">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="images/ai-infrastructure-agent.svg">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <style>
+    :root {
+      --docsifyLocaltabsTabColor: #42b883;
+      --docsifyLocaltabsTabBackgroundColor: #f8f8f9;
+      --primary-color: #4f46e5;
+      --left-sidebar-width: 280px;
+      --right-sidebar-width: 260px;
+      --header-height: 60px;
+      --light-bg: #ffffff;
+      --light-bg-secondary: #f8fafc;
+      --light-bg-tertiary: #f1f5f9;
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --text-tertiary: #64748b;
+      --border-color: #e2e8f0;
+      --border-color-dark: #cbd5e1;
+    }
+    
+    /* Reset and base styles */
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--light-bg-secondary);
+      color: var(--text-primary);
+    }
+    
+    /* SECTION 1: Header/Navigation Bar */
+    .nav-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--header-height);
+      background: linear-gradient(135deg, var(--light-bg) 0%, var(--light-bg-tertiary) 100%);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+    
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .nav-logo {
+      width: 32px;
+      height: 32px;
+    }
+    
+    .nav-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .nav-back-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      border: 1px solid var(--border-color);
+      background: var(--light-bg);
+    }
+    
+    .nav-back-link:hover {
+      color: var(--primary-color);
+      border-color: var(--primary-color);
+      background: var(--light-bg-secondary);
+    }
+    
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .nav-right a {
+      color: var(--text-secondary);
+      transition: color 0.2s ease;
+    }
+    
+    .nav-right a:hover {
+      color: var(--primary-color);
+    }
+    
+    .github-icon {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+    
+    /* SECTION 2: Left Sidebar - Document Navigation */
+    .sidebar {
+      position: fixed !important;
+      top: var(--header-height) !important;
+      left: 0 !important;
+      right: auto !important;
+      width: var(--left-sidebar-width) !important;
+      height: calc(100vh - var(--header-height)) !important;
+      background: linear-gradient(180deg, var(--light-bg) 0%, var(--light-bg-tertiary) 100%) !important;
+      border-right: 1px solid var(--border-color) !important;
+      border-left: none !important;
+      overflow-y: auto !important;
+      padding: 0 !important;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05) !important;
+      z-index: 100 !important;
+    }
+    
+    .sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .sidebar::-webkit-scrollbar-track {
+      background: var(--light-bg-tertiary);
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border-color-dark);
+      border-radius: 3px;
+    }
+    
+    .sidebar .sidebar-nav {
+      padding: 24px 20px !important;
+    }
+    
+    .sidebar .app-name-link {
+      color: var(--text-primary) !important;
+      font-weight: bold !important;
+      font-size: 16px !important;
+      padding: 16px 20px !important;
+      display: block !important;
+      border-bottom: 1px solid var(--border-color) !important;
+      margin-bottom: 16px !important;
+      text-decoration: none !important;
+    }
+    
+    .sidebar .sidebar-nav ul {
+      margin: 0 !important;
+      padding: 0 !important;
+      list-style: none !important;
+    }
+    
+    .sidebar .sidebar-nav > ul > li {
+      margin: 0 0 8px 0 !important;
+      list-style: none !important;
+    }
+    
+    .sidebar .sidebar-nav > ul > li > a {
+      display: block !important;
+      color: var(--text-secondary) !important;
+      text-decoration: none !important;
+      padding: 10px 16px !important;
+      border-radius: 6px !important;
+      font-weight: 500 !important;
+      transition: all 0.2s ease !important;
+      border-left: 3px solid transparent !important;
+    }
+    
+    .sidebar .sidebar-nav > ul > li > a:hover,
+    .sidebar .sidebar-nav > ul > li > a.active {
+      color: var(--primary-color) !important;
+      background-color: var(--light-bg-secondary) !important;
+      border-left-color: var(--primary-color) !important;
+    }
+    
+    .sidebar .sidebar-nav ul ul {
+      margin-left: 0 !important;
+      /* padding-left: 16px !important; */
+    }
+    
+    .sidebar .sidebar-nav ul ul li a {
+      font-size: 14px !important;
+      padding: 8px 16px !important;
+      color: var(--text-tertiary) !important;
+      font-weight: 400 !important;
+    }
+    
+    .sidebar .sidebar-nav ul ul li a:hover,
+    .sidebar .sidebar-nav ul ul li a.active {
+      color: var(--primary-color) !important;
+      background-color: var(--light-bg-tertiary) !important;
+    }
+    
+    .sidebar .search {
+      padding: 16px 20px !important;
+      border-bottom: 1px solid var(--border-color) !important;
+      margin-bottom: 16px !important;
+    }
+    
+    .sidebar .search input {
+      width: 100% !important;
+      padding: 10px 16px !important;
+      border: 1px solid var(--border-color) !important;
+      border-radius: 6px !important;
+      background: var(--light-bg) !important;
+      color: var(--text-primary) !important;
+      font-size: 14px !important;
+      outline: none !important;
+      transition: all 0.2s ease !important;
+    }
+    
+    .sidebar .search input:focus {
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1) !important;
+    }
+    
+    .sidebar .search input::placeholder {
+      color: var(--text-tertiary) !important;
+    }
+    
+    /* SECTION 2B: Right Sidebar - Page Table of Contents */
+    .page-toc {
+      position: fixed !important;
+      top: var(--header-height) !important;
+      right: 0 !important;
+      width: var(--right-sidebar-width) !important;
+      height: calc(100vh - var(--header-height)) !important;
+      background: linear-gradient(180deg, var(--light-bg) 0%, var(--light-bg-secondary) 100%) !important;
+      border-left: 1px solid var(--border-color) !important;
+      overflow-y: auto !important;
+      padding: 24px 20px !important;
+      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.05) !important;
+      z-index: 99 !important;
+    }
+    
+    .page-toc::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .page-toc::-webkit-scrollbar-track {
+      background: var(--light-bg-tertiary);
+    }
+    
+    .page-toc::-webkit-scrollbar-thumb {
+      background: var(--border-color-dark);
+      border-radius: 3px;
+    }
+    
+    .page-toc h4 {
+      color: var(--text-secondary) !important;
+      font-size: 12px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      margin: 0 0 12px 0 !important;
+      font-weight: 600 !important;
+    }
+    
+    .page-toc ul {
+      margin: 0 !important;
+      padding: 0 !important;
+      list-style: none !important;
+    }
+    
+    .page-toc li {
+      margin: 0 0 4px 0 !important;
+      list-style: none !important;
+    }
+    
+    .page-toc a {
+      display: block !important;
+      color: var(--text-secondary) !important;
+      text-decoration: none !important;
+      padding: 6px 12px !important;
+      border-radius: 4px !important;
+      font-size: 13px !important;
+      line-height: 1.4 !important;
+      transition: all 0.2s ease !important;
+      border-left: 2px solid transparent !important;
+    }
+    
+    .page-toc a:hover {
+      color: var(--primary-color) !important;
+      background-color: var(--light-bg-tertiary) !important;
+      border-left-color: var(--primary-color) !important;
+    }
+    
+    .page-toc a.active {
+      color: var(--primary-color) !important;
+      background-color: var(--light-bg-tertiary) !important;
+      border-left-color: var(--primary-color) !important;
+      font-weight: 500 !important;
+    }
+    
+    /* Nested levels */
+    .page-toc li li a {
+      margin-left: 16px !important;
+      font-size: 12px !important;
+    }
+    
+    .page-toc li li li a {
+      margin-left: 32px !important;
+    }
+
+    /* SECTION 3: Main Content Area - Between Both Sidebars */
+    .content {
+      position: fixed !important;
+      top: var(--header-height) !important;
+      left: var(--left-sidebar-width) !important;
+      right: var(--right-sidebar-width) !important;
+      width: calc(100vw - var(--left-sidebar-width) - var(--right-sidebar-width)) !important;
+      height: calc(100vh - var(--header-height)) !important;
+      overflow-y: auto !important;
+      background-color: var(--light-bg) !important;
+      padding: 32px !important;
+    }
+    
+    .content::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .content::-webkit-scrollbar-track {
+      background: var(--light-bg-secondary);
+    }
+    
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border-color-dark);
+      border-radius: 4px;
+    }
+    
+    .content::-webkit-scrollbar-thumb:hover {
+      background: var(--text-tertiary);
+    }
+    
+    /* SECTION 4: Content Styling */
+    .markdown-section {
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+    
+    .markdown-section h1,
+    .markdown-section h2,
+    .markdown-section h3,
+    .markdown-section h4,
+    .markdown-section h5,
+    .markdown-section h6 {
+      color: var(--text-primary) !important;
+      margin-top: 2rem !important;
+      margin-bottom: 1rem !important;
+      font-weight: 600 !important;
+    }
+    
+    .markdown-section h1 {
+      font-size: 2rem !important;
+      border-bottom: 2px solid var(--border-color) !important;
+      padding-bottom: 0.5rem !important;
+    }
+    
+    .markdown-section h2 {
+      font-size: 1.5rem !important;
+      border-bottom: 1px solid var(--border-color) !important;
+      padding-bottom: 0.5rem !important;
+    }
+    
+    .markdown-section p {
+      color: var(--text-secondary) !important;
+      line-height: 1.7 !important;
+      margin-bottom: 1rem !important;
+    }
+    
+    .markdown-section a {
+      color: var(--primary-color) !important;
+      text-decoration: none !important;
+    }
+    
+    .markdown-section a:hover {
+      text-decoration: underline !important;
+    }
+    
+    .markdown-section code {
+      background: var(--light-bg-tertiary) !important;
+      color: var(--text-primary) !important;
+      padding: 2px 6px !important;
+      border-radius: 3px !important;
+      font-size: 0.9em !important;
+    }
+    
+    .markdown-section pre {
+      background: var(--light-bg-tertiary) !important;
+      border: 1px solid var(--border-color) !important;
+      border-radius: 6px !important;
+      padding: 16px !important;
+      overflow-x: auto !important;
+      margin: 1rem 0 !important;
+    }
+    
+    .markdown-section pre code {
+      background: transparent !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+    }
+    
+    .markdown-section blockquote {
+      border-left: 4px solid var(--primary-color) !important;
+      background: var(--light-bg-secondary) !important;
+      margin: 1rem 0 !important;
+      padding: 1rem 1.5rem !important;
+      color: var(--text-secondary) !important;
+    }
+    
+    .markdown-section ul, .markdown-section ol {
+      color: var(--text-secondary) !important;
+      line-height: 1.7 !important;
+    }
+    
+    .markdown-section li {
+      margin-bottom: 0.5rem !important;
+    }
+    
+    .search input::placeholder {
+      color: var(--text-tertiary) !important;
+    }
+    
+    /* Mobile responsiveness */
+    @media screen and (max-width: 768px) {
+      .nav-header {
+        padding: 0 16px;
+      }
+      
+      .nav-back-link {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+      
+      .nav-title {
+        font-size: 16px;
+        margin-left: 12px;
+      }
+      
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1001;
+      }
+      
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      
+      .page-toc {
+        display: none;
+      }
+      
+      .content {
+        left: 0 !important;
+        right: 0 !important;
+        width: 100vw !important;
+        padding: 20px !important;
+      }
+      
+      .mobile-toggle {
+        display: block !important;
+      }
+    }
+    
+    .mobile-toggle {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navigation Header -->
+  <div class="nav-header">
+    <div class="nav-left">
+      <img src="images/ai-infrastructure-agent.svg" alt="AI Infrastructure Agent" class="nav-logo">
+      <a href="/" class="nav-back-link">← Back to Home</a>
+    </div>
+    <div class="nav-right">
+      <a href="https://github.com/VersusControl/ai-infrastructure-agent" target="_blank" title="View on GitHub">
+        <svg class="github-icon" viewBox="0 0 24 24">
+          <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Right Sidebar - Page Table of Contents -->
+  <div class="page-toc">
+    <h4>On This Page</h4>
+    <div id="page-toc-content"></div>
+  </div>
+
+  <div id="app"></div>
+  <script>
+    window.$docsify = {
+      repo: 'https://github.com/VersusControl/ai-infrastructure-agent',
+      homepage: 'README.md',
+      loadSidebar: true,
+      hideSidebar: false,
+      loadNavbar: false,
+      subMaxLevel: 0,
+      maxLevel: 0,
+      auto2top: true,
+      coverpage: false,
+      executeScript: true,
+      relativePath: false,
+      routerMode: 'hash',
+      search: {
+        maxAge: 86400000,
+        paths: 'auto',
+        placeholder: '🔍 Search documentation...',
+        noData: 'No Results!',
+        depth: 3
+      },
+      copyCode: {
+        buttonText: '📋 Copy',
+        errorText: '❌ Error',
+        successText: '✅ Copied'
+      },
+      pagination: {
+        previousText: 'Previous',
+        nextText: 'Next',
+        crossChapter: true,
+        // crossChapterText: true,
+      },
+      plugins: [
+        function(hook, vm) {
+          hook.ready(function() {
+            console.log('Docsify ready - dual sidebars should be loading...')
+          })
+          
+          hook.beforeEach(function(content) {
+            // Scroll to top when loading new page
+            const contentElement = document.querySelector('.content');
+            if (contentElement) {
+              contentElement.scrollTop = 0;
+            }
+            return content;
+          })
+          
+          hook.doneEach(function() {
+            // Ensure scroll to top after content is loaded
+            const contentElement = document.querySelector('.content');
+            if (contentElement) {
+              contentElement.scrollTop = 0;
+            }
+            // Generate page table of contents
+            const tocContainer = document.getElementById('page-toc-content');
+            if (tocContainer) {
+              const headings = document.querySelectorAll('.markdown-section h2, .markdown-section h3, .markdown-section h4');
+              let tocHTML = '<ul>';
+              
+              headings.forEach(heading => {
+                const id = heading.getAttribute('id') || heading.textContent.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const level = parseInt(heading.tagName.charAt(1));
+                const indent = (level - 2) * 16; // h2 = 0, h3 = 16px, h4 = 32px
+                
+                // Add id if not present
+                if (!heading.getAttribute('id')) {
+                  heading.setAttribute('id', id);
+                }
+                
+                tocHTML += `<li><a href="#${id}" style="margin-left: ${indent}px;">${heading.textContent}</a></li>`;
+              });
+              
+              tocHTML += '</ul>';
+              tocContainer.innerHTML = tocHTML;
+              
+              // Add click handlers and active states
+              const tocLinks = tocContainer.querySelectorAll('a');
+              tocLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                  e.preventDefault();
+                  const targetId = this.getAttribute('href').substring(1);
+                  const targetElement = document.getElementById(targetId);
+                  if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                  
+                  // Update active state
+                  tocLinks.forEach(l => l.classList.remove('active'));
+                  this.classList.add('active');
+                });
+              });
+            }
+            
+            // Add mobile menu toggle functionality
+            if (window.innerWidth <= 768) {
+              const sidebar = document.querySelector('.sidebar')
+              
+              // Add mobile toggle button if it doesn't exist
+              if (!document.querySelector('.mobile-toggle')) {
+                const toggleBtn = document.createElement('button')
+                toggleBtn.className = 'mobile-toggle'
+                toggleBtn.innerHTML = '☰'
+                toggleBtn.style.cssText = `
+                  position: fixed;
+                  top: 70px;
+                  left: 16px;
+                  z-index: 1002;
+                  background: var(--light-bg);
+                  color: var(--text-primary);
+                  border: 1px solid var(--border-color);
+                  padding: 8px 12px;
+                  border-radius: 6px;
+                  font-size: 16px;
+                  cursor: pointer;
+                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                `
+                document.body.appendChild(toggleBtn)
+                
+                toggleBtn.onclick = function() {
+                  sidebar.classList.toggle('open')
+                }
+              }
+            }
+          })
+        }
+      ]
+    }
+  </script>
+  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-copy-code@2"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-pagination@2/dist/docsify-pagination.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-yaml.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-go.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
+</body>
+</html>

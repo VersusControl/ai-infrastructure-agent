@@ -1,0 +1,38 @@
+# Example configuration for Google AI (Gemini) provider
+server:
+  port: 3000
+  host: "localhost"
+
+aws:
+  region: "ap-southeast-5"
+
+mcp:
+  server_name: "aws-infrastructure-server"
+  version: "1.0.0"
+
+agent:
+  provider: "gemini"              # Use Google AI (Gemini)
+  model: "gemini-2.5-flash-lite"
+  max_tokens: 10000
+  temperature: 0.1
+  dry_run: true
+  auto_resolve_conflicts: false
+  enable_debug: false
+  # Note: Set GEMINI_API_KEY environment variable
+
+logging:
+  level: "info"
+  format: "text"
+  output: "stdout"
+
+state:
+  file_path: "./states/infrastructure-state.json"
+  backup_enabled: true
+  backup_dir: "./backups"
+
+web:
+  port: 8080
+  host: "localhost"
+  template_dir: "web/templates"
+  static_dir: "web/static"
+  enable_websockets: true

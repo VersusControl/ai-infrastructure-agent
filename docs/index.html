@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Infrastructure Agent - Intelligent AWS Management</title>
+    <meta name="description" content="AI Infrastructure Agent is an intelligent system that allows you to manage AWS infrastructure using natural language commands.">
+    <meta name="keywords" content="AI, AWS, Infrastructure as Code, DevOps, Cloud Management, OpenAI, Gemini, Anthropic">
+    <link rel="icon" type="image/svg+xml" href="images/ai-infrastructure-agent.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @import url('https://rsms.me/inter/inter.css');
+        .gradient-text {
+            background: -webkit-linear-gradient(45deg, #4F46E5, #EC4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .code-block {
+            background-color: #0D1117;
+            color: #E6EDF3;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #30363D;
+            font-family: 'Fira Code', monospace;
+            /* white-space: pre-wrap; */
+            word-break: break-word;
+            position: relative;
+            max-width: 900px;
+            width: fit-content;
+            margin: 0 auto;
+        }
+        .code-block::before {
+            color: #7C3AED;
+            font-weight: bold;
+        }
+        .code-block .comment {
+            color: #8B949E;
+        }
+        .code-block .command {
+            color: #79C0FF;
+        }
+        .code-block .path {
+            color: #A5A5A5;
+        }
+        .nav-header {
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #374151;
+        }
+        .nav-logo {
+            height: 40px;
+            width: auto;
+        }
+        .nav-menu a {
+            color: #E5E7EB;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .nav-menu a:hover {
+            background-color: #374151;
+            color: #FFFFFF;
+        }
+                .github-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            padding: 12px !important;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+            background: rgba(55, 65, 81, 0.8) !important;
+            border: 1px solid #6B7280 !important;
+            width: 48px;
+            height: 48px;
+        }
+        .mobile-menu-btn:hover {
+            background-color: #374151;
+        }
+        .mobile-menu-btn span {
+            display: block !important;
+            width: 24px !important;
+            height: 3px !important;
+            background-color: #FFFFFF !important;
+            margin: 3px 0 !important;
+            border-radius: 2px !important;
+            transition: 0.3s ease !important;
+        }
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(17, 24, 39, 0.98);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #374151;
+            padding: 1rem;
+        }
+        .mobile-menu.active {
+            display: block;
+        }
+        .mobile-menu a {
+            display: block;
+            color: #E5E7EB;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 4px 0;
+            transition: all 0.2s ease;
+        }
+        .mobile-menu a:hover {
+            background-color: #374151;
+            color: #FFFFFF;
+        }
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex !important;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200">
+
+    <!-- Navigation Header -->
+    <nav class="nav-header fixed top-0 left-0 right-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <img src="images/ai-infrastructure-agent.svg" alt="AI Infrastructure Agent" class="nav-logo">
+                </div>
+                
+                <!-- Center: Desktop Menu OR Mobile Menu Button -->
+                <div class="flex items-center">
+                    <!-- Desktop Menu -->
+                    <div class="hidden md:flex nav-menu space-x-6">
+                        <a href="#home">Home</a>
+                        <a href="docs.html">Docs</a>
+                        <a href="https://github.com/VersusControl/devops-ai-guidelines/blob/main/resources/ai-infrastructure-agent-for-aws.md" target="_blank">Quick Example</a>
+                        <a href="https://github.com/VersusControl/devops-ai-guidelines/blob/main/04-ai-agent-for-aws/00-toc.md" target="_blank">Tutorial</a>
+                        <a href="#pricing">Pricing</a>
+                    </div>
+                    
+                    <!-- Mobile Menu Button (Visible on Mobile) -->
+                    <button class="mobile-menu-btn block md:hidden" onclick="toggleMobileMenu()">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+                
+                <!-- Right Side: GitHub Link Only -->
+                <div class="flex items-center">
+                    <!-- GitHub Link -->
+                    <a href="https://github.com/VersusControl/ai-infrastructure-agent" target="_blank" class="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+                        <svg class="github-icon" viewBox="0 0 24 24">
+                            <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="mobile-menu">
+                <a href="#home">Home</a>
+                <a href="docs.html">Docs</a>
+                <a href="https://github.com/VersusControl/devops-ai-guidelines/blob/main/resources/ai-infrastructure-agent-for-aws.md" target="_blank">Quick Example</a>
+                <a href="https://github.com/VersusControl/devops-ai-guidelines/blob/main/04-ai-agent-for-aws/00-toc.md" target="_blank">Tutorial</a>
+                <a href="#pricing">Pricing</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8" style="margin-top: 64px;">
+
+        <!-- Header -->
+        <header class="text-center mb-16">
+            <h1 class="text-5xl md:text-7xl font-bold mb-4 gradient-text">AI Infrastructure Agent</h1>
+            <p class="text-xl md:text-2xl text-gray-400">Intelligent AWS infrastructure management through natural language.</p>
+        </header>
+
+        <!-- Get Started Section -->
+        <section class="mb-12">
+            <!-- Section Title -->
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold mb-4 text-white">Get Started in Seconds</h2>
+                <p class="text-gray-400">Clone the repository and run the installation script to get started.</p>
+            </div>
+            
+            <!-- Code Block and UI Image in Two Rows -->
+            <div class="mx-auto">
+                <!-- Installation Guide Row -->
+                <div class="mb-8">
+                    <div class="code-block text-sm">
+                        <span class="comment"># Clone the repository</span></br>
+                        <span class="command">git clone</span> https://github.com/VersusControl/ai-infrastructure-agent.git</br>
+                        <span class="command">cd</span> <span class="path">ai-infrastructure-agent</span></br>
+                        </br>
+                        <span class="comment"># Run the installation script</span></br>
+                        <span class="command">./scripts/install.sh</span></br>
+                        </br>
+                        <span class="comment"># Start the Web UI</span></br>
+                        <span class="command">./scripts/run-web-ui.sh</span></br>
+                    </div>
+                </div>
+                <!-- Project UI Image Row -->
+                <div class="flex justify-center">
+                    <!-- Placeholder for Web UI Image. Replace docs/images/web-dashboard.svg with the actual path if different. -->
+                    <img src="images/web-dashboard.svg" alt="Project Web UI" class="rounded-lg shadow-2xl w-full" style="max-width: 1200px;">
+                </div>
+            </div>
+        </section>
+
+        <!-- GitHub Badges -->
+        <div class="flex justify-center space-x-4 mb-16">
+            <a href="https://github.com/VersusControl/ai-infrastructure-agent/stargazers"><img src="https://img.shields.io/github/stars/VersusControl/ai-infrastructure-agent?style=for-the-badge&logo=github&color=blue" alt="GitHub Stars"></a>
+            <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/LICENSE"><img src="https://img.shields.io/github/license/VersusControl/ai-infrastructure-agent?style=for-the-badge&color=brightgreen" alt="License"></a>
+            <a href="https://golang.org/"><img src="https://img.shields.io/badge/Go-1.24.2+-00ADD8?style=for-the-badge&logo=go" alt="Go Version"></a>
+            <a href="https://aws.amazon.com/"><img src="https://img.shields.io/badge/AWS-Cloud-FF9900?style=for-the-badge&logo=amazon-aws" alt="AWS"></a>
+        </div>
+
+        <!-- Main Features Section -->
+        <section class="mb-16">
+            <h2 class="text-4xl font-bold text-center mb-8 text-white">Main Features</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Natural Language Interface</h3>
+                    <p class="text-gray-400">Describe your desired infrastructure in plain English, and let the AI handle the rest.</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Multi-AI Provider Support</h3>
+                    <p class="text-gray-400">Flexibly switch between OpenAI, Google Gemini, and Anthropic models.</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Visual Web Dashboard</h3>
+                    <p class="text-gray-400">Manage and monitor your infrastructure through an intuitive web interface.</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Terraform-like State</h3>
+                    <p class="text-gray-400">Maintains an accurate state of your infrastructure to prevent drift.</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Conflict Detection</h3>
+                    <p class="text-gray-400">Safely execute plans with built-in conflict detection and dry-run mode.</p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Broad AWS Resource Support</h3>
+                    <p class="text-gray-400">Support for VPC, EC2, Security Groups, Auto Scaling Groups, and ALBs.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Simple Demo Section -->
+        <section class="mb-16">
+            <h2 class="text-4xl font-bold text-center mb-8 text-white">Simple Demo</h2>
+            <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
+                <p class="text-lg text-gray-400 mb-4">Prompt:</p>
+                <div class="code-block mb-6">
+                    <p>"Create an EC2 for hosting an Apache Server with a dedicated security group that allows inbound HTTP (port 80) and SSH (port 22) traffic."</p>
+                </div>
+                <p class="text-lg text-gray-400 mb-4">Result:</p>
+                <p class="text-gray-400 mb-6">The agent creates a detailed execution plan to provision an EC2 instance and a corresponding security group with the specified rules, then awaits your approval before applying the changes.</p>
+                <!-- Demo Image -->
+                <div class="flex justify-center">
+                    <img src="images/simple-demo.svg" alt="Simple Demo Result" class="rounded-lg shadow-2xl w-full" style="max-width: 1150px;">
+                </div>
+            </div>
+        </section>
+
+        <!-- Advanced Demo Section -->
+        <section class="mb-16">
+            <h2 class="text-4xl font-bold text-center mb-8 text-white">Advanced Demo</h2>
+            <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
+                <p class="text-lg text-gray-400 mb-4">Prompt:</p>
+                <div class="code-block mb-6">
+                    <p>"Create a production VPC with a CIDR block of 10.0.0.0/16 across two availability zones. Set up public subnets (10.0.1.0/24 and 10.0.2.0/24) for internet-facing load balancers. Create private subnets for application servers (10.0.11.0/24 and 10.0.12.0/24). Set up dedicated database subnets (10.0.21.0/24 and 10.0.22.0/24). Configure Internet Gateway and NAT Gateway for proper routing."</p>
+                </div>
+                <p class="text-lg text-gray-400 mb-4">Result:</p>
+                <p class="text-gray-400 mb-6">The agent generates a comprehensive plan to build a multi-AZ, multi-tier VPC network architecture, including all necessary subnets, gateways, and routing configurations, ready for a production workload.</p>
+                <!-- Demo Image -->
+                <div class="flex justify-center">
+                    <img src="images/advanced-demo.svg" alt="Advanced Demo Result" class="rounded-lg shadow-2xl w-full" style="max-width: 1150px;">
+                </div>
+            </div>
+        </section>
+
+        <!-- Model Support Section -->
+        <section class="mb-16">
+            <h2 class="text-4xl font-bold text-center mb-8 text-white">Supported AI Models</h2>
+            <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
+                <p class="text-lg text-gray-400 mb-8 text-center">Choose the AI provider that best fits your needs and infrastructure requirements.</p>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- OpenAI -->
+                    <div class="bg-gray-700 p-6 rounded-lg border border-gray-600 text-center">
+                        <div class="mb-4">
+                            <svg class="w-12 h-12 mx-auto text-blue-400" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-blue-400">OpenAI</h3>
+                    </div>
+                    
+                    <!-- Google Gemini -->
+                    <div class="bg-gray-700 p-6 rounded-lg border border-gray-600 text-center">
+                        <div class="mb-4">
+                            <svg class="w-12 h-12 mx-auto text-green-400" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2.4c5.302 0 9.6 4.298 9.6 9.6s-4.298 9.6-9.6 9.6S2.4 17.302 2.4 12 6.698 2.4 12 2.4zm-1.2 4.8v9.6h2.4V7.2h-2.4zm-3.6 2.4v7.2h2.4V9.6H7.2zm7.2 0v7.2h2.4V9.6h-2.4z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-green-400">Google Gemini</h3>
+                    </div>
+                    
+                    <!-- Anthropic -->
+                    <div class="bg-gray-700 p-6 rounded-lg border border-gray-600 text-center">
+                        <div class="mb-4">
+                            <svg class="w-12 h-12 mx-auto text-purple-400" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-purple-400">Anthropic Claude</h3>
+                    </div>
+                    
+                    <!-- AWS Bedrock Nova -->
+                    <div class="bg-gray-700 p-6 rounded-lg border border-gray-600 text-center">
+                        <div class="mb-4">
+                            <svg class="w-12 h-12 mx-auto text-orange-400" viewBox="0 0 24 24" fill="none">
+                                <!-- AWS Nova-style diamond/star pattern -->
+                                <path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z" fill="currentColor" opacity="0.8"/>
+                                <!-- Inner diamond -->
+                                <path d="M12 6L14 10L18 12L14 14L12 18L10 14L6 12L10 10L12 6Z" fill="currentColor" opacity="0.6"/>
+                                <!-- Central core -->
+                                <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+                                <!-- Subtle outer glow -->
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="0.5" fill="none" opacity="0.3"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 text-orange-400">AWS Bedrock Nova</h3>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-900 p-6 rounded-lg border border-gray-600 text-center">
+                    <h4 class="text-lg font-bold mb-4 text-white">Configuration Example</h4>
+                    <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                        <a href="docs.html#/api-key-setup/openai-api-setup" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition-colors">OpenAI Setup Guide</a>
+                        <a href="docs.html#/api-key-setup/gemini-api-setup" class="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition-colors">Gemini Setup Guide</a>
+                        <a href="docs.html#/api-key-setup/aws-bedrock-nova-setup" class="inline-block bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-sm transition-colors">Bedrock Setup Guide</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Additional Information Section -->
+        <footer class="text-center text-gray-500">
+            <p class="mb-4">We welcome contributions! Please read our <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/README.md#contributing" class="text-indigo-400 hover:underline">contribution guidelines</a> to get started.</p>
+            <div class="space-x-4 mb-4">
+                <a href="docs.html" class="hover:underline">Docs</a>
+                <span>&bull;</span>
+                <a href="https://github.com/VersusControl/ai-infrastructure-agent/issues" class="hover:underline">Issues</a>
+                <span>&bull;</span>
+                <a href="https://github.com/VersusControl/ai-infrastructure-agent/discussions" class="hover:underline">Discussions</a>
+            </div>
+            <p>Licensed under the <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/LICENSE" class="text-indigo-400 hover:underline">MIT License</a>.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('active');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (!mobileMenuBtn.contains(event.target) && !mobileMenu.contains(event.target)) {
+                mobileMenu.classList.remove('active');
+            }
+        });
+    </script>
+
+</body>
+</html>
