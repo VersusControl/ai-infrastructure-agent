@@ -30,9 +30,9 @@ This guide will help you obtain a Google Gemini API key for use with the AI Infr
 For enterprise use or more control:
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create or select a project
-3. Enable the "Generative Language API" 
+3. Enable the "Gemini API" 
 4. Go to "Credentials" → "Create Credentials" → "API Key"
-5. Restrict the API key to "Generative Language API" for security
+5. Restrict the API key to "Gemini API" for security
 
 ### 3. Choose Your Model
 
@@ -82,11 +82,7 @@ agent:
 
 ### Free Tier Limits
 
-Google AI Studio provides generous free tier limits:
-
-- **Rate limits**: 15 requests per minute, 1,500 requests per day (may vary by model)
-- **Token limits**: Up to 1M tokens per day for most models
-- **Free quota**: Substantial monthly allowance suitable for development
+Google AI Studio provides a free tier for the Gemini API. The limits may vary, but typically include a generous number of requests per minute and a substantial monthly quota suitable for development and testing. For the most up-to-date information, please refer to the official [Google AI pricing page](https://ai.google.dev/pricing).
 
 ### Current Pricing (USD per 1M tokens)
 
@@ -172,7 +168,7 @@ echo $GEMINI_API_KEY
 # Test with curl
 curl -H "Content-Type: application/json" \
      -d '{"contents":[{"parts":[{"text":"Hello"}]}]}' \
-     "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$GEMINI_API_KEY"
+     "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=$GEMINI_API_KEY"
 ```
 
 #### "Quota exceeded"
@@ -202,7 +198,7 @@ curl -H "Content-Type: application/json" \
          "parts": [{"text": "Respond with: API key working correctly"}]
        }]
      }' \
-     "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$GEMINI_API_KEY"
+     "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=$GEMINI_API_KEY"
 ```
 
 Successful response should include generated text.
