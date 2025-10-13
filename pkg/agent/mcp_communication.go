@@ -875,35 +875,11 @@ func (a *StateAwareAgent) VisualizeDependencyGraph(ctx context.Context, format s
 		return nil, fmt.Errorf("failed to visualize dependency graph: %w", err)
 	}
 
-	// Extract the complete response from MCP tool
-	// The tool can return data in two formats:
-	// 1. Direct map with visualization, graph, and metadata keys (from mock MCP server)
-	// 2. JSON string in "text" field (from real MCP server via stdio)
-	var graphResponse map[string]interface{}
-
-	// First, check if the result already has the expected keys (direct format)
-	if _, hasViz := result["visualization"]; hasViz {
-		graphResponse = result
-	} else if text, exists := result["text"]; exists {
-		// Otherwise, try to parse from text field
-		if textStr, ok := text.(string); ok {
-
-			// Parse the JSON response
-			if err := json.Unmarshal([]byte(textStr), &graphResponse); err != nil {
-				// If parsing fails, return the text as visualization only
-				a.Logger.WithError(err).Warn("Failed to parse graph response JSON, returning basic structure")
-				return map[string]interface{}{
-					"visualization": textStr,
-				}, nil
-			}
-		}
-	}
-
-	if len(graphResponse) == 0 {
+	if len(result) == 0 {
 		return nil, fmt.Errorf("graph visualization returned empty response")
 	}
 
-	return graphResponse, nil
+	return result, nil
 }
 
 // ExportInfrastructureState calls the MCP server to export infrastructure state
