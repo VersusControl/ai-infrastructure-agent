@@ -124,7 +124,7 @@ mcp:
 
 agent:
   provider: "openai"          # openai, gemini, anthropic, bedrock
-  model: "gpt-4o-mini"       # Recommended starting model
+  model: "gpt-4o-mini"
   max_tokens: 4000
   temperature: 0.1
   dry_run: false              
