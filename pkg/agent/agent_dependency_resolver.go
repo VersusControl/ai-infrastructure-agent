@@ -224,21 +224,48 @@ func (a *StateAwareAgent) resolveFromInfrastructureState(stepID, requestedField,
 	}
 
 	// Try to find the field directly in the MCP response
-	if id, ok := mcpResponse[requestedField].(string); ok && id != "" {
-		// Cache it for future use
-		a.mappingsMutex.Lock()
-		a.resourceMappings[stepID] = id
-		a.mappingsMutex.Unlock()
+	if fieldValue, exists := mcpResponse[requestedField]; exists {
+		// Handle string field
+		if id, ok := fieldValue.(string); ok && id != "" {
+			// Cache it for future use
+			a.mappingsMutex.Lock()
+			a.resourceMappings[stepID] = id
+			a.mappingsMutex.Unlock()
 
-		a.Logger.WithFields(map[string]interface{}{
-			"reference":       reference,
-			"step_id":         stepID,
-			"resource_id":     id,
-			"source":          "state_direct_field",
-			"requested_field": requestedField,
-		}).Info("Resolved field dependency directly from state")
+			a.Logger.WithFields(map[string]interface{}{
+				"reference":       reference,
+				"step_id":         stepID,
+				"resource_id":     id,
+				"source":          "state_direct_field",
+				"requested_field": requestedField,
+			}).Info("Resolved field dependency directly from state")
 
-		return id, nil
+			return id, nil
+		}
+
+		// Handle array field - serialize to JSON for use in other tools
+		if arrayValue, ok := fieldValue.([]interface{}); ok && len(arrayValue) > 0 {
+			jsonBytes, err := json.Marshal(arrayValue)
+			if err == nil {
+				jsonStr := string(jsonBytes)
+
+				// Cache it for future use
+				a.mappingsMutex.Lock()
+				a.resourceMappings[stepID] = jsonStr
+				a.mappingsMutex.Unlock()
+
+				a.Logger.WithFields(map[string]interface{}{
+					"reference":       reference,
+					"step_id":         stepID,
+					"resource_id":     jsonStr,
+					"source":          "state_array_field",
+					"requested_field": requestedField,
+					"array_length":    len(arrayValue),
+				}).Info("Resolved array field dependency from state")
+
+				return jsonStr, nil
+			}
+		}
 	}
 
 	// Use configuration-driven field resolver with resource type detection
@@ -250,14 +277,6 @@ func (a *StateAwareAgent) resolveFromInfrastructureState(stepID, requestedField,
 			a.mappingsMutex.Lock()
 			a.resourceMappings[stepID] = id
 			a.mappingsMutex.Unlock()
-
-			a.Logger.WithFields(map[string]interface{}{
-				"reference":   reference,
-				"step_id":     stepID,
-				"resource_id": id,
-				"source":      "state_field_resolver",
-				"field":       field,
-			}).Debug("Resolved dependency reference from state")
 
 			return id, nil
 		}

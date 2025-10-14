@@ -1,0 +1,296 @@
+# Plan-Level Recovery Analysis
+
+## Context
+
+You are analyzing a **PLAN EXECUTION FAILURE** where an infrastructure deployment plan failed at a specific step. Your task is to generate ONE complete recovery strategy that preserves successfully completed work while fixing the failure.
+
+## Execution Overview
+
+- **Execution ID**: {{executionId}}
+- **Started**: {{executionStarted}}
+- **Original Intent**: {{originalUserIntent}}
+- **Action**: {{originalAction}}
+- **Total Steps in Original Plan**: {{totalStepsInOriginalPlan}}
+- **Recovery Attempt**: {{attemptNumber}}
+
+## Failure Information
+
+**Failed at Step {{failedStepNumber}} of {{totalSteps}}**
+
+- **Step ID**: {{failedStepId}}
+- **Step Name**: {{failedStepName}}
+- **Description**: {{failedStepDescription}}
+- **Action**: {{failedStepAction}}
+- **MCP Tool**: {{failedStepMcpTool}}
+- **Error**: {{failureError}}
+- **Time of Failure**: {{failureTime}}
+
+{{failedStepParameters}}
+
+## ✅ Successfully Completed Steps (MUST PRESERVE)
+
+**{{completedStepsCount}} steps completed successfully before failure. These resources MUST be preserved and reused in recovery plans:**
+
+{{completedStepsDetails}}
+
+## ⏳ Remaining Steps (Not Yet Executed)
+
+**{{remainingStepsCount}} steps were not executed due to the failure:**
+
+{{remainingStepsDetails}}
+
+{{currentInfrastructureState}}
+
+{{resourceMappings}}
+
+{{previousRecoveryAttempts}}
+
+## Available MCP Tools
+
+**{{availableToolsCount}} AWS tools available for recovery:**
+
+{{availableToolsDetails}}
+
+## Required Output: Single Recovery Strategy
+
+Generate **ONE recovery strategy** in JSON format. Analyze the failure and determine the optimal recovery approach.
+
+### Recovery Strategy Guidelines
+
+1. **Include ALL completed steps first** - Add completed steps to the executionPlan with status="completed" to show the full execution flow
+2. **Preserve completed work** - DO NOT re-execute completed steps, just reference their resource IDs
+3. **Analyze the failure** - Understand what went wrong and what's needed to fix it
+4. **Design recovery steps intelligently**:
+   - Add steps to fix missing dependencies or prerequisites
+   - Modify the failed step if parameters need correction
+   - Include the remaining unexecuted steps from the original plan
+   - Adjust dependencies based on the new recovery steps
+5. **Reuse existing resources** - Reference completed resources by their actual IDs using the step ID
+6. **Maintain proper dependencies** - Ensure each step has correct `dependsOn` array
+7. **Use standard actions** - Only "create" or "query" actions
+
+### Intelligence Requirements
+
+The AI should:
+- **Understand the context**: Analyze completed steps, failed step, and remaining steps
+- **Determine root cause**: Why did the step fail? What's missing or incorrect?
+- **Design minimal recovery**: Add only necessary steps, don't over-engineer
+- **Preserve continuity**: The recovery plan should flow naturally from completed work
+- **Think adaptively**: The number of steps needed depends on the failure type
+
+### Recovery Plan Structure
+
+The `executionPlan` MUST intelligently contain IN THIS ORDER:
+
+1. **Completed steps** (status="completed"): Include ALL completed steps first with their original step IDs and actual resource IDs
+2. **Recovery steps** (status="pending"): Only if needed to verify or discover resources or fix issues
+3. **Retry/Fix step** (status="pending"): The fixed version of the failed operation (if applicable)
+4. **Remaining steps** (status="pending"): Original remaining steps, adjusted for new dependencies
+
+**CRITICAL**: The executionPlan must show the COMPLETE execution flow from start to finish, including completed steps.
+
+**Example structure:**
+```json
+"executionPlan": [
+  // First: Include completed steps with status="completed"
+  {
+    "id": "step-discover-vpc-for-alb-creation",  // Original step ID
+    "name": "Discover VPC for ALB",
+    "status": "completed",                        // Mark as completed!
+    "resourceId": "vpc",
+    "mcpTool": "list-vpcs",
+    // ... other fields from completed step
+  },
+  // Then: Add recovery steps with status="pending"
+  {
+    "id": "step-discover-availability-zones-for-recovery",
+    "status": "pending",
+    // ... recovery step details
+  },
+  // Then: Add retry/fix step
+  {
+    "id": "step-discover-public-subnets-for-alb-recovery",
+    "status": "pending",
+    // ... fixed step details
+  },
+  // Finally: Add remaining steps
+  {
+    "id": "step-create-alb-security-group",
+    "status": "pending",
+    // ... remaining step details
+  }
+]
+```
+
+**Step count calculation:**
+- `total_steps` = completed + recovery + remaining
+- `preserved_count` = number of completed steps included
+- `new_steps_count` = number of NEW recovery steps (not including completed or original remaining)
+
+### Required JSON Response Format
+
+```json
+{
+  "failure_reason": "Clear explanation of why the step failed",
+  "root_cause": "Deep analysis of the underlying cause",
+  "impact_assessment": "How this failure affects remaining steps and overall plan",
+  "confidence": 0.85,
+  
+  "strategy": {
+    "action": "create_infrastructure|update_infrastructure|delete_infrastructure",
+    "reasoning": "Detailed explanation of the recovery approach. Explain: (1) What completed steps are preserved, (2) What's being fixed or added, (3) Why this approach will succeed, (4) How remaining steps are handled.",
+    "confidence": 0.90,
+    "success_probability": 0.90,
+    "risk_level": "low|medium|high",
+    "estimated_duration": "5m",
+    
+    "executionPlan": [
+      // FIRST: Include ALL completed steps with status="completed"
+      {
+        "status": "completed"
+      },
+      // THEN: Add recovery steps with status="pending"
+      {
+        "id": "unique-step-id",
+        "name": "Human-readable step name",
+        "description": "Clear description of what this step does and why",
+        "action": "create|query",
+        "resourceId": "logical-resource-identifier",
+        "mcpTool": "exact-mcp-tool-name-from-available-tools",
+        "toolParameters": {
+          "parameter1": "value-or-reference",
+          "parameter2": "{{dependency-step-id.fieldName}}"
+        },
+        "dependsOn": ["list-of-step-ids"],
+        "estimatedDuration": "30s",
+        "status": "pending"
+      }
+      // Add as many steps as needed: recovery steps, retry step, remaining steps
+    ],
+    
+    "total_steps": 0,  // Count of ALL steps in executionPlan (completed + new + remaining)
+    "preserved_count": 0,  // Count of completed steps included
+    "new_steps_count": 0,  // Count of NEW recovery steps only (not completed, not remaining)
+    "recovery_notes": "Brief summary: Preserves X completed steps (list them), adds Y recovery steps (list them), includes Z remaining steps."
+  },
+  
+  "risk_factors": [
+    "Potential risks specific to this recovery approach",
+    "What could go wrong and why"
+  ],
+  "success_factors": [
+    "Why this recovery approach should work",
+    "What supports the success probability estimate"
+  ]
+}
+```
+
+## 🚨 CRITICAL GUIDELINES
+
+1. **Include completed steps FIRST** - The executionPlan must start with all completed steps (status="completed")
+2. **Think intelligently** - Analyze the failure deeply and design the minimal effective recovery
+3. **Variable step count** - Use as few or as many steps as needed (1 to 20+)
+4. **Don't re-execute completed work** - Completed steps should have status="completed", not "pending"
+5. **Use actual resource IDs** - Reference completed resources by their real IDs from the state
+6. **Proper dependencies** - Use `{{step-id.fieldName}}` for outputs from steps (both completed and new)
+   - ✅ CORRECT: `{{step-discover-azs.availabilityZones.0}}`
+   - ❌ WRONG: `{{step-discover-azs.output.availabilityZones.0}}` (no .output!)
+   - ✅ CORRECT: `{{step-list-vpcs.vpcId}}`
+   - ❌ WRONG: `{{step-list-vpcs.output.vpcId}}` (no .output!)
+7. **Standard actions only** - "create" or "query" (no custom actions)
+8. **Include ALL remaining steps** - After fixing the failure, include adjusted remaining steps from original plan
+9. **Calculate totals accurately** - `total_steps` = count of ALL steps in executionPlan (completed + new + remaining)
+10. **Realistic assessments** - Base success probability on actual error analysis, not optimism
+11. **Return ONLY valid JSON** - No markdown, no explanations outside JSON
+
+## Recovery Decision Framework
+
+### Step 1: List Completed Steps First
+- Include ALL completed steps in executionPlan with status="completed"
+- Use their original step IDs
+- Include their actual resource IDs from the completed step data
+- This shows users the full execution context
+
+### Step 2: Understand the Failure
+- What was the root cause? (Missing resource? Wrong parameter? Permission issue?)
+- What resources were successfully created before the failure?
+- What steps remain unexecuted in the original plan?
+
+### Step 3: Design Minimal Recovery
+- **Simple parameter fix**: Completed steps + 1 retry step + remaining steps
+- **Missing prerequisite**: Completed steps + 2 recovery steps (create missing, retry) + remaining steps
+- **Complex issue**: Completed steps + N recovery steps + retry + remaining steps
+
+### Step 4: Build Complete Plan
+- Start with completed steps (status="completed")
+- Add recovery steps (status="pending")
+- Include the fixed retry of the failed operation (status="pending")
+- Append remaining unexecuted steps from original plan (status="pending")
+
+### Step 5: Validate Dependencies
+- Ensure each step's `dependsOn` is correct
+- New steps depend on both completed and recovery steps using `{{step-id.field}}`
+- Remaining steps updated to depend on recovery outputs if needed
+
+## Example Recovery Thinking
+
+**Scenario: ALB Missing Multi-AZ Subnets**
+```
+Analysis:
+- Completed: Step 1: Discover VPC (vpc-xxx)
+- Failed: Step 2: List subnets for ALB (only 1 AZ found, need 2)
+- Remaining: Steps 3-9 (create security group, ALB, listener, etc.)
+
+Solution:
+1. Include completed VPC discovery (status="completed")
+2. Add: Discover availability zones
+3. Add: Create subnet in second AZ
+4. Retry: List subnets for ALB (should now find 2 AZs)
+5. Include: All remaining steps 3-9
+
+Result: 1 completed + 3 recovery + 7 remaining = 11 total steps
+- preserved_count: 1
+- new_steps_count: 3
+- total_steps: 11
+```
+
+**Scenario: Wrong Parameter**
+```
+Analysis:
+- Completed: Network, subnet, security group (3 steps)
+- Failed: Create instance (invalid instance type)
+- Remaining: Storage, monitoring (2 steps)
+
+Solution:
+1. Include 3 completed steps (status="completed")
+2. Retry: Create instance with correct type
+3. Include 2 remaining steps
+
+Result: 3 completed + 1 retry + 2 remaining = 6 total steps
+- preserved_count: 3
+- new_steps_count: 0 (just a retry, not new)
+- total_steps: 6
+```
+
+**Scenario: Missing Multiple Prerequisites**
+```
+Analysis:
+- Completed: Network infrastructure (2 steps)
+- Failed: Create application (missing database, cache, queue)
+- Remaining: Application, monitoring, backup (3 steps)
+
+Solution:
+1. Include 2 completed network steps (status="completed")
+2. Add: Create database
+3. Add: Create cache
+4. Add: Create queue
+5. Retry: Create application
+6. Include: 3 remaining steps
+
+Result: 2 completed + 4 recovery + 3 remaining = 9 total steps
+- preserved_count: 2
+- new_steps_count: 3 (database, cache, queue are NEW)
+- total_steps: 9
+```
+
+Return ONLY the JSON response. No additional text before or after the JSON.

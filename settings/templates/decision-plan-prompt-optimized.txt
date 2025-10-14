@@ -202,13 +202,7 @@ Return ONLY valid JSON (no markdown):
       "riskLevel": "low|medium|high",
       "status": "pending"
     }
-  ],
-  "recoveryStrategy": {
-    "enableAutoRetry": true,
-    "maxRetries": 3,
-    "backoffStrategy": "exponential",
-    "fallbackOptions": []
-  }
+  ]
 }
 
 ═══════════════════════════════════════════════════════════════════

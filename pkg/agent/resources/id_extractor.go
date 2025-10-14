@@ -85,11 +85,15 @@ func (e *IDExtractor) ExtractResourceID(toolName string, resourceType string, pa
 		return "", fmt.Errorf("no patterns matched for unknown action type on tool %s (resource type: %s)", toolName, resourceType)
 	}
 
+	// Determine if we should extract first element from arrays
+	// For plural resource types (vpcs, subnets, security_groups), extract first element
+	extractFirstFromArray := isPluralResourceType(resourceType)
+
 	// Try patterns for this resource type and action
 	for _, pattern := range patterns {
 		if e.matchesResourceType(pattern.ResourceTypes, resourceType) {
 			for _, fieldPath := range pattern.FieldPaths {
-				if value := e.extractFromPath(dataSource, fieldPath); value != "" {
+				if value := e.extractFromPath(dataSource, fieldPath, extractFirstFromArray); value != "" {
 					return value, nil
 				}
 			}
@@ -111,7 +115,7 @@ func (e *IDExtractor) matchesResourceType(patternTypes []string, resourceType st
 }
 
 // extractFromPath extracts a value from nested data using dot notation
-func (e *IDExtractor) extractFromPath(data map[string]interface{}, path string) string {
+func (e *IDExtractor) extractFromPath(data map[string]interface{}, path string, extractFirstFromArray bool) string {
 	if data == nil {
 		return ""
 	}
@@ -145,8 +149,13 @@ func (e *IDExtractor) extractFromPath(data map[string]interface{}, path string) 
 		if i == len(parts)-1 {
 			// Last part - return the value
 			if value, ok := current[part]; ok {
-				// Check if the value is an array - serialize it as JSON
+				// Check if the value is an array
 				if arrayValue, isArray := value.([]interface{}); isArray {
+					// For plural resource types, extract first element instead of serializing
+					if extractFirstFromArray && len(arrayValue) > 0 {
+						return fmt.Sprintf("%v", arrayValue[0])
+					}
+					// Otherwise serialize as JSON for dependency passing
 					jsonBytes, err := json.Marshal(arrayValue)
 					if err == nil {
 						return string(jsonBytes)
@@ -242,8 +251,9 @@ func (e *IDExtractor) ExtractAllResourceIDs(toolName string, parameters, result 
 				continue // Skip wildcard for this function
 			}
 
+			extractFirst := isPluralResourceType(resourceType)
 			for _, fieldPath := range pattern.FieldPaths {
-				if value := e.extractFromPath(dataSource, fieldPath); value != "" {
+				if value := e.extractFromPath(dataSource, fieldPath, extractFirst); value != "" {
 					ids[resourceType] = value
 					break // Take first match for this resource type
 				}
@@ -252,4 +262,11 @@ func (e *IDExtractor) ExtractAllResourceIDs(toolName string, parameters, result 
 	}
 
 	return ids
+}
+
+// isPluralResourceType checks if a resource type is plural (represents multiple resources)
+// For plural types, we extract the first element from arrays instead of serializing
+// A resource type is considered plural if it ends with 's'
+func isPluralResourceType(resourceType string) bool {
+	return strings.HasSuffix(resourceType, "s")
 }

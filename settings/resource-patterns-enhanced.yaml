@@ -128,25 +128,29 @@ resource_identification:
 tool_resource_patterns:
   vpc:
     - '^create-vpc$'
-    - '^list-vpcs$'
     - '^get-default-vpc$'
+
+  vpcs:
+    - '^list-vpcs$'
     
   subnet:
     - '^create-subnet$'
     - '^create-private-subnet$'
     - '^create-public-subnet$'
-    - '^list-subnets$'
     
   subnets:
+    - '^list-subnets$'
     - '^list-subnets-for-alb$'
     
   security_group:
     - '^create-security-group$'
-    - '^list-security-groups$'
     - '^add-security-group-ingress-rule$'
     - '^add-security-group-egress-rule$'
     - '^delete-security-group$'
-    
+
+  security_groups:
+    - '^list-security-groups$'
+
   ec2_instance:
     - '^create-ec2-instance$'
     - '^list-ec2-instances$'

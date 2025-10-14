@@ -43,18 +43,21 @@ import (
 //   1. execution := agent.ExecuteConfirmedPlanWithDryRun(ctx, decision, progressChan, false)
 //   2. // Monitor execution through progressChan updates
 
-// ExecuteConfirmedPlanWithRecovery executes a plan with UI-coordinated recovery
-func (a *StateAwareAgent) ExecuteConfirmedPlanWithRecovery(ctx context.Context, decision *types.AgentDecision, progressChan chan<- *types.ExecutionUpdate, dryRun bool, coordinator RecoveryCoordinator) (*types.PlanExecution, error) {
-	if dryRun {
-		// Dry run doesn't need recovery coordination
-		return a.ExecuteConfirmedPlanWithDryRun(ctx, decision, progressChan, dryRun)
-	}
+// ========== Plan-Level Recovery Implementation ==========
 
+// ExecutePlanWithReActRecovery executes a plan with plan-level ReAct recovery
+// This is the NEW plan-level recovery method that replaces step-level recovery
+func (a *StateAwareAgent) ExecutePlanWithReActRecovery(
+	ctx context.Context,
+	decision *types.AgentDecision,
+	progressChan chan<- *types.ExecutionUpdate,
+	coordinator PlanRecoveryCoordinator,
+) (*types.PlanExecution, error) {
 	a.Logger.WithFields(map[string]interface{}{
 		"decision_id": decision.ID,
 		"action":      decision.Action,
 		"plan_steps":  len(decision.ExecutionPlan),
-	}).Info("Executing confirmed plan with recovery coordination")
+	}).Info("Executing plan with plan-level ReAct recovery")
 
 	// Create execution plan
 	execution := &types.PlanExecution{
@@ -72,116 +75,532 @@ func (a *StateAwareAgent) ExecuteConfirmedPlanWithRecovery(ctx context.Context, 
 		progressChan <- &types.ExecutionUpdate{
 			Type:        "execution_started",
 			ExecutionID: execution.ID,
-			Message:     "Starting plan execution with recovery",
+			Message:     "Starting plan execution with ReAct recovery",
 			Timestamp:   time.Now(),
 		}
 	}
 
-	// Define default recovery strategy
-	defaultRecoveryStrategy := &RecoveryStrategy{
-		MaxAttempts:          1,
-		EnableAIConsultation: true,
-		AllowToolSwapping:    true,
-		AllowParameterMod:    true,
-		TimeoutPerAttempt:    5 * time.Minute,
-	}
+	// Get recovery configuration
+	config := DefaultPlanRecoveryConfig(coordinator)
 
-	// Execute each step in the plan with ReAct-style recovery
-	for i, planStep := range decision.ExecutionPlan {
-		// Define a custom type for the context key
-		type contextKey string
-		const stepNumberKey contextKey = "step_number"
+	// Attempt execution with recovery (up to MaxRecoveryAttempts)
+	for attemptNumber := 1; attemptNumber <= config.MaxRecoveryAttempts; attemptNumber++ {
 
-		// Add step number to context for tracking
-		stepCtx := context.WithValue(ctx, stepNumberKey, i+1)
+		// Execute the plan
+		planToExecute := decision.ExecutionPlan
+		if attemptNumber > 1 {
+			// For retry attempts, planToExecute will be set by recovery strategy execution
+			a.Logger.Info("This is a recovery attempt - plan should have been adjusted by previous recovery")
+		}
 
+		// Try to execute all steps
+		failedStepIndex := -1
+		var failureError error
+
+		for i, planStep := range planToExecute {
+			// Skip steps that are already completed (from previous recovery attempts)
+			if planStep.Status == "completed" {
+				a.Logger.WithFields(map[string]interface{}{
+					"step_id":        planStep.ID,
+					"step_name":      planStep.Name,
+					"step_index":     i,
+					"attempt_number": attemptNumber,
+				}).Debug("Skipping already completed step from recovery plan")
+
+				// Don't send progress updates or execute, these were done in previous attempt
+				continue
+			}
+
+			// Send step started update
+			if progressChan != nil {
+				progressChan <- &types.ExecutionUpdate{
+					Type:        "step_started",
+					ExecutionID: execution.ID,
+					StepID:      planStep.ID,
+					Message:     fmt.Sprintf("Starting step %d/%d: %s", i+1, len(planToExecute), planStep.Name),
+					Timestamp:   time.Now(),
+				}
+			}
+
+			// Execute the step
+			step, err := a.executeExecutionStep(planStep, execution, progressChan)
+
+			if err != nil {
+				// Step failed
+				step.Status = "failed"
+				step.Error = err.Error()
+				execution.Steps = append(execution.Steps, step)
+
+				failedStepIndex = i
+				failureError = err
+
+				if progressChan != nil {
+					progressChan <- &types.ExecutionUpdate{
+						Type:        "step_failed",
+						ExecutionID: execution.ID,
+						StepID:      planStep.ID,
+						Message:     fmt.Sprintf("Step %d failed: %v", i+1, err),
+						Error:       err.Error(),
+						Timestamp:   time.Now(),
+					}
+				}
+
+				break // Exit step execution loop
+			}
+
+			// Step succeeded
+			step.Status = "completed"
+			execution.Steps = append(execution.Steps, step)
+
+			if progressChan != nil {
+				progressChan <- &types.ExecutionUpdate{
+					Type:        "step_completed",
+					ExecutionID: execution.ID,
+					StepID:      planStep.ID,
+					Message:     fmt.Sprintf("Step %d completed: %s", i+1, planStep.Name),
+					Timestamp:   time.Now(),
+				}
+			}
+
+			// Persist state after successful step
+			if err := a.persistCurrentState(); err != nil {
+				a.Logger.WithError(err).Warn("Failed to persist state after successful step")
+			}
+
+			// Store resource mapping if resource was created
+			if step.Output != nil {
+				if resourceID, err := a.extractResourceIDFromResponse(step.Output, planStep.MCPTool); err == nil && resourceID != "" {
+					a.storeResourceMapping(planStep.ID, resourceID)
+				}
+			}
+		}
+
+		// Check if execution completed successfully
+		if failedStepIndex == -1 {
+			// All steps completed successfully
+			execution.Status = "completed"
+			now := time.Now()
+			execution.CompletedAt = &now
+
+			if progressChan != nil {
+				progressChan <- &types.ExecutionUpdate{
+					Type:        "execution_completed",
+					ExecutionID: execution.ID,
+					Message:     "Execution completed successfully",
+					Timestamp:   time.Now(),
+				}
+			}
+
+			return execution, nil
+		}
+
+		// Execution failed - attempt recovery
+		a.Logger.WithFields(map[string]interface{}{
+			"execution_id":      execution.ID,
+			"failed_step_index": failedStepIndex,
+			"attempt_number":    attemptNumber,
+		}).Warn("Plan execution failed, attempting recovery")
+
+		// Check if we've exhausted recovery attempts
+		if attemptNumber >= config.MaxRecoveryAttempts {
+			execution.Status = "failed"
+			execution.Errors = append(execution.Errors,
+				fmt.Sprintf("Execution failed after %d attempts: %v", attemptNumber, failureError))
+			now := time.Now()
+			execution.CompletedAt = &now
+
+			if progressChan != nil {
+				progressChan <- &types.ExecutionUpdate{
+					Type:        "execution_failed",
+					ExecutionID: execution.ID,
+					Message:     fmt.Sprintf("Execution failed after %d recovery attempts", attemptNumber),
+					Error:       failureError.Error(),
+					Timestamp:   time.Now(),
+				}
+			}
+
+			return execution, fmt.Errorf("execution failed after %d attempts: %w", attemptNumber, failureError)
+		}
+
+		// Extract user intent safely with fallback
+		userIntent := ""
+		if decision.Parameters != nil {
+			if intent, ok := decision.Parameters["user_intent"].(string); ok {
+				userIntent = intent
+			}
+		}
+		// Fallback to reasoning if user_intent is not available
+		if userIntent == "" {
+			userIntent = decision.Reasoning
+		}
+
+		// Build failure context
+		failureContext := a.buildPlanFailureContext(
+			execution,
+			failedStepIndex,
+			planToExecute[failedStepIndex],
+			failureError,
+			decision.ExecutionPlan,
+			decision.Action,
+			userIntent,
+			attemptNumber,
+		)
+
+		// Notify UI that we're analyzing recovery options
 		if progressChan != nil {
 			progressChan <- &types.ExecutionUpdate{
-				Type:        "step_started",
+				Type:        "plan_recovery_analyzing",
 				ExecutionID: execution.ID,
-				StepID:      planStep.ID,
-				Message:     fmt.Sprintf("Starting step %d/%d: %s", i+1, len(decision.ExecutionPlan), planStep.Name),
+				StepID:      planToExecute[failedStepIndex].ID,
+				Message:     fmt.Sprintf("Plan failed at step %d, analyzing recovery options...", failedStepIndex+1),
 				Timestamp:   time.Now(),
 			}
 		}
 
-		// Execute the step with ReAct-style recovery and UI coordination
-		step, err := a.ExecuteStepWithRecoveryAndCoordinator(stepCtx, planStep, execution, progressChan, defaultRecoveryStrategy, coordinator)
+		if coordinator != nil {
+			coordinator.NotifyRecoveryAnalyzing(
+				execution.ID,
+				planToExecute[failedStepIndex].ID,
+				failedStepIndex,
+				len(execution.Steps)-1, // Completed steps (excluding failed one)
+				len(planToExecute),
+			)
+		}
+
+		// Consult AI for recovery strategy
+		analysis, err := a.ConsultAIForPlanRecovery(ctx, failureContext)
 		if err != nil {
-			execution.Status = "failed"
-			execution.Errors = append(execution.Errors, fmt.Sprintf("Step %s failed after recovery attempts: %v", planStep.ID, err))
+			a.Logger.WithError(err).Error("Failed to get AI recovery analysis")
+			// Continue to next attempt without recovery strategy
+			continue
+		}
+
+		// NOTE: Don't send a separate progress update here - RequestPlanRecoveryDecision will send the full recovery plan
+		// Sending a duplicate message would overwrite the complete plan in the frontend
+
+		// Request user approval via coordinator (this sends the full recovery plan to UI)
+		approved, err := coordinator.RequestPlanRecoveryDecision(
+			execution.ID,
+			failureContext,
+			analysis.Strategy,
+		)
+
+		if err != nil {
+			a.Logger.WithError(err).Error("Failed to get recovery decision from user")
+			return execution, fmt.Errorf("recovery decision failed: %w", err)
+		}
+
+		if !approved {
+			// User rejected the recovery plan
+			execution.Status = "aborted"
+			now := time.Now()
+			execution.CompletedAt = &now
 
 			if progressChan != nil {
 				progressChan <- &types.ExecutionUpdate{
-					Type:        "step_failed_final",
+					Type:        "execution_aborted",
 					ExecutionID: execution.ID,
+					Message:     "Execution aborted by user",
+					Timestamp:   time.Now(),
+				}
+			}
+
+			return execution, fmt.Errorf("execution aborted by user")
+		}
+
+		// Execute the approved recovery strategy
+		recoveryStrategy := analysis.Strategy
+
+		if progressChan != nil {
+			progressChan <- &types.ExecutionUpdate{
+				Type:        "plan_recovery_executing",
+				ExecutionID: execution.ID,
+				Message:     fmt.Sprintf("Executing recovery plan with %d steps", len(recoveryStrategy.ExecutionPlan)),
+				Timestamp:   time.Now(),
+			}
+		}
+
+		if coordinator != nil {
+			coordinator.NotifyRecoveryExecuting(execution.ID, recoveryStrategy)
+		}
+
+		// Execute the recovery strategy
+		recoveryResult, err := a.ExecuteRecoveryStrategy(ctx, recoveryStrategy, failureContext, progressChan)
+		if err != nil {
+			a.Logger.WithError(err).Error("Recovery strategy execution failed")
+
+			if coordinator != nil {
+				coordinator.NotifyRecoveryFailed(execution.ID, err.Error())
+			}
+
+			// Continue to next recovery attempt
+			continue
+		}
+
+		// Recovery succeeded
+		a.Logger.WithFields(map[string]interface{}{
+			"execution_id":   execution.ID,
+			"recovery_steps": len(recoveryResult.CompletedSteps),
+		}).Info("Recovery strategy executed successfully")
+
+		if progressChan != nil {
+			progressChan <- &types.ExecutionUpdate{
+				Type:        "plan_recovery_completed",
+				ExecutionID: execution.ID,
+				Message:     "Recovery completed, continuing execution",
+				Timestamp:   time.Now(),
+			}
+		}
+
+		if coordinator != nil {
+			coordinator.NotifyRecoveryCompleted(execution.ID)
+		}
+
+		// Update execution with recovery steps
+		execution.Steps = append(execution.Steps, recoveryResult.CompletedSteps...)
+
+		// Update decision.ExecutionPlan for next iteration
+		// The recovery strategy's execution plan becomes our new plan to execute
+		// It's already in the standard ExecutionPlanStep format
+		decision.ExecutionPlan = recoveryStrategy.ExecutionPlan
+
+		// Continue to next attempt with the new plan
+	}
+
+	// Should not reach here
+	execution.Status = "failed"
+	now := time.Now()
+	execution.CompletedAt = &now
+	return execution, fmt.Errorf("execution failed - max recovery attempts exhausted")
+}
+
+// ConsultAIForPlanRecovery asks the AI model for plan-level recovery strategies
+func (a *StateAwareAgent) ConsultAIForPlanRecovery(
+	ctx context.Context,
+	failureContext *PlanFailureContext,
+) (*AIPlanRecoveryAnalysis, error) {
+	a.Logger.WithField("execution_id", failureContext.ExecutionID).Info("Consulting AI for plan recovery strategies")
+
+	// Create recovery engine
+	engine := NewPlanRecoveryEngine(a)
+
+	// Analyze the failure
+	analysis, err := engine.AnalyzePlanFailure(ctx, failureContext)
+	if err != nil {
+		return nil, fmt.Errorf("AI analysis failed: %w", err)
+	}
+
+	return analysis, nil
+}
+
+// ExecuteRecoveryStrategy executes a selected recovery strategy
+func (a *StateAwareAgent) ExecuteRecoveryStrategy(
+	ctx context.Context,
+	strategy *PlanRecoveryStrategy,
+	failureContext *PlanFailureContext,
+	progressChan chan<- *types.ExecutionUpdate,
+) (*PlanRecoveryResult, error) {
+
+	startTime := time.Now()
+	result := &PlanRecoveryResult{
+		Success:          false,
+		SelectedStrategy: strategy,
+		AttemptNumber:    failureContext.AttemptNumber,
+		CompletedSteps:   []*types.ExecutionStep{},
+	}
+
+	// Execute recovery plan steps (already in standard ExecutionPlanStep format)
+	for i, planStep := range strategy.ExecutionPlan {
+		// Skip steps that are already completed (preserved from original execution)
+		if planStep.Status == "completed" {
+			a.Logger.WithFields(map[string]interface{}{
+				"step_id":        planStep.ID,
+				"step_name":      planStep.Name,
+				"step_index":     i,
+				"total_steps":    len(strategy.ExecutionPlan),
+				"execution_id":   failureContext.ExecutionID,
+				"attempt_number": failureContext.AttemptNumber,
+			}).Info("✅ Skipping already completed step in recovery plan execution")
+
+			// Don't add to result.CompletedSteps since it's from original execution
+			// These are just for UI context, not part of recovery execution
+			continue
+		}
+
+		// Send step started update (same as main execution loop)
+		if progressChan != nil {
+			progressChan <- &types.ExecutionUpdate{
+				Type:        "step_started",
+				ExecutionID: failureContext.ExecutionID,
+				StepID:      planStep.ID,
+				Message:     fmt.Sprintf("Starting recovery step %d/%d: %s", i+1, len(strategy.ExecutionPlan), planStep.Name),
+				Timestamp:   time.Now(),
+			}
+		}
+
+		// Create temporary execution for this recovery step
+		tempExecution := &types.PlanExecution{
+			ID:     failureContext.ExecutionID + "-recovery",
+			Status: "running",
+		}
+
+		// Execute the step
+		step, err := a.executeExecutionStep(planStep, tempExecution, progressChan)
+		if err != nil {
+			result.Success = false
+			result.FailureReason = fmt.Sprintf("Recovery step %s failed: %v", planStep.ID, err)
+			result.Duration = time.Since(startTime)
+
+			// Send step failed update (same as main execution loop)
+			if progressChan != nil {
+				progressChan <- &types.ExecutionUpdate{
+					Type:        "step_failed",
+					ExecutionID: failureContext.ExecutionID,
 					StepID:      planStep.ID,
-					Message:     fmt.Sprintf("Step failed permanently after recovery attempts: %v", err),
+					Message:     fmt.Sprintf("Recovery step failed: %v", err),
 					Error:       err.Error(),
 					Timestamp:   time.Now(),
 				}
 			}
-			break
+
+			a.Logger.WithError(err).WithField("step_id", planStep.ID).Error("Recovery step failed")
+			return result, fmt.Errorf("recovery step failed: %w", err)
 		}
 
-		execution.Steps = append(execution.Steps, step)
+		step.Status = "completed"
+		result.CompletedSteps = append(result.CompletedSteps, step)
 
-		// 🔥 CRITICAL: Save state after each successful step
-		// This ensures that if later steps fail, we don't lose track of successfully created resources
-		a.Logger.WithField("step_id", planStep.ID).Info("Attempting to persist state after successful step")
+		// Send step completed update (same as main execution loop)
+		if progressChan != nil {
+			progressChan <- &types.ExecutionUpdate{
+				Type:        "step_completed",
+				ExecutionID: failureContext.ExecutionID,
+				StepID:      planStep.ID,
+				Message:     fmt.Sprintf("Completed recovery step %d/%d: %s", i+1, len(strategy.ExecutionPlan), planStep.Name),
+				Timestamp:   time.Now(),
+			}
+		}
 
+		// Persist state after each successful recovery step
 		if err := a.persistCurrentState(); err != nil {
-			a.Logger.WithError(err).WithField("step_id", planStep.ID).Error("CRITICAL: Failed to persist state after successful step - this may cause state inconsistency")
-			// Don't fail the execution for state persistence issues, but make it very visible
-		} else {
-			a.Logger.WithField("step_id", planStep.ID).Info("Successfully persisted state after step completion")
+			a.Logger.WithError(err).Warn("Failed to persist state after recovery step")
+		}
+
+		// Store resource mapping if resource was created
+		if step.Output != nil {
+			if resourceID, err := a.extractResourceIDFromResponse(step.Output, planStep.MCPTool); err == nil && resourceID != "" {
+				a.storeResourceMapping(planStep.ID, resourceID)
+				result.NewResourcesCreated = append(result.NewResourcesCreated, resourceID)
+			}
 		}
 	}
 
-	// Calculate and set final status
-	if execution.Status != "failed" {
-		execution.Status = "completed"
-	}
-
-	now := time.Now()
-	execution.CompletedAt = &now
-
-	// Send final progress update
-	if progressChan != nil {
-		progressChan <- &types.ExecutionUpdate{
-			Type:        "execution_completed",
-			ExecutionID: execution.ID,
-			Message:     fmt.Sprintf("Execution %s", execution.Status),
-			Timestamp:   time.Now(),
-		}
-	}
+	// Recovery completed successfully
+	result.Success = true
+	result.Duration = time.Since(startTime)
 
 	a.Logger.WithFields(map[string]interface{}{
-		"execution_id":   execution.ID,
-		"status":         execution.Status,
-		"total_steps":    len(execution.Steps),
-		"total_errors":   len(execution.Errors),
-		"execution_time": execution.CompletedAt.Sub(execution.StartedAt),
-	}).Info("Plan execution completed")
+		"execution_id":     failureContext.ExecutionID,
+		"recovery_steps":   len(result.CompletedSteps),
+		"new_resources":    len(result.NewResourcesCreated),
+		"duration_seconds": result.Duration.Seconds(),
+	}).Info("Recovery strategy executed successfully")
 
-	return execution, nil
+	return result, nil
+}
+
+// buildPlanFailureContext creates a PlanFailureContext from execution state
+func (a *StateAwareAgent) buildPlanFailureContext(
+	execution *types.PlanExecution,
+	failedStepIndex int,
+	failedStep *types.ExecutionPlanStep,
+	failureError error,
+	originalPlan []*types.ExecutionPlanStep,
+	originalAction string,
+	originalUserIntent string,
+	attemptNumber int,
+) *PlanFailureContext {
+	a.Logger.WithField("failed_step_index", failedStepIndex).Debug("Building plan failure context")
+
+	// Extract completed steps (all steps before the failed one)
+	completedSteps := make([]*CompletedStepInfo, 0)
+	for i := 0; i < failedStepIndex && i < len(execution.Steps); i++ {
+		execStep := execution.Steps[i]
+		if execStep.Status == "completed" {
+			completedStep := &CompletedStepInfo{
+				StepID:      execStep.ID,
+				StepName:    execStep.Name,
+				StepIndex:   i,
+				Status:      "completed",
+				CompletedAt: *execStep.CompletedAt,
+				Duration:    execStep.Duration,
+			}
+
+			// Extract resource ID if available
+			if execStep.Output != nil {
+				// Try to get resource ID from output
+				if resourceID, err := a.extractResourceIDFromResponse(execStep.Output, originalPlan[i].MCPTool); err == nil && resourceID != "" {
+					completedStep.ResourceID = resourceID
+					completedStep.ResourceType = a.extractResourceTypeFromStep(originalPlan[i])
+				}
+			}
+
+			if execStep.Output != nil {
+				completedStep.Output = execStep.Output
+			}
+
+			completedSteps = append(completedSteps, completedStep)
+		}
+	}
+
+	// Extract remaining steps (all steps after the failed one)
+	remainingSteps := make([]*types.ExecutionPlanStep, 0)
+	for i := failedStepIndex + 1; i < len(originalPlan); i++ {
+		remainingSteps = append(remainingSteps, originalPlan[i])
+	}
+
+	// Get resource mappings
+	a.mappingsMutex.RLock()
+	resourceMappings := make(map[string]string)
+	for k, v := range a.resourceMappings {
+		resourceMappings[k] = v
+	}
+	a.mappingsMutex.RUnlock()
+
+	// Get current infrastructure state
+	// Note: We're analyzing state without live scan for speed (scanLive=false)
+	// This uses cached state which should be sufficient for recovery context
+	currentState, _, _, err := a.AnalyzeInfrastructureState(context.Background(), false)
+	if err != nil {
+		a.Logger.WithError(err).Warn("Failed to get current infrastructure state, using nil")
+		currentState = nil
+	}
+
+	// Build the context
+	ctx := &PlanFailureContext{
+		ExecutionID:        execution.ID,
+		ExecutionStarted:   execution.StartedAt,
+		FailedStepID:       failedStep.ID,
+		FailedStepIndex:    failedStepIndex,
+		FailedStep:         failedStep,
+		FailureError:       failureError.Error(),
+		FailureTime:        time.Now(),
+		AttemptNumber:      attemptNumber,
+		CompletedSteps:     completedSteps,
+		RemainingSteps:     remainingSteps,
+		CurrentState:       currentState,
+		OriginalPlan:       originalPlan,
+		OriginalUserIntent: originalUserIntent,
+		OriginalAction:     originalAction,
+		AWSRegion:          a.awsConfig.Region,
+		ResourceMappings:   resourceMappings,
+	}
+
+	return ctx
 }
 
 // ExecuteConfirmedPlanWithDryRun executes a confirmed execution plan with a specific dry run setting
 func (a *StateAwareAgent) ExecuteConfirmedPlanWithDryRun(ctx context.Context, decision *types.AgentDecision, progressChan chan<- *types.ExecutionUpdate, dryRun bool) (*types.PlanExecution, error) {
-
-	a.Logger.WithFields(map[string]interface{}{
-		"decision_id": decision.ID,
-		"action":      decision.Action,
-		"plan_steps":  len(decision.ExecutionPlan),
-	}).Info("Executing confirmed plan")
-
-	a.Logger.WithFields(map[string]interface{}{
-		"dry_run":           dryRun,
-		"progress_chan_nil": progressChan == nil,
-		"execution_plan":    len(decision.ExecutionPlan),
-	}).Debug("ExecuteConfirmedPlan debug info")
-
 	if dryRun {
 		a.Logger.Info("Dry run mode - simulating execution")
 		a.Logger.Debug("About to call simulatePlanExecution")
@@ -211,25 +630,8 @@ func (a *StateAwareAgent) ExecuteConfirmedPlanWithDryRun(ctx context.Context, de
 		}
 	}
 
-	// Define a custom type for the context key
-	type contextKey string
-
-	// Define a constant for the key
-	const stepNumberKey contextKey = "step_number"
-
-	// Define default recovery strategy
-	defaultRecoveryStrategy := &RecoveryStrategy{
-		MaxAttempts:          1,
-		EnableAIConsultation: true,
-		AllowToolSwapping:    true,
-		AllowParameterMod:    true,
-		TimeoutPerAttempt:    5 * time.Minute,
-	}
-
-	// Execute each step in the plan with ReAct-style recovery
+	// Execute each step in the plan (simple execution without step-level recovery)
 	for i, planStep := range decision.ExecutionPlan {
-		stepCtx := context.WithValue(ctx, stepNumberKey, i+1)
-
 		// Send step started update
 		if progressChan != nil {
 			progressChan <- &types.ExecutionUpdate{
@@ -241,18 +643,18 @@ func (a *StateAwareAgent) ExecuteConfirmedPlanWithDryRun(ctx context.Context, de
 			}
 		}
 
-		// Execute the step with ReAct-style recovery
-		step, err := a.ExecuteStepWithRecovery(stepCtx, planStep, execution, progressChan, defaultRecoveryStrategy)
+		// Execute the step without recovery (simple execution)
+		step, err := a.executeExecutionStep(planStep, execution, progressChan)
 		if err != nil {
 			execution.Status = "failed"
-			execution.Errors = append(execution.Errors, fmt.Sprintf("Step %s failed after all recovery attempts: %v", planStep.ID, err))
+			execution.Errors = append(execution.Errors, fmt.Sprintf("Step %s failed: %v", planStep.ID, err))
 
 			if progressChan != nil {
 				progressChan <- &types.ExecutionUpdate{
 					Type:        "step_failed_final",
 					ExecutionID: execution.ID,
 					StepID:      planStep.ID,
-					Message:     fmt.Sprintf("Step failed permanently after recovery attempts: %v", err),
+					Message:     fmt.Sprintf("Step failed: %v", err),
 					Error:       err.Error(),
 					Timestamp:   time.Now(),
 				}

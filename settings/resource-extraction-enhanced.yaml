@@ -191,11 +191,6 @@ resource_id_extraction:
         resource_types: ["subnet"]
         priority: 1
 
-      # For list array of subnet IDs
-      - field_paths: ["subnetIds"]
-        resource_types: ["subnets"]
-        priority: 1
-
       # For get-vpc - returns single VPC
       - field_paths: ["vpcId"]
         resource_types: ["vpc"]
@@ -209,7 +204,22 @@ resource_id_extraction:
       - field_paths: ["keyName", "keyPairId"]
         resource_types: ["key_pair"]
         priority: 1
-        
+
+      # For list array of subnet IDs
+      - field_paths: ["subnetIds"]
+        resource_types: ["subnets"]
+        priority: 1
+
+      # For list array of vpc IDs
+      - field_paths: ["vpcIds"]
+        resource_types: ["vpcs"]
+        priority: 1
+
+      # For list array of sg IDs
+      - field_paths: ["securityGroupIds"]
+        resource_types: ["security_groups"]
+        priority: 1
+
       # Universal fallback for query tools
       - field_paths: ["resourceId", "id"]
         resource_types: ["*"]

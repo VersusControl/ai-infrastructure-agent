@@ -24,8 +24,9 @@ import (
 
 // WebSocket connection wrapper
 type wsConnection struct {
-	conn     *websocket.Conn
-	lastPong time.Time
+	conn       *websocket.Conn
+	lastPong   time.Time
+	writeMutex sync.Mutex // Protects concurrent writes to WebSocket
 }
 
 // WebServer handles HTTP requests for the AI agent UI
@@ -43,24 +44,23 @@ type WebServer struct {
 	decisions      map[string]*StoredDecision
 	decisionsMutex sync.RWMutex
 
-	// Recovery coordination
-	recoveryRequests map[string]*RecoveryRequest
-	recoveryMutex    sync.RWMutex
+	// Plan-level recovery coordination
+	planRecoveryRequests map[string]*PlanRecoveryRequest
+	planRecoveryMutex    sync.RWMutex
 }
 
-// RecoveryRequest represents a pending recovery decision
-type RecoveryRequest struct {
-	StepID          string                   `json:"stepId"`
-	FailureContext  map[string]interface{}   `json:"failureContext"`
-	RecoveryOptions []map[string]interface{} `json:"recoveryOptions"`
-	ResponseChan    chan *RecoveryResponse   `json:"-"`
-	Timestamp       time.Time                `json:"timestamp"`
+// PlanRecoveryRequest represents a pending plan-level recovery decision
+type PlanRecoveryRequest struct {
+	ExecutionID    string                      `json:"executionId"`
+	FailureContext *agent.PlanFailureContext   `json:"failureContext"`
+	Strategy       *agent.PlanRecoveryStrategy `json:"strategy"` // Single strategy now
+	ResponseChan   chan *PlanRecoveryResponse  `json:"-"`
+	Timestamp      time.Time                   `json:"timestamp"`
 }
 
-// RecoveryResponse represents the user's recovery decision
-type RecoveryResponse struct {
-	SelectedOptionIndex string `json:"selectedOptionIndex"`
-	Abort               bool   `json:"abort"`
+// PlanRecoveryResponse represents the user's plan recovery decision
+type PlanRecoveryResponse struct {
+	Approved bool `json:"approved"` // User approved (true) or rejected (false) the recovery plan
 }
 
 // StoredDecision stores a decision along with its execution parameters
@@ -72,10 +72,10 @@ type StoredDecision struct {
 // NewWebServer creates a new web server instance
 func NewWebServer(cfg *config.Config, awsClient *aws.Client, logger *logging.Logger) *WebServer {
 	ws := &WebServer{
-		router:           mux.NewRouter(),
-		connections:      make(map[string]*wsConnection),
-		decisions:        make(map[string]*StoredDecision),
-		recoveryRequests: make(map[string]*RecoveryRequest),
+		router:               mux.NewRouter(),
+		connections:          make(map[string]*wsConnection),
+		decisions:            make(map[string]*StoredDecision),
+		planRecoveryRequests: make(map[string]*PlanRecoveryRequest),
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true // Allow all origins in development
@@ -188,7 +188,7 @@ func (ws *WebServer) setupRoutes() {
 	api.HandleFunc("/conflicts", ws.getConflictsHandler).Methods("GET")
 	api.HandleFunc("/plan", ws.getPlanHandler).Methods("POST")
 	api.HandleFunc("/agent/process", ws.processRequestHandler).Methods("POST")
-	api.HandleFunc("/agent/execute", ws.executeConfirmedPlanHandler).Methods("POST")
+	api.HandleFunc("/agent/execute-with-plan-recovery", ws.executeWithPlanRecoveryHandler).Methods("POST")
 	api.HandleFunc("/export", ws.exportStateHandler).Methods("GET")
 
 	// Handle OPTIONS requests for all API routes
@@ -539,7 +539,8 @@ func (ws *WebServer) processRequestHandler(w http.ResponseWriter, r *http.Reques
 	})
 }
 
-func (ws *WebServer) executeConfirmedPlanHandler(w http.ResponseWriter, r *http.Request) {
+// executeWithPlanRecoveryHandler executes a confirmed plan with plan-level ReAct recovery
+func (ws *WebServer) executeWithPlanRecoveryHandler(w http.ResponseWriter, r *http.Request) {
 	var executeRequest struct {
 		DecisionID string `json:"decisionId"`
 	}
@@ -555,10 +556,10 @@ func (ws *WebServer) executeConfirmedPlanHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	ws.aiAgent.Logger.WithField("decision_id", executeRequest.DecisionID).Info("Executing confirmed plan")
+	ws.aiAgent.Logger.WithField("decision_id", executeRequest.DecisionID).Info("Executing plan with plan-level recovery")
 
-	// Retrieve the stored decision with dry run flag
-	decision, dryRun, exists := ws.getStoredDecisionWithDryRun(executeRequest.DecisionID)
+	// Retrieve the stored decision
+	decision, _, exists := ws.getStoredDecisionWithDryRun(executeRequest.DecisionID)
 	if !exists {
 		ws.aiAgent.Logger.WithField("decision_id", executeRequest.DecisionID).Error("Decision not found")
 		http.Error(w, "Decision not found", http.StatusNotFound)
@@ -573,17 +574,13 @@ func (ws *WebServer) executeConfirmedPlanHandler(w http.ResponseWriter, r *http.
 		defer close(progressChan)
 		defer ws.removeStoredDecision(executeRequest.DecisionID) // Cleanup after execution
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*20) // 20 minutes for plan-level recovery
 		defer cancel()
 
-		ws.aiAgent.Logger.WithFields(map[string]interface{}{
-			"decision_id": executeRequest.DecisionID,
-			"dry_run":     dryRun,
-		}).Debug("Starting agent execution")
-
-		execution, err := ws.aiAgent.ExecuteConfirmedPlanWithRecovery(ctx, decision, progressChan, dryRun, ws)
+		// Use new plan-level recovery execution
+		execution, err := ws.aiAgent.ExecutePlanWithReActRecovery(ctx, decision, progressChan, ws)
 		if err != nil {
-			ws.aiAgent.Logger.WithError(err).Error("Plan execution failed")
+			ws.aiAgent.Logger.WithError(err).Error("Plan execution with recovery failed")
 			// Send error update
 			select {
 			case progressChan <- &types.ExecutionUpdate{
@@ -599,7 +596,8 @@ func (ws *WebServer) executeConfirmedPlanHandler(w http.ResponseWriter, r *http.
 			ws.aiAgent.Logger.WithFields(map[string]interface{}{
 				"execution_id": execution.ID,
 				"status":       execution.Status,
-			}).Info("Plan execution completed")
+				"total_steps":  len(execution.Steps),
+			}).Info("Plan execution with plan-level recovery completed")
 		}
 	}()
 
@@ -626,10 +624,11 @@ func (ws *WebServer) executeConfirmedPlanHandler(w http.ResponseWriter, r *http.
 	// Return immediate response
 	w.Header().Set("Content-Type", "application/json")
 	response := map[string]interface{}{
-		"success":     true,
-		"message":     "Plan execution started",
-		"executionId": "exec-" + executeRequest.DecisionID,
-		"timestamp":   time.Now(),
+		"success":      true,
+		"message":      "Plan execution started with plan-level recovery",
+		"executionId":  "exec-" + executeRequest.DecisionID,
+		"recoveryType": "plan-level",
+		"timestamp":    time.Now(),
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -750,8 +749,13 @@ func (ws *WebServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			// Lock write mutex to prevent concurrent writes
+			wsConn.writeMutex.Lock()
 			conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			err := conn.WriteMessage(websocket.PingMessage, nil)
+			wsConn.writeMutex.Unlock()
+
+			if err != nil {
 				ws.aiAgent.Logger.WithError(err).WithField("conn_id", connID).Error("Failed to send ping")
 				return
 			}
@@ -794,8 +798,13 @@ func (ws *WebServer) sendStateUpdate(connID string) {
 		"timestamp": time.Now(),
 	}
 
+	// Lock the write mutex to prevent concurrent writes
+	wsConn.writeMutex.Lock()
 	wsConn.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	if err := wsConn.conn.WriteJSON(update); err != nil {
+	err = wsConn.conn.WriteJSON(update)
+	wsConn.writeMutex.Unlock()
+
+	if err != nil {
 		ws.aiAgent.Logger.WithError(err).WithField("conn_id", connID).Debug("Failed to send state update, connection likely closed")
 		// Connection is broken, it will be cleaned up by the main handler
 	}
@@ -811,8 +820,15 @@ func (ws *WebServer) broadcastUpdate(update map[string]interface{}) {
 	ws.connMutex.RUnlock()
 
 	for connID, wsConn := range connections {
+		// Lock the write mutex for this connection to prevent concurrent writes
+		wsConn.writeMutex.Lock()
+
 		wsConn.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-		if err := wsConn.conn.WriteJSON(update); err != nil {
+		err := wsConn.conn.WriteJSON(update)
+
+		wsConn.writeMutex.Unlock()
+
+		if err != nil {
 			ws.aiAgent.Logger.WithError(err).WithField("conn_id", connID).Debug("Failed to broadcast update, removing connection")
 			// Remove broken connection
 			ws.connMutex.Lock()
@@ -858,10 +874,10 @@ func (ws *WebServer) removeStoredDecision(decisionID string) {
 
 // RecoveryMessage represents incoming recovery-related messages from WebSocket clients
 type RecoveryMessage struct {
-	Type                string    `json:"type"`
-	StepID              string    `json:"stepId,omitempty"`
-	SelectedOptionIndex string    `json:"selectedOptionIndex,omitempty"`
-	Timestamp           time.Time `json:"timestamp"`
+	Type        string    `json:"type"`
+	ExecutionID string    `json:"executionId,omitempty"` // For plan-level recovery
+	Approved    bool      `json:"approved,omitempty"`    // For plan-level recovery (approved/rejected)
+	Timestamp   time.Time `json:"timestamp"`
 }
 
 // handleIncomingMessage processes messages received from WebSocket clients
@@ -873,16 +889,16 @@ func (ws *WebServer) handleIncomingMessage(connID string, msgData []byte) {
 	}
 
 	ws.aiAgent.Logger.WithFields(logrus.Fields{
-		"conn_id": connID,
-		"type":    message.Type,
-		"step_id": message.StepID,
+		"conn_id":      connID,
+		"type":         message.Type,
+		"execution_id": message.ExecutionID,
 	}).Debug("Received WebSocket message")
 
 	switch message.Type {
-	case "recovery_decision":
-		ws.handleRecoveryDecision(message)
-	case "recovery_abort":
-		ws.handleRecoveryAbort(message)
+	case "plan_recovery_decision":
+		ws.handlePlanRecoveryDecision(message)
+	case "plan_recovery_abort":
+		ws.handlePlanRecoveryAbort(message)
 	default:
 		ws.aiAgent.Logger.WithFields(logrus.Fields{
 			"conn_id": connID,
@@ -891,109 +907,266 @@ func (ws *WebServer) handleIncomingMessage(connID string, msgData []byte) {
 	}
 }
 
-// handleRecoveryDecision processes user's recovery decision
-func (ws *WebServer) handleRecoveryDecision(message RecoveryMessage) {
+// handlePlanRecoveryDecision processes user's plan recovery decision
+func (ws *WebServer) handlePlanRecoveryDecision(message RecoveryMessage) {
 	ws.aiAgent.Logger.WithFields(logrus.Fields{
-		"step_id":               message.StepID,
-		"selected_option_index": message.SelectedOptionIndex,
-	}).Info("Processing recovery decision")
+		"execution_id": message.ExecutionID,
+		"approved":     message.Approved,
+	}).Info("Processing plan recovery decision")
 
-	// Find the pending recovery request
-	ws.recoveryMutex.Lock()
-	request, exists := ws.recoveryRequests[message.StepID]
-	ws.recoveryMutex.Unlock()
+	// Find the pending plan recovery request
+	ws.planRecoveryMutex.Lock()
+	request, exists := ws.planRecoveryRequests[message.ExecutionID]
+	ws.planRecoveryMutex.Unlock()
 
 	if !exists {
-		ws.aiAgent.Logger.WithField("step_id", message.StepID).Warn("No pending recovery request found")
+		ws.aiAgent.Logger.WithField("execution_id", message.ExecutionID).Warn("No pending plan recovery request found")
 		return
 	}
 
 	// Send response back to waiting goroutine
-	response := &RecoveryResponse{
-		SelectedOptionIndex: message.SelectedOptionIndex,
-		Abort:               false,
+	response := &PlanRecoveryResponse{
+		Approved: message.Approved,
 	}
 
 	select {
 	case request.ResponseChan <- response:
-		ws.aiAgent.Logger.WithField("step_id", message.StepID).Info("Recovery decision sent to execution")
+		ws.aiAgent.Logger.WithFields(logrus.Fields{
+			"execution_id": message.ExecutionID,
+			"approved":     message.Approved,
+		}).Info("Plan recovery decision sent to execution")
 	default:
-		ws.aiAgent.Logger.WithField("step_id", message.StepID).Error("Failed to send recovery decision - channel full or closed")
+		ws.aiAgent.Logger.WithField("execution_id", message.ExecutionID).Error("Failed to send plan recovery decision - channel full or closed")
 	}
 }
 
-// handleRecoveryAbort processes user's recovery abort decision
-func (ws *WebServer) handleRecoveryAbort(message RecoveryMessage) {
-	ws.aiAgent.Logger.WithField("step_id", message.StepID).Info("Processing recovery abort")
+// handlePlanRecoveryAbort processes user's plan recovery abort decision
+func (ws *WebServer) handlePlanRecoveryAbort(message RecoveryMessage) {
+	ws.aiAgent.Logger.WithField("execution_id", message.ExecutionID).Info("Processing plan recovery abort")
 
-	// Find the pending recovery request
-	ws.recoveryMutex.Lock()
-	request, exists := ws.recoveryRequests[message.StepID]
-	ws.recoveryMutex.Unlock()
+	// Find the pending plan recovery request
+	ws.planRecoveryMutex.Lock()
+	request, exists := ws.planRecoveryRequests[message.ExecutionID]
+	ws.planRecoveryMutex.Unlock()
 
 	if !exists {
-		ws.aiAgent.Logger.WithField("step_id", message.StepID).Warn("No pending recovery request found for abort")
+		ws.aiAgent.Logger.WithField("execution_id", message.ExecutionID).Warn("No pending plan recovery request found for abort")
 		return
 	}
 
 	// Send abort response back to waiting goroutine
-	response := &RecoveryResponse{
-		SelectedOptionIndex: "",
-		Abort:               true,
+	response := &PlanRecoveryResponse{
+		Approved: false, // User rejected the recovery plan
 	}
 
 	select {
 	case request.ResponseChan <- response:
-		ws.aiAgent.Logger.WithField("step_id", message.StepID).Info("Recovery abort sent to execution")
+		ws.aiAgent.Logger.WithField("execution_id", message.ExecutionID).Info("Plan recovery abort sent to execution")
 	default:
-		ws.aiAgent.Logger.WithField("step_id", message.StepID).Error("Failed to send recovery abort - channel full or closed")
+		ws.aiAgent.Logger.WithField("execution_id", message.ExecutionID).Error("Failed to send plan recovery abort - channel full or closed")
 	}
 }
 
-// RequestRecoveryDecision implements RecoveryCoordinator interface
-func (ws *WebServer) RequestRecoveryDecision(stepID string, failureContext map[string]interface{}, recoveryOptions []map[string]interface{}) (map[string]interface{}, error) {
+// ========== Plan-Level Recovery Coordinator Implementation ==========
+
+// RequestPlanRecoveryDecision implements PlanRecoveryCoordinator interface
+// RequestPlanRecoveryDecision implements PlanRecoveryCoordinator interface
+// This is the main method called by the agent when plan-level recovery is needed
+func (ws *WebServer) RequestPlanRecoveryDecision(
+	executionID string,
+	context *agent.PlanFailureContext,
+	strategy *agent.PlanRecoveryStrategy,
+) (approved bool, err error) {
+	ws.aiAgent.Logger.WithFields(map[string]interface{}{
+		"execution_id": executionID,
+		"failed_step":  context.FailedStepID,
+		"attempt":      context.AttemptNumber,
+		"total_steps":  strategy.TotalSteps,
+	}).Info("Plan recovery decision requested from UI")
+
 	// Create response channel for this request
-	responseChan := make(chan *RecoveryResponse, 1)
+	responseChan := make(chan *PlanRecoveryResponse, 1)
 
 	// Store the recovery request
-	ws.recoveryMutex.Lock()
-	ws.recoveryRequests[stepID] = &RecoveryRequest{
-		StepID:          stepID,
-		FailureContext:  failureContext,
-		RecoveryOptions: recoveryOptions,
-		ResponseChan:    responseChan,
-		Timestamp:       time.Now(),
+	ws.planRecoveryMutex.Lock()
+	ws.planRecoveryRequests[executionID] = &PlanRecoveryRequest{
+		ExecutionID:    executionID,
+		FailureContext: context,
+		Strategy:       strategy, // Single strategy now
+		ResponseChan:   responseChan,
+		Timestamp:      time.Now(),
 	}
-	ws.recoveryMutex.Unlock()
+	ws.planRecoveryMutex.Unlock()
 
-	// Send recovery needed message to UI
+	// Convert strategy to JSON-friendly format for UI (same structure as AgentDecision)
+	strategyJSON := map[string]interface{}{
+		"action":             strategy.Action,
+		"reasoning":          strategy.Reasoning,
+		"confidence":         strategy.Confidence,
+		"successProbability": strategy.SuccessProbability,
+		"riskLevel":          strategy.RiskLevel,
+		"estimatedDuration":  strategy.EstimatedDuration,
+		"executionPlan":      strategy.ExecutionPlan, // Standard ExecutionPlanStep array
+		"totalSteps":         strategy.TotalSteps,
+		"preservedCount":     strategy.PreservedCount,
+		"newStepsCount":      strategy.NewStepsCount,
+		"recoveryNotes":      strategy.RecoveryNotes,
+	}
+
+	// Convert failure context to JSON-friendly format
+	contextJSON := map[string]interface{}{
+		"executionId":      context.ExecutionID,
+		"failedStepId":     context.FailedStepID,
+		"failedStepIndex":  context.FailedStepIndex,
+		"failureError":     context.FailureError,
+		"attemptNumber":    context.AttemptNumber,
+		"completedSteps":   len(context.CompletedSteps),
+		"remainingSteps":   len(context.RemainingSteps),
+		"failedStepName":   context.FailedStep.Name,
+		"failedStepAction": context.FailedStep.Action,
+	}
+
+	// Add completed steps details
+	completedStepsJSON := make([]map[string]interface{}, len(context.CompletedSteps))
+	for i, step := range context.CompletedSteps {
+		completedStepsJSON[i] = map[string]interface{}{
+			"stepId":       step.StepID,
+			"stepName":     step.StepName,
+			"stepIndex":    step.StepIndex,
+			"resourceId":   step.ResourceID,
+			"resourceType": step.ResourceType,
+			"status":       step.Status,
+		}
+	}
+	contextJSON["completedStepsDetails"] = completedStepsJSON
+
+	// Send plan recovery request to UI (single strategy)
 	ws.broadcastUpdate(map[string]interface{}{
-		"type":            "step_recovery_needed",
-		"stepId":          stepID,
-		"failureContext":  failureContext,
-		"recoveryOptions": recoveryOptions,
+		"type":           "plan_recovery_request",
+		"executionId":    executionID,
+		"failureContext": contextJSON,
+		"strategy":       strategyJSON, // Single strategy now
+		"timestamp":      time.Now(),
 	})
+
+	// Log the complete execution plan being sent to UI for debugging
+	if len(strategy.ExecutionPlan) > 0 {
+		// Marshal the complete strategy JSON (including full execution plan with parameters)
+		if strategyFullJSON, err := json.MarshalIndent(strategyJSON, "", "  "); err == nil {
+			ws.aiAgent.Logger.WithFields(map[string]interface{}{
+				"execution_id": executionID,
+				"total_steps":  len(strategy.ExecutionPlan),
+			}).Infof("📋 Complete strategy sent to front-end:\n%s", string(strategyFullJSON))
+		}
+	}
+
+	ws.aiAgent.Logger.WithField("execution_id", executionID).Info("Plan recovery request sent to UI, waiting for response")
 
 	// Wait for user response with timeout
 	select {
 	case response := <-responseChan:
 		// Cleanup
-		ws.recoveryMutex.Lock()
-		delete(ws.recoveryRequests, stepID)
-		ws.recoveryMutex.Unlock()
+		ws.planRecoveryMutex.Lock()
+		delete(ws.planRecoveryRequests, executionID)
+		ws.planRecoveryMutex.Unlock()
 
-		// Convert RecoveryResponse to map
-		result := map[string]interface{}{
-			"selectedOptionIndex": response.SelectedOptionIndex,
-			"abort":               response.Abort,
-		}
-		return result, nil
+		ws.aiAgent.Logger.WithFields(map[string]interface{}{
+			"execution_id": executionID,
+			"approved":     response.Approved,
+		}).Info("Plan recovery decision received from user")
 
-	case <-time.After(10 * time.Minute): // 10 minute timeout
+		return response.Approved, nil
+
+	case <-time.After(15 * time.Minute): // 15 minute timeout for plan-level decisions
 		// Cleanup
-		ws.recoveryMutex.Lock()
-		delete(ws.recoveryRequests, stepID)
-		ws.recoveryMutex.Unlock()
-		return nil, fmt.Errorf("recovery decision timeout after 10 minutes")
+		ws.planRecoveryMutex.Lock()
+		delete(ws.planRecoveryRequests, executionID)
+		ws.planRecoveryMutex.Unlock()
+
+		ws.aiAgent.Logger.WithField("execution_id", executionID).Error("Plan recovery decision timeout")
+		return false, fmt.Errorf("plan recovery decision timeout after 15 minutes")
 	}
+}
+
+// NotifyRecoveryAnalyzing implements PlanRecoveryCoordinator interface
+func (ws *WebServer) NotifyRecoveryAnalyzing(
+	executionID string,
+	failedStepID string,
+	failedIndex int,
+	completedCount int,
+	totalSteps int,
+) error {
+	ws.aiAgent.Logger.WithFields(map[string]interface{}{
+		"execution_id":    executionID,
+		"failed_step":     failedStepID,
+		"failed_index":    failedIndex,
+		"completed_count": completedCount,
+		"total_steps":     totalSteps,
+	}).Info("Notifying UI: Analyzing recovery options")
+
+	ws.broadcastUpdate(map[string]interface{}{
+		"type":           "plan_recovery_analyzing",
+		"executionId":    executionID,
+		"failedStepId":   failedStepID,
+		"failedIndex":    failedIndex,
+		"completedCount": completedCount,
+		"totalSteps":     totalSteps,
+		"message":        fmt.Sprintf("Plan failed at step %d/%d, analyzing recovery options...", failedIndex+1, totalSteps),
+		"timestamp":      time.Now(),
+	})
+
+	return nil
+}
+
+// NotifyRecoveryExecuting implements PlanRecoveryCoordinator interface
+func (ws *WebServer) NotifyRecoveryExecuting(executionID string, strategy *agent.PlanRecoveryStrategy) error {
+	ws.aiAgent.Logger.WithFields(map[string]interface{}{
+		"execution_id": executionID,
+		"action":       strategy.Action,
+		"total_steps":  strategy.TotalSteps,
+	}).Info("Notifying UI: Executing recovery plan")
+
+	ws.broadcastUpdate(map[string]interface{}{
+		"type":        "plan_recovery_executing",
+		"executionId": executionID,
+		"action":      strategy.Action,
+		"reasoning":   strategy.Reasoning,
+		"totalSteps":  strategy.TotalSteps,
+		"message":     fmt.Sprintf("Executing recovery plan with %d steps", strategy.TotalSteps),
+		"timestamp":   time.Now(),
+	})
+
+	return nil
+}
+
+// NotifyRecoveryCompleted implements PlanRecoveryCoordinator interface
+func (ws *WebServer) NotifyRecoveryCompleted(executionID string) error {
+	ws.aiAgent.Logger.WithField("execution_id", executionID).Info("Notifying UI: Recovery completed")
+
+	ws.broadcastUpdate(map[string]interface{}{
+		"type":        "plan_recovery_completed",
+		"executionId": executionID,
+		"message":     "Recovery completed successfully, continuing execution",
+		"timestamp":   time.Now(),
+	})
+
+	return nil
+}
+
+// NotifyRecoveryFailed implements PlanRecoveryCoordinator interface
+func (ws *WebServer) NotifyRecoveryFailed(executionID string, reason string) error {
+	ws.aiAgent.Logger.WithFields(map[string]interface{}{
+		"execution_id": executionID,
+		"reason":       reason,
+	}).Warn("Notifying UI: Recovery failed")
+
+	ws.broadcastUpdate(map[string]interface{}{
+		"type":        "plan_recovery_failed",
+		"executionId": executionID,
+		"reason":      reason,
+		"message":     fmt.Sprintf("Recovery attempt failed: %s", reason),
+		"timestamp":   time.Now(),
+	})
+
+	return nil
 }
