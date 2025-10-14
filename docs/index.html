@@ -152,6 +152,143 @@
             margin: 0 auto;
             padding: 120px 24px 80px;
             text-align: center;
+            position: relative;
+        }
+        
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 800px;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        /* Circle background */
+        .hero-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            pointer-events: none;
+        }
+        
+        /* Gridlines */
+        .hero-gridline-h-top,
+        .hero-gridline-h-center,
+        .hero-gridline-h-bottom,
+        .hero-gridline-v-left,
+        .hero-gridline-v-center,
+        .hero-gridline-v-right {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.06);
+            pointer-events: none;
+        }
+        
+        .hero-gridline-h-top,
+        .hero-gridline-h-center,
+        .hero-gridline-h-bottom {
+            left: 0;
+            right: 0;
+            height: 1px;
+        }
+        
+        .hero-gridline-h-top { top: 15%; }
+        .hero-gridline-h-center { top: 50%; }
+        .hero-gridline-h-bottom { bottom: 15%; }
+        
+        .hero-gridline-v-left,
+        .hero-gridline-v-center,
+        .hero-gridline-v-right {
+            top: 0;
+            bottom: 0;
+            width: 1px;
+        }
+        
+        .hero-gridline-v-left { left: 15%; }
+        .hero-gridline-v-center { left: 50%; }
+        .hero-gridline-v-right { right: 15%; }
+        
+        /* Corner gridlines */
+        .hero-gridline-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            pointer-events: none;
+        }
+        
+        .hero-gridline-corner-tl {
+            top: 15%;
+            left: 15%;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            border-left: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .hero-gridline-corner-tr {
+            top: 15%;
+            right: 15%;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            border-right: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .hero-gridline-corner-bl {
+            bottom: 15%;
+            left: 15%;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            border-left: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .hero-gridline-corner-br {
+            bottom: 15%;
+            right: 15%;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            border-right: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        /* Dots */
+        .hero-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .hero-dot-tl {
+            top: 15%;
+            left: 15%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .hero-dot-tr {
+            top: 15%;
+            right: 15%;
+            transform: translate(50%, -50%);
+        }
+        
+        .hero-dot-bl {
+            bottom: 15%;
+            left: 15%;
+            transform: translate(-50%, 50%);
+        }
+        
+        .hero-dot-br {
+            bottom: 15%;
+            right: 15%;
+            transform: translate(50%, 50%);
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
         }
         
         .hero-title {
@@ -224,44 +361,197 @@
             background: rgba(0, 0, 0, 0.05);
         }
         
-        /* Code block */
+        /* Code block - Raycast style */
         .code-container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 60px auto;
-            background: rgba(0, 0, 0, 0.02);
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            padding: 24px;
-            backdrop-filter: blur(12px);
+            padding: 0 24px;
+            position: relative;
         }
         
-        .code-block {
-            background: #000000;
+        .code-frame-wrapper {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .code-pattern-top,
+        .code-pattern-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background-image: url('images/pattern.879b8d77.svg');
+            background-repeat: repeat-x;
+            background-size: auto 100%;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+        
+        .code-pattern-top {
+            top: 0;
+        }
+        
+        .code-pattern-bottom {
+            bottom: 0;
+            transform: rotate(180deg);
+        }
+        
+        .code-window {
+            position: relative;
+            background: #ffffff;
             border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            padding: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            width: auto;
+            min-width: 320px;
+            max-width: 100%;
+        }
+        
+        .code-gridlines-horizontal,
+        .code-gridlines-vertical {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .code-gridlines-horizontal {
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 20px
+            );
+        }
+        
+        .code-gridlines-vertical {
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+                90deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 20px
+            );
+        }
+        
+        .code-header {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.02);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .code-filename {
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.6);
+        }
+        
+        .code-language {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .code-editor {
+            position: relative;
+            z-index: 1;
+            padding: 20px 24px;
             font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.8;
             overflow-x: auto;
-            color: #ffffff;
+            color: #2E2E4B;
+            width: fit-content;
+            max-width: 100%;
         }
         
-        .code-block .comment {
-            color: rgba(255, 255, 255, 0.5);
+        .code-editor pre {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            border: none;
+            width: fit-content;
         }
         
-        .code-block .command {
-            color: #0070f3;
+        .code-editor code {
+            display: block;
+            white-space: pre;
+            width: fit-content;
         }
         
-        .code-block .path {
-            color: rgba(255, 255, 255, 0.8);
+        .code-editor .line {
+            display: block;
+            min-height: 1.8em;
+            white-space: nowrap;
+        }
+        
+        .code-editor .keyword {
+            color: #B114D3;
+            font-weight: 600;
+        }
+        
+        .code-editor .function {
+            color: #5C40FF;
+            font-weight: 500;
+        }
+        
+        .code-editor .string {
+            color: #0879E2;
+        }
+        
+        .code-editor .comment {
+            color: #5F6570;
+            font-style: italic;
+        }
+        
+        .code-editor .constant {
+            color: #1E1E1E;
+        }
+        
+        .code-editor .punctuation {
+            color: #333333;
+        }
+        
+        .code-editor .command {
+            color: #0879E2;
+            font-weight: 600;
+        }
+        
+        .code-editor .path {
+            color: #404040;
+        }
+        
+        .code-editor .path {
+            color: #404040;
         }
         
         /* Screenshot */
         .screenshot-container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 60px auto;
             padding: 0 24px;
         }
@@ -273,11 +563,236 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
         
+        /* Execution Plan Styles */
+        .execution-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+        }
+        
+        .execution-container * {
+            box-sizing: border-box;
+        }
+
+        .exec-main-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .exec-request-block {
+            background-color: #e7f5ff;
+            border: 1px solid #bce0fb;
+            border-left: 5px solid #007bff;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .exec-request-block p {
+            margin: 0;
+            line-height: 1.6;
+        }
+        .exec-request-block .exec-label {
+            font-weight: 600;
+            color: #0056b3;
+            margin-right: 8px;
+        }
+        .exec-request-block .exec-confidence {
+            background-color: #e6f7f0;
+            color: #0d6efd;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: inline-block;
+            margin-left: 8px;
+        }
+        
+        .exec-card {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .exec-card-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .exec-card-body {
+            padding: 20px;
+            color: #495057;
+            line-height: 1.6;
+        }
+        
+        .execution-plan-block .exec-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .execution-plan-block .exec-card-body {
+            padding: 0;
+        }
+
+        .exec-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .exec-step:last-child {
+            border-bottom: none;
+        }
+
+        .exec-step-number {
+            background-color: #f1f3f5;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            font-weight: 600;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+        
+        .exec-step-content {
+            flex-grow: 1;
+        }
+        .exec-step-content h4 {
+            margin: 0 0 5px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #212529;
+        }
+        .exec-step-content p {
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .exec-step-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .exec-step-meta .exec-status-pending {
+            color: #fd7e14;
+        }
+
+        .exec-show-details-btn {
+            background: none;
+            border: 1px solid #ced4da;
+            color: #007bff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        .exec-show-details-btn:hover {
+            background-color: #f1f3f5;
+        }
+
+        .exec-step-status-icon {
+            color: #adb5bd;
+            flex-shrink: 0;
+        }
+
+        .exec-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .exec-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .exec-btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .exec-btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .exec-btn-secondary {
+            background-color: #ffffff;
+            color: #495057;
+            border: 1px solid #ced4da;
+        }
+        .exec-btn-secondary:hover {
+            background-color: #f8f9fa;
+        }
+        
         /* Features section */
         .features-section {
-            max-width: 1280px;
-            margin: 120px auto 80px;
-            padding: 0 24px;
+            max-width: 1200px;
+            margin: auto;
+            padding: 80px 24px;
+            position: relative;
+        }
+        
+        .features-background {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 900px;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .features-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            pointer-events: none;
+        }
+        
+        .features-gridline-h,
+        .features-gridline-v {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.06);
+            pointer-events: none;
+        }
+        
+        .features-gridline-h {
+            left: 0;
+            right: 0;
+            height: 1px;
+        }
+        
+        .features-gridline-v {
+            top: 0;
+            bottom: 0;
+            width: 1px;
+        }
+        
+        .features-content {
+            position: relative;
+            z-index: 1;
         }
         
         .section-header {
@@ -305,7 +820,7 @@
         }
         
         .feature-card {
-            background: rgba(0, 0, 0, 0.02);
+            background: transparent;
             border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 12px;
             padding: 32px;
@@ -313,9 +828,10 @@
         }
         
         .feature-card:hover {
-            background: rgba(0, 0, 0, 0.04);
+            background: rgba(0, 0, 0, 0.02);
             border-color: rgba(0, 0, 0, 0.2);
             transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
         
         .feature-icon {
@@ -351,34 +867,76 @@
         }
         
         .provider-card {
-            background: rgba(0, 0, 0, 0.02);
+            background: #f5f5f5;
             border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 12px;
             padding: 32px;
             text-align: center;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .provider-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 50px;
+            background-image: url('images/pattern.879b8d77.svg');
+            background-repeat: repeat-x;
+            background-size: auto 50px;
+            pointer-events: none;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .provider-card::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 50px;
+            background-image: url('images/pattern.879b8d77.svg');
+            background-repeat: repeat-x;
+            background-size: auto 50px;
+            pointer-events: none;
+            opacity: 0.3;
+            transform: rotate(180deg);
+            z-index: 0;
         }
         
         .provider-card:hover {
-            background: rgba(0, 0, 0, 0.04);
+            background: #ebebeb;
             border-color: rgba(0, 0, 0, 0.2);
+        }
+        
+        .provider-card > * {
+            position: relative;
+            z-index: 1;
         }
         
         .provider-icon {
             width: 48px;
             height: 48px;
             margin: 0 auto 20px;
+            position: relative;
+            z-index: 1;
         }
         
         .provider-name {
             font-size: 16px;
             font-weight: 600;
             color: rgba(0, 0, 0, 0.9);
+            position: relative;
+            z-index: 1;
         }
         
         /* Demo sections */
         .demo-section {
-            max-width: 1280px;
+            max-width: 1200px;
             margin: 80px auto;
             padding: 0 24px;
         }
@@ -500,8 +1058,48 @@
                 font-size: 18px;
             }
             
+            .hero-section {
+                padding: 80px 24px 40px;
+            }
+            
+            .hero-circle {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .hero-background {
+                max-width: 100%;
+            }
+            
             .section-title {
                 font-size: 36px;
+            }
+            
+            .section-header {
+                margin-bottom: 32px;
+            }
+            
+            .features-section {
+                margin: 60px auto 40px;
+                padding: 60px 24px 40px;
+            }
+            
+            .features-circle {
+                width: 280px;
+                height: 280px;
+            }
+            
+            .features-background {
+                max-width: 100%;
+            }
+            
+            .demo-section {
+                margin: 40px auto;
+            }
+            
+            .screenshot-container {
+                margin: 40px auto;
+                padding: 0;
             }
             
             .features-grid {
@@ -516,9 +1114,81 @@
                 padding: 32px 24px;
             }
             
-            .screenshot-container {
-                margin: 0;
-                padding: 0;
+            .screenshot {
+                border-radius: 0;
+            }
+            
+            .code-container {
+                padding: 0 16px;
+            }
+            
+            .code-frame-wrapper {
+                padding: 24px 16px;
+            }
+            
+            .code-window {
+                min-width: 280px;
+            }
+            
+            .code-editor {
+                padding: 16px;
+                font-size: 11px;
+                line-height: 1.6;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .code-header {
+                padding: 10px 12px;
+            }
+            
+            .code-filename {
+                font-size: 12px;
+            }
+            
+            .code-language {
+                font-size: 11px;
+            }
+            
+            .execution-container {
+                padding: 10px;
+                border-radius: 0;
+            }
+            
+            .exec-main-container {
+                gap: 15px;
+            }
+            
+            .exec-request-block,
+            .exec-card-body {
+                padding: 15px;
+            }
+            
+            .exec-step {
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .exec-step-number {
+                width: 28px;
+                height: 28px;
+                font-size: 0.9rem;
+            }
+            
+            .exec-step-content h4 {
+                font-size: 0.9rem;
+            }
+            
+            .exec-step-content p {
+                font-size: 0.85rem;
+            }
+            
+            .exec-actions {
+                flex-direction: column;
+            }
+            
+            .exec-btn {
+                width: 100%;
             }
         }
     </style>
@@ -541,6 +1211,7 @@
                 <a href="docs.html">Docs</a>
                 <a href="https://ai-agent.devopsvn.tech/docs.html#/examples/working-with-ec2-instance" target="_blank">Examples</a>
                 <a href="https://github.com/VersusControl/devops-ai-guidelines/blob/main/04-ai-agent-for-aws/00-toc.md" target="_blank">Tutorial</a>
+                <a href="https://leanpub.com/the-aiops-book" target="_blank">Book</a>
                 <a href="#">Pricing</a>
                 <a href="https://github.com/VersusControl/ai-infrastructure-agent" target="_blank">
                     <svg class="github-icon" viewBox="0 0 24 24">
@@ -571,35 +1242,57 @@
     <div class="main-content">
         <!-- Hero Section -->
         <section class="hero-section" id="home">
-            <h1 class="hero-title">AI Infrastructure Agent</h1>
-            <p class="hero-subtitle">Intelligent AWS infrastructure management through natural language. Build, modify, and manage your cloud resources with the power of AI.</p>
-            
-            <div class="cta-buttons">
-                <a href="https://ai-agent.devopsvn.tech/docs.html#/getting-started" class="btn-primary">
-                    Get Started
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </a>
-                <a href="docs.html" class="btn-secondary">
-                    Documentation
-                </a>
+            <!-- Hero Background -->
+            <div class="hero-background">
+                <span class="hero-circle"></span>
+                <span class="hero-gridline-h-top"></span>
+                <span class="hero-gridline-h-center"></span>
+                <span class="hero-gridline-h-bottom"></span>
+                <span class="hero-gridline-v-left"></span>
+                <span class="hero-gridline-v-center"></span>
+                <span class="hero-gridline-v-right"></span>
+                <span class="hero-dot hero-dot-tl"></span>
+                <span class="hero-dot hero-dot-tr"></span>
+                <span class="hero-dot hero-dot-bl"></span>
+                <span class="hero-dot hero-dot-br"></span>
+                <span class="hero-gridline-corner hero-gridline-corner-tl"></span>
+                <span class="hero-gridline-corner hero-gridline-corner-tr"></span>
+                <span class="hero-gridline-corner hero-gridline-corner-bl"></span>
+                <span class="hero-gridline-corner hero-gridline-corner-br"></span>
             </div>
             
-            <!-- Badges -->
-            <div class="badges">
-                <a href="https://github.com/VersusControl/ai-infrastructure-agent/stargazers">
-                    <img src="https://img.shields.io/github/stars/VersusControl/ai-infrastructure-agent?style=for-the-badge&logo=github&color=white&labelColor=black" alt="GitHub Stars">
-                </a>
-                <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/LICENSE">
-                    <img src="https://img.shields.io/github/license/VersusControl/ai-infrastructure-agent?style=for-the-badge&color=white&labelColor=black" alt="License">
-                </a>
-                <a href="https://golang.org/">
-                    <img src="https://img.shields.io/badge/Go-1.24.2+-white?style=for-the-badge&logo=go&labelColor=black" alt="Go Version">
-                </a>
-                <a href="https://aws.amazon.com/">
-                    <img src="https://img.shields.io/badge/AWS-Cloud-white?style=for-the-badge&logo=amazon-aws&labelColor=black" alt="AWS">
-                </a>
+            <!-- Hero Content -->
+            <div class="hero-content">
+                <h1 class="hero-title">AI Infrastructure Agent</h1>
+                <p class="hero-subtitle">Intelligent AWS infrastructure management through natural language. Build, modify, and manage your cloud resources with the power of AI.</p>
+                
+                <div class="cta-buttons">
+                    <a href="https://ai-agent.devopsvn.tech/docs.html#/getting-started" class="btn-primary">
+                        Get Started
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
+                    <a href="docs.html" class="btn-secondary">
+                        Documentation
+                    </a>
+                </div>
+                
+                <!-- Badges -->
+                <div class="badges">
+                    <a href="https://github.com/VersusControl/ai-infrastructure-agent/stargazers">
+                        <img src="https://img.shields.io/github/stars/VersusControl/ai-infrastructure-agent?style=for-the-badge&logo=github&color=white&labelColor=black" alt="GitHub Stars">
+                    </a>
+                    <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/LICENSE">
+                        <img src="https://img.shields.io/github/license/VersusControl/ai-infrastructure-agent?style=for-the-badge&color=white&labelColor=black" alt="License">
+                    </a>
+                    <a href="https://golang.org/">
+                        <img src="https://img.shields.io/badge/Go-1.24.2+-white?style=for-the-badge&logo=go&labelColor=black" alt="Go Version">
+                    </a>
+                    <a href="https://aws.amazon.com/">
+                        <img src="https://img.shields.io/badge/AWS-Cloud-white?style=for-the-badge&logo=amazon-aws&labelColor=black" alt="AWS">
+                    </a>
+                </div>
             </div>
         </section>
 
@@ -609,22 +1302,39 @@
         <section class="demo-section" id="get-started">
             <div class="section-header">
                 <h2 class="section-title">Get Started in Seconds</h2>
-                <p class="section-description">Run with Docker - just set your API keys and go.</p>
+                <p class="section-description">Run with Docker - just set your API keys and go</p>
             </div>
             
             <div class="code-container">
-                <div class="code-block">
-<span class="command">docker run</span> <span class="path">-d \</span><br/>
-  <span class="path">-p 8080:8080 \</span><br/>
-  <span class="path">-e GEMINI_API_KEY="your-gemini-api-key-here" \</span><br/>
-  <span class="path">-e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \</span><br/>
-  <span class="path">-e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \</span><br/>
-  <span class="path">-e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION \</span><br/>
-  <span class="path">--name ai-agent \</span><br/>
-  <span class="path">ghcr.io/versuscontrol/ai-infrastructure-agent</span>
+                <div class="code-frame-wrapper">
+                    <div class="code-pattern-top"></div>
+                    <div class="code-pattern-bottom"></div>
+                    <div class="code-window">
+                        <span class="code-gridlines-horizontal" data-grid="true"></span>
+                        <span class="code-gridlines-vertical" data-grid="true"></span>
+                        <div class="code-header">
+                            <div class="code-filename">docker-run.sh</div>
+                            <span class="code-language">Shell</span>
+                        </div>
+                        <div class="code-editor">
+                            <pre><code><span class="line"><span class="command">docker</span> <span class="command">run</span> <span class="path">-d \</span></span>
+<span class="line">  <span class="path">-p</span> <span class="string">8080:8080</span> <span class="path">\</span></span>
+<span class="line">  <span class="path">-e</span> <span class="string">GEMINI_API_KEY=</span><span class="string">"your-gemini-api-key-here"</span> <span class="path">\</span></span>
+<span class="line">  <span class="path">-e</span> <span class="string">AWS_ACCESS_KEY_ID=</span><span class="path">$AWS_ACCESS_KEY_ID</span> <span class="path">\</span></span>
+<span class="line">  <span class="path">-e</span> <span class="string">AWS_SECRET_ACCESS_KEY=</span><span class="path">$AWS_SECRET_ACCESS_KEY</span> <span class="path">\</span></span>
+<span class="line">  <span class="path">-e</span> <span class="string">AWS_DEFAULT_REGION=</span><span class="path">$AWS_DEFAULT_REGION</span> <span class="path">\</span></span>
+<span class="line">  <span class="path">--name</span> <span class="string">ai-agent</span> <span class="path">\</span></span>
+<span class="line">  <span class="string">ghcr.io/versuscontrol/ai-infrastructure-agent</span></span></code></pre>
+                        </div>
+                    </div>
                 </div>
             </div>
-            
+
+            <div class="section-header">
+                <h2 class="section-title">Access your browser</h2>
+                <p class="section-description">The web dashboard allows you to manage your infrastructure using natural language commands</p>
+            </div>
+
             <div class="screenshot-container">
                 <img src="images/web-dashboard.svg" alt="Web Dashboard" class="screenshot">
             </div>
@@ -632,10 +1342,22 @@
 
         <!-- Features Section -->
         <section class="features-section">
-            <div class="section-header">
-                <h2 class="section-title">Main Features</h2>
-                <p class="section-description">Everything you need to manage AWS infrastructure with AI</p>
+            <!-- Geometric Background -->
+            <div class="features-background">
+                <div class="features-circle"></div>
+                <div class="features-gridline-h" style="top: 25%;"></div>
+                <div class="features-gridline-h" style="top: 50%;"></div>
+                <div class="features-gridline-h" style="top: 75%;"></div>
+                <div class="features-gridline-v" style="left: 25%;"></div>
+                <div class="features-gridline-v" style="left: 50%;"></div>
+                <div class="features-gridline-v" style="left: 75%;"></div>
             </div>
+            
+            <div class="features-content">
+                <div class="section-header">
+                    <h2 class="section-title">Main Features</h2>
+                    <p class="section-description">Everything you need to manage AWS infrastructure with AI</p>
+                </div>
             
             <div class="features-grid">
                 <div class="feature-card">
@@ -714,31 +1436,6 @@
             </div>
         </section>
 
-        </section>
-
-        <!-- The Sample Section -->
-        <section class="demo-section">
-            <div class="section-header">
-                <h2 class="section-title">The Sample</h2>
-            </div>
-            
-            <div class="demo-card">
-                <div class="demo-label">Prompt</div>
-                <div class="demo-prompt">
-                    "Create an EC2 for hosting an Apache Server with a dedicated security group that allows inbound HTTP (port 80) and SSH (port 22) traffic."
-                </div>
-                
-                <div class="demo-label">Result</div>
-                <p class="demo-result">
-                    The agent creates a detailed execution plan to provision an EC2 instance and a corresponding security group with the specified rules, then awaits your approval before applying the changes.
-                </p>
-                
-                <div class="screenshot-container" style="margin: 0;">
-                    <img src="images/simple-demo.png" alt="Simple Demo Result" class="screenshot">
-                </div>
-            </div>
-        </section>
-
         <!-- Model Support Section -->
         <section class="features-section">
             <div class="section-header">
@@ -786,6 +1483,161 @@
                     <a href="docs.html#/api-key-setup/aws-bedrock-nova-setup" class="btn-secondary">Bedrock Setup</a>
                 </div>
             </div>
+        </section>
+
+        <!-- The Sample Section -->
+        <section class="demo-section">
+            <div class="section-header">
+                <h2 class="section-title">The Sample</h2>
+                <p class="section-description">See how the AI agent transforms your natural language request into a detailed execution plan</p>
+            </div>
+            
+            <div class="demo-card">
+                <div class="demo-label">Prompt</div>
+                <div class="demo-prompt">
+                    "Create an EC2 for hosting an Apache Server with a dedicated security group that allows inbound HTTP (port 80) and SSH (port 22) traffic."
+                </div>
+                
+                <div class="demo-label">Result</div>
+                <p class="demo-result">
+                    The agent creates a detailed execution plan to provision an EC2 instance and a corresponding security group with the specified rules, then awaits your approval before applying the changes.
+                </p>
+                
+                <div class="demo-label" style="margin-top: 30px;">For Example</div>
+                <p class="demo-result">
+                    Below is an interactive execution plan that shows how the AI agent breaks down your request into actionable steps, provides reasoning, and awaits your confirmation before making any changes to your infrastructure.
+                </p>
+                
+                <!-- Embedded Execution Plan -->
+                <div style="margin-top: 15px;">
+                    <div class="execution-container">
+                        <div class="exec-main-container">
+                            <!-- Request Block -->
+                            <div class="exec-request-block">
+                                <p><span class="exec-label">Request Processed</span> Create an EC2 instance for hosting an Apache Server with a dedicated security group that allows inbound HTTP (port 80) and SSH (port 22) traffic.</p>
+                                <p><span class="exec-label">Mode:</span> Live Execution</p>
+                                <p><span class="exec-label">Confidence:</span> <span class="exec-confidence">95.0%</span></p>
+                            </div>
+
+                            <!-- Reasoning -->
+                            <div class="exec-card">
+                                <div class="exec-card-header">Reasoning</div>
+                                <div class="exec-card-body">
+                                    The user wants to create an EC2 instance with a dedicated security group. I need to discover a VPC, create a security group that allows HTTP and SSH traffic, and then create the EC2 instance using a suitable AMI. Since no managed resources are provided, I will discover the default VPC and then proceed with creating the security group and the EC2 instance.
+                                </div>
+                            </div>
+                            
+                            <!-- Execution Plan -->
+                            <div class="exec-card execution-plan-block">
+                                <div class="exec-card-header">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    <span>Execution Plan</span>
+                                </div>
+                                <div class="exec-card-body">
+                                    <!-- Step 1 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">1</div>
+                                        <div class="exec-step-content">
+                                            <h4>Discover Default VPC</h4>
+                                            <p>Discover the default VPC to host the EC2 instance and security group.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 2 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">2</div>
+                                        <div class="exec-step-content">
+                                            <h4>Create Security Group for Apache Server</h4>
+                                            <p>Create a security group that allows inbound HTTP (port 80) and SSH (port 22) traffic.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 3 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">3</div>
+                                        <div class="exec-step-content">
+                                            <h4>Add HTTP Ingress Rule</h4>
+                                            <p>Add an ingress rule to allow HTTP traffic on port 80.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 4 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">4</div>
+                                        <div class="exec-step-content">
+                                            <h4>Add SSH Ingress Rule</h4>
+                                            <p>Add an ingress rule to allow SSH traffic on port 22.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 5 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">5</div>
+                                        <div class="exec-step-content">
+                                            <h4>Get Latest Ubuntu AMI</h4>
+                                            <p>Find the latest Ubuntu LTS AMI ID for the EC2 instance.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 6 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">6</div>
+                                        <div class="exec-step-content">
+                                            <h4>Discover Subnet</h4>
+                                            <p>Discover a subnet within the default VPC to launch the EC2 instance.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 7 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">7</div>
+                                        <div class="exec-step-content">
+                                            <h4>Create EC2 Instance for Apache Server</h4>
+                                            <p>Create an EC2 instance to host the Apache server.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="exec-actions">
+                                <button class="exec-btn exec-btn-secondary">✕ Cancel</button>
+                                <button class="exec-btn exec-btn-primary">✓ Confirm & Execute</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- Close features-content -->
         </section>
 
         <!-- Footer -->
