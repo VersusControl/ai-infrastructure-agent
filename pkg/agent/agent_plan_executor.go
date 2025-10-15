@@ -169,13 +169,22 @@ func (a *StateAwareAgent) ExecutePlanWithReActRecovery(
 
 			// Store resource mapping if resource was created
 			if step.Output != nil {
-				if resourceID, err := a.extractResourceIDFromResponse(step.Output, planStep.MCPTool); err == nil && resourceID != "" {
-					a.storeResourceMapping(planStep.ID, resourceID)
+				// Extract the mcp_response from the wrapped output
+				var mcpResponse map[string]interface{}
+				if wrapped, ok := step.Output["mcp_response"].(map[string]interface{}); ok {
+					mcpResponse = wrapped
+				} else {
+					// If not wrapped, use the output directly (for backward compatibility)
+					mcpResponse = step.Output
+				}
+
+				// Process arrays first to get concatenated values
+				processedOutput := a.processArraysInMCPResponse(mcpResponse)
+				if resourceID, err := a.extractResourceIDFromResponse(processedOutput, planStep.MCPTool, planStep.ID); err == nil && resourceID != "" {
+					a.storeResourceMapping(planStep.ID, resourceID, processedOutput)
 				}
 			}
-		}
-
-		// Check if execution completed successfully
+		} // Check if execution completed successfully
 		if failedStepIndex == -1 {
 			// All steps completed successfully
 			execution.Status = "completed"
@@ -337,12 +346,6 @@ func (a *StateAwareAgent) ExecutePlanWithReActRecovery(
 			continue
 		}
 
-		// Recovery succeeded
-		a.Logger.WithFields(map[string]interface{}{
-			"execution_id":   execution.ID,
-			"recovery_steps": len(recoveryResult.CompletedSteps),
-		}).Info("Recovery strategy executed successfully")
-
 		if progressChan != nil {
 			progressChan <- &types.ExecutionUpdate{
 				Type:        "plan_recovery_completed",
@@ -359,12 +362,31 @@ func (a *StateAwareAgent) ExecutePlanWithReActRecovery(
 		// Update execution with recovery steps
 		execution.Steps = append(execution.Steps, recoveryResult.CompletedSteps...)
 
-		// Update decision.ExecutionPlan for next iteration
-		// The recovery strategy's execution plan becomes our new plan to execute
-		// It's already in the standard ExecutionPlanStep format
-		decision.ExecutionPlan = recoveryStrategy.ExecutionPlan
+		// Recovery completed successfully - execution is done
+		// ExecuteRecoveryStrategy has already executed the complete plan
+		// (completed steps + recovery steps + remaining steps)
+		execution.Status = "completed"
+		now := time.Now()
+		execution.CompletedAt = &now
 
-		// Continue to next attempt with the new plan
+		a.Logger.WithFields(map[string]interface{}{
+			"execution_id":   execution.ID,
+			"recovery_steps": len(recoveryResult.CompletedSteps),
+			"total_steps":    len(execution.Steps),
+			"attempt_number": attemptNumber,
+		}).Info("Recovery strategy completed successfully, execution finished")
+
+		// Notify completion via WebSocket
+		if progressChan != nil {
+			progressChan <- &types.ExecutionUpdate{
+				Type:        "execution_completed",
+				ExecutionID: execution.ID,
+				Message:     fmt.Sprintf("Execution completed after recovery (attempt %d/%d)", attemptNumber, config.MaxRecoveryAttempts),
+				Timestamp:   time.Now(),
+			}
+		}
+
+		return execution, nil
 	}
 
 	// Should not reach here
@@ -488,8 +510,19 @@ func (a *StateAwareAgent) ExecuteRecoveryStrategy(
 
 		// Store resource mapping if resource was created
 		if step.Output != nil {
-			if resourceID, err := a.extractResourceIDFromResponse(step.Output, planStep.MCPTool); err == nil && resourceID != "" {
-				a.storeResourceMapping(planStep.ID, resourceID)
+			// Extract the mcp_response from the wrapped output
+			var mcpResponse map[string]interface{}
+			if wrapped, ok := step.Output["mcp_response"].(map[string]interface{}); ok {
+				mcpResponse = wrapped
+			} else {
+				// If not wrapped, use the output directly (for backward compatibility)
+				mcpResponse = step.Output
+			}
+
+			// Process arrays first to get concatenated values
+			processedOutput := a.processArraysInMCPResponse(mcpResponse)
+			if resourceID, err := a.extractResourceIDFromResponse(processedOutput, planStep.MCPTool, planStep.ID); err == nil && resourceID != "" {
+				a.storeResourceMapping(planStep.ID, resourceID, processedOutput)
 				result.NewResourcesCreated = append(result.NewResourcesCreated, resourceID)
 			}
 		}
@@ -536,12 +569,34 @@ func (a *StateAwareAgent) buildPlanFailureContext(
 				Duration:    execStep.Duration,
 			}
 
+			// Preserve the full original step for recovery (CRITICAL for Action field)
+			if i < len(originalPlan) {
+				completedStep.OriginalStep = originalPlan[i]
+			}
+
 			// Extract resource ID if available
 			if execStep.Output != nil {
-				// Try to get resource ID from output
-				if resourceID, err := a.extractResourceIDFromResponse(execStep.Output, originalPlan[i].MCPTool); err == nil && resourceID != "" {
+				// First try to get the already-extracted resource ID from the wrapped output
+				if resourceID, ok := execStep.Output["resource_id"].(string); ok && resourceID != "" {
 					completedStep.ResourceID = resourceID
 					completedStep.ResourceType = a.extractResourceTypeFromStep(originalPlan[i])
+				} else {
+					// Unwrap mcp_response and extract (for backward compatibility)
+					var mcpResponse map[string]interface{}
+					if wrapped, ok := execStep.Output["mcp_response"].(map[string]interface{}); ok {
+						mcpResponse = wrapped
+					} else {
+						mcpResponse = execStep.Output
+					}
+
+					// Process arrays before extraction
+					processedOutput := a.processArraysInMCPResponse(mcpResponse)
+
+					// Try to extract resource ID from processed output
+					if resourceID, err := a.extractResourceIDFromResponse(processedOutput, originalPlan[i].MCPTool, originalPlan[i].ID); err == nil && resourceID != "" {
+						completedStep.ResourceID = resourceID
+						completedStep.ResourceType = a.extractResourceTypeFromStep(originalPlan[i])
+					}
 				}
 			}
 
@@ -1104,8 +1159,11 @@ func (a *StateAwareAgent) executeNativeMCPTool(planStep *types.ExecutionPlanStep
 		return nil, fmt.Errorf("MCP tool call failed: %w", err)
 	}
 
-	// Extract actual resource ID from MCP response
-	resourceID, err := a.extractResourceIDFromResponse(result, toolName)
+	// Process arrays BEFORE extraction so extraction sees concatenated values
+	processedResult := a.processArraysInMCPResponse(result)
+
+	// Extract actual resource ID from MCP response (using processed result)
+	resourceID, err := a.extractResourceIDFromResponse(processedResult, toolName, planStep.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract resource ID from MCP response for tool %s: %w", toolName, err)
 	}
@@ -1113,8 +1171,8 @@ func (a *StateAwareAgent) executeNativeMCPTool(planStep *types.ExecutionPlanStep
 	// Update the plan step with the actual resource ID so it gets stored correctly
 	planStep.ResourceID = resourceID
 
-	// Store the mapping of plan step ID to actual resource ID
-	a.storeResourceMapping(planStep.ID, resourceID)
+	// Store the mapping of plan step ID to actual resource ID and all array field mappings
+	a.storeResourceMapping(planStep.ID, resourceID, processedResult)
 
 	// Wait for resource to be ready if it has dependencies
 	if err := a.waitForResourceReady(toolName, resourceID); err != nil {
@@ -1126,13 +1184,13 @@ func (a *StateAwareAgent) executeNativeMCPTool(planStep *types.ExecutionPlanStep
 		return nil, fmt.Errorf("resource %s not ready: %w", resourceID, err)
 	}
 
-	// Update state manager with the new resource
-	if err := a.updateStateFromMCPResult(planStep, result); err != nil {
+	// Update state manager with the new resource (use processed result)
+	if err := a.updateStateFromMCPResult(planStep, processedResult); err != nil {
 		a.Logger.WithError(err).WithFields(map[string]interface{}{
 			"step_id":     planStep.ID,
 			"tool_name":   toolName,
 			"resource_id": resourceID,
-			"result":      result,
+			"result":      processedResult,
 		}).Error("CRITICAL: Failed to update state after resource creation - this may cause state inconsistency")
 
 		// Still continue execution but ensure this is visible
@@ -1144,7 +1202,7 @@ func (a *StateAwareAgent) executeNativeMCPTool(planStep *types.ExecutionPlanStep
 		"resource_id":  resourceID,
 		"plan_step_id": planStep.ID,
 		"mcp_tool":     toolName,
-		"mcp_response": result,
+		"mcp_response": processedResult, // Use processed result with concatenated arrays
 	}
 
 	return resultMap, nil
@@ -1233,6 +1291,7 @@ func (a *StateAwareAgent) updateStateFromMCPResult(planStep *types.ExecutionPlan
 		"mcp_response": result,
 	}).Info("Starting state update from MCP result")
 
+	// Note: result is already processed (arrays concatenated) from executeNativeMCPTool
 	// Create a simple properties map from MCP result
 	resultData := map[string]interface{}{
 		"mcp_response": result,
@@ -1517,8 +1576,9 @@ func (a *StateAwareAgent) persistCurrentState() error {
 }
 
 // extractResourceIDFromResponse extracts the actual AWS resource ID from MCP response
-func (a *StateAwareAgent) extractResourceIDFromResponse(result map[string]interface{}, toolName string) (string, error) {
-	// Use configuration-driven extraction
+// Note: result should be the processed result with concatenated arrays
+func (a *StateAwareAgent) extractResourceIDFromResponse(result map[string]interface{}, toolName string, stepID string) (string, error) {
+	// Use configuration-driven extraction for primary resource ID
 	resourceType := a.patternMatcher.IdentifyResourceTypeFromToolName(toolName)
 	if resourceType == "" || resourceType == "unknown" {
 		return "", fmt.Errorf("could not identify resource type for tool %s", toolName)
@@ -1543,6 +1603,7 @@ func (a *StateAwareAgent) extractResourceIDFromResponse(result map[string]interf
 			"tool_name":     toolName,
 			"resource_type": resourceType,
 			"resource_id":   extractedID,
+			"step_id":       stepID,
 		}).Info("Successfully extracted resource ID")
 	}
 
@@ -1716,14 +1777,75 @@ func (a *StateAwareAgent) checkRDSInstanceState(dbInstanceID string) (bool, erro
 	return false, fmt.Errorf("could not determine RDS instance state from response")
 }
 
+// processArraysInMCPResponse processes MCP response to concatenate array fields with _ delimiter
+// This provides unified array handling where arrays are stored as "item1_item2_item3"
+func (a *StateAwareAgent) processArraysInMCPResponse(result map[string]interface{}) map[string]interface{} {
+	processed := make(map[string]interface{})
+
+	for key, value := range result {
+		// Check if value is an array of strings
+		if arrValue, ok := value.([]interface{}); ok && len(arrValue) > 0 {
+			// Check if array contains strings
+			stringArray := make([]string, 0, len(arrValue))
+			allStrings := true
+
+			for _, item := range arrValue {
+				if strItem, ok := item.(string); ok {
+					stringArray = append(stringArray, strItem)
+				} else {
+					allStrings = false
+					break
+				}
+			}
+
+			// If it's an array of strings, concatenate with _
+			if allStrings && len(stringArray) > 0 {
+				concatenated := strings.Join(stringArray, "_")
+
+				// Store both concatenated version and original array
+				processed[key] = concatenated
+				processed[key+"_array"] = arrValue // Keep original for other processing
+
+				continue
+			}
+		}
+
+		// For non-string-arrays, keep as-is
+		processed[key] = value
+	}
+
+	return processed
+}
+
 // storeResourceMapping stores the mapping between plan step ID and actual AWS resource ID
-func (a *StateAwareAgent) storeResourceMapping(stepID, resourceID string) {
+// Also stores all array field mappings from the processed result for field-specific references
+func (a *StateAwareAgent) storeResourceMapping(stepID, resourceID string, processedResult map[string]interface{}) {
 	a.mappingsMutex.Lock()
 	defer a.mappingsMutex.Unlock()
+
+	// Store primary resource ID mapping
 	a.resourceMappings[stepID] = resourceID
+
+	// Store all array field mappings for field-specific references (e.g., {{step-id.zones}})
+	for key, value := range processedResult {
+		// Skip the original array fields (ending with _array)
+		if strings.HasSuffix(key, "_array") {
+			continue
+		}
+
+		// Store concatenated string values as step-id.fieldname mappings
+		if strValue, ok := value.(string); ok && strValue != "" {
+			// Check if this looks like a concatenated array (contains _)
+			// or if there's a corresponding _array field
+			if strings.Contains(strValue, "_") || processedResult[key+"_array"] != nil {
+				mappingKey := fmt.Sprintf("%s.%s", stepID, key)
+				a.resourceMappings[mappingKey] = strValue
+			}
+		}
+	}
 }
 
 // StoreResourceMapping is a public wrapper for storeResourceMapping for external use
-func (a *StateAwareAgent) StoreResourceMapping(stepID, resourceID string) {
-	a.storeResourceMapping(stepID, resourceID)
+func (a *StateAwareAgent) StoreResourceMapping(stepID, resourceID string, processedResult map[string]interface{}) {
+	a.storeResourceMapping(stepID, resourceID, processedResult)
 }

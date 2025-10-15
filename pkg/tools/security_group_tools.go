@@ -161,15 +161,8 @@ func (t *ListSecurityGroupsTool) Execute(ctx context.Context, arguments map[stri
 	message := fmt.Sprintf("Found %d security groups", len(sgs))
 	data := map[string]interface{}{
 		"securityGroups":   sgs,
-		"securityGroupIds": sgIDs, // Array of all security group IDs
+		"securityGroupIds": sgIDs, // Array of all security group IDs - will be concatenated as "sg-1_sg-2_sg-3"
 		"count":            len(sgs),
-	}
-
-	// Add single ID fields for extraction pattern matching
-	if len(sgIDs) > 0 {
-		data["securityGroupId"] = sgIDs[0] // First security group ID
-		data["groupId"] = sgIDs[0]         // Alias for compatibility
-		data["value"] = sgIDs[0]           // For resource ID resolution
 	}
 
 	return t.CreateSuccessResponse(message, data)

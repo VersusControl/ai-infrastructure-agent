@@ -183,15 +183,16 @@ type PlanFailureContext struct {
 
 // CompletedStepInfo represents a successfully completed step that should be preserved
 type CompletedStepInfo struct {
-	StepID       string                 `json:"step_id"`
-	StepName     string                 `json:"step_name"`
-	StepIndex    int                    `json:"step_index"`
-	ResourceID   string                 `json:"resource_id,omitempty"`
-	ResourceType string                 `json:"resource_type,omitempty"`
-	Status       string                 `json:"status"` // "completed"
-	Output       map[string]interface{} `json:"output,omitempty"`
-	CompletedAt  time.Time              `json:"completed_at"`
-	Duration     time.Duration          `json:"duration"`
+	StepID       string                   `json:"step_id"`
+	StepName     string                   `json:"step_name"`
+	StepIndex    int                      `json:"step_index"`
+	ResourceID   string                   `json:"resource_id,omitempty"`
+	ResourceType string                   `json:"resource_type,omitempty"`
+	Status       string                   `json:"status"` // "completed"
+	Output       map[string]interface{}   `json:"output,omitempty"`
+	CompletedAt  time.Time                `json:"completed_at"`
+	Duration     time.Duration            `json:"duration"`
+	OriginalStep *types.ExecutionPlanStep `json:"original_step,omitempty"` // Preserve full step details for recovery
 }
 
 // RecoveryAttemptHistory records information about previous recovery attempts
@@ -342,6 +343,23 @@ type PlanRecoveryConfig struct {
 
 	// Coordinator
 	Coordinator PlanRecoveryCoordinator `json:"-"` // UI coordinator for recovery decisions
+}
+
+// Parse AI response with new format (recoverySteps + adjustedRemainingSteps)
+type AIResponse struct {
+	FailureReason          string                     `json:"failure_reason"`
+	RootCause              string                     `json:"root_cause"`
+	ImpactAssessment       string                     `json:"impact_assessment"`
+	Confidence             float64                    `json:"confidence"`
+	RecoverySteps          []*types.ExecutionPlanStep `json:"recoverySteps"`
+	AdjustedRemainingSteps []*types.ExecutionPlanStep `json:"adjustedRemainingSteps"`
+	Reasoning              string                     `json:"reasoning"`
+	NewStepsCount          int                        `json:"newStepsCount"`
+	SuccessProbability     float64                    `json:"successProbability"`
+	RiskLevel              string                     `json:"riskLevel"`
+	EstimatedDuration      string                     `json:"estimatedDuration"`
+	RiskFactors            []string                   `json:"riskFactors"`
+	SuccessFactors         []string                   `json:"successFactors"`
 }
 
 // DefaultPlanRecoveryConfig returns sensible defaults for plan recovery

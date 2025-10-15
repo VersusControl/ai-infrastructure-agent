@@ -148,15 +148,9 @@ func (t *ListVPCsTool) Execute(ctx context.Context, arguments map[string]interfa
 
 	// Build data response (always include fields for extraction consistency)
 	data := map[string]interface{}{
-		"vpcIds": vpcIDs,    // Full list for extraction pattern matching
+		"vpcIds": vpcIDs,    // Array of VPC IDs - will be concatenated as "vpc-1_vpc-2_vpc-3"
 		"vpcs":   vpcs,      // VPC details
 		"count":  len(vpcs), // Count for convenience
-	}
-
-	// Add single VPC reference fields only if we have results
-	if len(vpcIDs) > 0 {
-		data["vpcId"] = vpcIDs[0] // First VPC ID for {{step-id.vpcId}} resolution
-		data["value"] = vpcIDs[0] // For {{step-id.resourceId}} resolution
 	}
 
 	return t.CreateSuccessResponse(message, data)

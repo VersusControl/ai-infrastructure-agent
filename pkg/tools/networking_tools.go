@@ -304,14 +304,8 @@ func (t *ListSubnetsTool) Execute(ctx context.Context, arguments map[string]inte
 	}
 
 	data := map[string]interface{}{
-		"subnet_ids": subnetIDs, // Full list for comprehensive access
-		"subnets":    subnets,   // Subnet details
-	}
-
-	// Add dependency resolution fields (following retrieveSubnetsInVPC pattern)
-	if len(subnetIDs) > 0 {
-		data["subnetId"] = subnetIDs[0] // First subnet ID for {{step-id.subnetId}} resolution
-		data["value"] = subnetIDs[0]    // For {{step-id.resourceId}} resolution
+		"subnetIds": subnetIDs, // Array of subnet IDs - will be concatenated as "subnet-1_subnet-2_subnet-3"
+		"subnets":   subnets,   // Subnet details
 	}
 
 	if vpcID != "" {
