@@ -1,0 +1,315 @@
+# Plan-Level Recovery Analysis
+
+## Context
+
+You are analyzing a **PLAN EXECUTION FAILURE** where an infrastructure deployment plan failed at a specific step. Your task is to generate **ONLY THE RECOVERY STEPS** needed to fix the failure and continue execution.
+
+**IMPORTANT:** DO NOT include completed steps in your response. The system will automatically prepend them from execution history.
+
+## Execution Overview
+
+- **Execution ID**: {{executionId}}
+- **Started**: {{executionStarted}}
+- **Original Intent**: {{originalUserIntent}}
+- **Action**: {{originalAction}}
+- **Total Steps in Original Plan**: {{totalStepsInOriginalPlan}}
+- **Recovery Attempt**: {{attemptNumber}}
+
+## Failure Information
+
+**Failed at Step {{failedStepNumber}} of {{totalSteps}}**
+
+- **Step ID**: {{failedStepId}}
+- **Step Name**: {{failedStepName}}
+- **Description**: {{failedStepDescription}}
+- **Action**: {{failedStepAction}}
+- **MCP Tool**: {{failedStepMcpTool}}
+- **Error**: {{failureError}}
+- **Time of Failure**: {{failureTime}}
+
+{{failedStepParameters}}
+
+## ✅ Successfully Completed Steps (READ-ONLY CONTEXT)
+
+**{{completedStepsCount}} steps completed successfully before failure. These are provided as CONTEXT ONLY - DO NOT include them in your response:**
+
+{{completedStepsDetails}}
+
+**The system will automatically preserve these completed steps. You can reference their outputs using `{{step-id.fieldName}}` in your recovery steps.**
+
+## ⏳ Remaining Steps (Not Yet Executed)
+
+**{{remainingStepsCount}} steps were not executed due to the failure:**
+
+{{remainingStepsDetails}}
+
+{{currentInfrastructureState}}
+
+{{resourceMappings}}
+
+{{previousRecoveryAttempts}}
+
+## Available MCP Tools
+
+**{{availableToolsCount}} AWS tools available for recovery:**
+
+{{availableToolsDetails}}
+
+## Required Output: Recovery Steps Only
+
+Generate **ONLY THE RECOVERY STEPS** needed to fix the failure. DO NOT include completed steps - the system handles them automatically.
+
+### Your Task
+
+Analyze the failure and generate:
+1. **recoverySteps** - NEW steps to fix the issue (query resources, create missing prerequisites, etc.)
+2. **adjustedRemainingSteps** - The original remaining steps with updated dependencies if needed
+
+### Recovery Strategy Guidelines
+
+1. **Analyze the failure** - Understand what went wrong and what's needed to fix it
+2. **Design minimal recovery**:
+   - Add steps to query or discover missing resources
+   - Add steps to create missing prerequisites
+   - Modify the failed step if parameters need correction
+3. **Reference completed work** - Use `{{step-id.fieldName}}` to reference completed step outputs
+4. **Adjust remaining steps** - Update dependencies in remaining steps if needed to reference recovery steps
+5. **Use standard actions** - Only "create" or "query" actions
+
+### Intelligence Requirements
+
+The AI should:
+- **Understand the context**: What completed? What failed? What remains?
+- **Determine root cause**: Why did it fail? What's missing or incorrect?
+- **Design minimal fix**: Add ONLY necessary steps, don't over-engineer
+- **Maintain continuity**: Recovery should flow naturally from completed work
+
+### Response Format
+
+Return a JSON object with this structure:
+
+```json
+{
+  "failure_reason": "Clear explanation of why the step failed",
+  "root_cause": "Deep analysis of the underlying cause",
+  "impact_assessment": "How this failure affects remaining steps",
+  "confidence": 0.85,
+  
+  "recoverySteps": [
+    {
+      "id": "unique-step-id",
+      "name": "Human-readable step name",
+      "description": "Clear description of what this step does and why",
+      "action": "create|query",
+      "resourceId": "logical-resource-identifier",
+      "mcpTool": "exact-mcp-tool-name-from-available-tools",
+      "toolParameters": {
+        "parameter1": "value-or-reference",
+        "parameter2": "{{dependency-step-id.fieldName}}"
+      },
+      "dependsOn": ["list-of-step-ids"],
+      "estimatedDuration": "30s"
+    }
+  ],
+  
+  "adjustedRemainingSteps": [
+    {
+      "id": "original-step-id",
+      "name": "Original Step Name",
+      "description": "Original description or updated if needed",
+      "action": "create|query",
+      "resourceId": "logical-resource-identifier",
+      "mcpTool": "exact-mcp-tool-name",
+      "toolParameters": {
+        "parameter1": "value-or-reference",
+        "parameter2": "{{step-id.fieldName}}"
+      },
+      "dependsOn": ["updated-dependencies-including-recovery-steps"],
+      "estimatedDuration": "2m"
+    }
+  ],
+  
+  "reasoning": "Detailed explanation of recovery approach. Explain: (1) What's being fixed or added, (2) Why this approach will succeed, (3) How remaining steps are handled.",
+  "newStepsCount": 0,
+  "successProbability": 0.90,
+  "riskLevel": "low|medium|high",
+  "estimatedDuration": "5m",
+  "riskFactors": [
+    "Potential risks specific to this recovery approach",
+    "What could go wrong and why"
+  ],
+  "successFactors": [
+    "Why this recovery approach should work",
+    "What supports the success probability estimate"
+  ]
+}
+```
+
+### Field Descriptions
+
+**recoverySteps:** Array of NEW steps to fix the failure
+- If simple parameter fix: Can be empty array `[]`
+- If missing resource: Add query/create steps
+- Steps should have `action: "create"` or `action: "query"`
+
+**adjustedRemainingSteps:** Array of remaining steps (potentially with updated dependencies)
+- Include ALL remaining steps from the original plan
+- Update `dependsOn` arrays if they need to reference recovery steps
+- First step is usually the retry of the failed step (with fixes)
+
+**newStepsCount:** Count of recovery steps ONLY (not including remaining steps)
+
+**DO NOT include:**
+- ❌ Completed steps in recoverySteps
+- ❌ Completed steps in adjustedRemainingSteps
+- ❌ A `preservedCount` field (system calculates this)
+- ❌ A `totalSteps` field (system calculates this)
+
+## 🚨 CRITICAL GUIDELINES
+
+1. ❌ **DO NOT include completed steps** - System handles them automatically
+2. ✅ **DO reference completed steps** - Use `{{step-id.fieldName}}` for outputs
+3. ✅ **DO keep it minimal** - Add only necessary recovery steps
+4. ✅ **DO adjust dependencies** - Update remaining steps if needed
+5. ✅ **DO use correct format** - recoverySteps + adjustedRemainingSteps
+6. ❌ **DO NOT use .output** - Reference step outputs directly
+   - ✅ CORRECT: `{{step-discover-azs.availabilityZones.0}}`
+   - ❌ WRONG: `{{step-discover-azs.output.availabilityZones.0}}` (no .output!)
+   - ✅ CORRECT: `{{step-list-vpcs.vpcId}}`
+   - ❌ WRONG: `{{step-list-vpcs.output.vpcId}}` (no .output!)
+7. ✅ **DO count accurately** - newStepsCount = recovery steps only (not remaining)
+8. ✅ **DO return valid JSON** - No markdown, no extra text
+
+## Recovery Decision Framework
+
+### Step 1: Understand the Failure
+- What was the root cause? (Missing resource? Wrong parameter? Permission issue?)
+- What resources were successfully created before the failure?
+- What steps remain unexecuted in the original plan?
+
+### Step 2: Design Minimal Recovery
+Choose based on failure type:
+
+**Simple parameter fix:**
+- recoverySteps: `[]` (empty - just retry with fixed params)
+- adjustedRemainingSteps: [retry step with fixed params, remaining...]
+
+**Missing prerequisite:**
+- recoverySteps: [query/create missing resource]
+- adjustedRemainingSteps: [retry step using new resource, remaining...]
+
+**Complex issue:**
+- recoverySteps: [discover, create-1, create-2, ...]
+- adjustedRemainingSteps: [retry step, remaining...]
+
+### Step 3: Reference Completed Work
+- Use `{{step-id.fieldName}}` to reference completed step outputs
+- Completed steps are available for reference but not in your response
+- The system automatically includes them in the final plan
+
+### Step 4: Adjust Dependencies
+- Update `dependsOn` arrays in remaining steps
+- Add dependencies on recovery steps if needed
+- Ensure dependency chain is valid
+
+## Example Recovery Patterns
+
+### Pattern 1: Missing Resource Discovery
+When a step fails due to insufficient resources (e.g., not enough availability zones, missing subnets):
+
+```json
+{
+  "recoverySteps": [
+    {
+      "id": "step-discover-<resource-type>",
+      "action": "query",
+      "mcpTool": "<appropriate-discovery-tool>",
+      "toolParameters": {"<param>": "{{completed-step-id.<field>}}"}
+    },
+    {
+      "id": "step-create-<missing-resource>",
+      "action": "create",
+      "mcpTool": "<appropriate-creation-tool>",
+      "toolParameters": {"<param>": "{{step-discover-<resource-type>.<field>}}"},
+      "dependsOn": ["step-discover-<resource-type>"]
+    },
+    {
+      "id": "<original-failed-step-id>-retry",
+      "action": "query|create",
+      "mcpTool": "<original-tool>",
+      "toolParameters": {"<param>": "{{step-create-<missing-resource>.<field>}}"},
+      "dependsOn": ["step-create-<missing-resource>"]
+    }
+  ],
+  "adjustedRemainingSteps": [
+    /* Include ALL remaining steps with updated dependencies if needed */
+  ]
+}
+```
+
+### Pattern 2: Parameter Correction
+When a step fails due to invalid parameter values:
+
+```json
+{
+  "recoverySteps": [],
+  "adjustedRemainingSteps": [
+    {
+      "id": "<original-failed-step-id>",
+      "action": "create|query",
+      "mcpTool": "<same-tool>",
+      "toolParameters": {
+        "<param>": "<corrected-value>",
+        "<other-params>": "{{completed-step-id.<field>}}"
+      },
+      "dependsOn": ["<dependencies-from-completed-steps>"]
+    },
+    /* Include ALL other remaining steps */
+  ]
+}
+```
+
+### Pattern 3: Missing Prerequisites
+When a step fails due to missing dependent resources:
+
+```json
+{
+  "recoverySteps": [
+    {
+      "id": "step-create-<prerequisite-1>",
+      "action": "create",
+      "mcpTool": "<tool-for-prerequisite-1>",
+      "toolParameters": {"<param>": "{{completed-step-id.<field>}}"},
+      "dependsOn": ["<completed-step-ids>"]
+    },
+    {
+      "id": "step-create-<prerequisite-2>",
+      "action": "create",
+      "mcpTool": "<tool-for-prerequisite-2>",
+      "toolParameters": {"<param>": "{{completed-step-id.<field>}}"},
+      "dependsOn": ["<completed-step-ids>"]
+    },
+    {
+      "id": "<original-failed-step-id>-retry",
+      "action": "create",
+      "mcpTool": "<original-tool>",
+      "toolParameters": {
+        "<param-1>": "{{step-create-<prerequisite-1>.<field>}}",
+        "<param-2>": "{{step-create-<prerequisite-2>.<field>}}"
+      },
+      "dependsOn": ["step-create-<prerequisite-1>", "step-create-<prerequisite-2>"]
+    }
+  ],
+  "adjustedRemainingSteps": [
+    /* Include ALL remaining steps, updating dependencies to reference retry step */
+  ]
+}
+```
+
+## Final Notes
+
+- Return **ONLY** valid JSON (no markdown code blocks, no explanations outside JSON)
+- recoverySteps can be empty `[]` for simple parameter fixes
+- adjustedRemainingSteps must include ALL remaining steps from original plan
+- System will automatically prepend completed steps to your recovery plan
+- Use `{{step-id.fieldName}}` to reference any step output (completed or new)

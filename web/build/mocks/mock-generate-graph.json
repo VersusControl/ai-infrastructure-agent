@@ -1,0 +1,74 @@
+{
+    "format": "mermaid",
+    "graph": {
+        "edges": [
+            {
+                "source": "i-00715e5bd00566892",
+                "target": "ami-073e567f40baca912"
+            },
+            {
+                "source": "i-00715e5bd00566892",
+                "target": "vpc-0933701ec3e750243"
+            },
+            {
+                "source": "i-00715e5bd00566892",
+                "target": "sg-0ec14c13b03533bc4"
+            },
+            {
+                "source": "sg-0ec14c13b03533bc4",
+                "target": "sg-0ec14c13b03533bc4"
+            },
+            {
+                "source": "subnet-04d6205836a70aa21",
+                "target": "vpc-0933701ec3e750243"
+            }
+        ],
+        "nodes": [
+            {
+                "id": "ami-073e567f40baca912",
+                "name": "Get Latest Ubuntu AMI",
+                "status": "created",
+                "type": "ami"
+            },
+            {
+                "id": "i-00715e5bd00566892",
+                "name": "Create EC2 Instance for Apache Server",
+                "status": "created",
+                "type": "ec2_instance"
+            },
+            {
+                "id": "vpc-0933701ec3e750243",
+                "name": "Discover Default VPC",
+                "status": "created",
+                "type": "vpc"
+            },
+            {
+                "id": "sg-0ec14c13b03533bc4",
+                "name": "Add SSH Ingress Rule",
+                "status": "created",
+                "type": "security_group"
+            },
+            {
+                "id": "subnet-04d6205836a70aa21",
+                "name": "Discover Subnet",
+                "status": "created",
+                "type": "subnet"
+            }
+        ]
+    },
+    "mermaid": "graph TD\n    ami_073e567f40baca912[\"ami-073e567f40baca912\"]\n    i_00715e5bd00566892[\"i-00715e5bd00566892\"]:::ec2\n    vpc_0933701ec3e750243[\"vpc-0933701ec3e750243\"]:::vpc\n    sg_0ec14c13b03533bc4[\"sg-0ec14c13b03533bc4\"]:::sg\n    subnet_04d6205836a70aa21[\"subnet-04d6205836a70aa21\"]:::subnet\n\n    i_00715e5bd00566892 --> ami_073e567f40baca912\n    i_00715e5bd00566892 --> vpc_0933701ec3e750243\n    i_00715e5bd00566892 --> sg_0ec14c13b03533bc4\n    sg_0ec14c13b03533bc4 --> sg_0ec14c13b03533bc4\n    subnet_04d6205836a70aa21 --> vpc_0933701ec3e750243\n\n    classDef vpc fill:#e1f5fe\n    classDef subnet fill:#b3e5fc\n    classDef ec2 fill:#fff3e0\n    classDef sg fill:#f3e5f5\n    classDef lb fill:#e8f5e8\n    classDef asg fill:#fce4ec\n    classDef natgw fill:#e0f2f1\n    classDef tg fill:#f1f8e9\n    classDef rds fill:#fff9c4\n    classDef lt fill:#fce4ec\n",
+    "metadata": {
+        "bottlenecks": [],
+        "edgeCount": 5,
+        "nodeCount": 5,
+        "resourceTypeCounts": {
+            "ami": 1,
+            "ec2_instance": 1,
+            "security_group": 1,
+            "subnet": 1,
+            "vpc": 1
+        }
+    },
+    "source": "state",
+    "timestamp": "2025-10-13T10:32:16.891399+07:00"
+}

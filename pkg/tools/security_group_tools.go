@@ -152,10 +152,17 @@ func (t *ListSecurityGroupsTool) Execute(ctx context.Context, arguments map[stri
 		return t.CreateErrorResponse(fmt.Sprintf("Failed to list security groups: %s", err.Error()))
 	}
 
+	// Extract security group IDs for dependency resolution
+	var sgIDs []string
+	for _, sg := range sgs {
+		sgIDs = append(sgIDs, sg.ID)
+	}
+
 	message := fmt.Sprintf("Found %d security groups", len(sgs))
 	data := map[string]interface{}{
-		"securityGroups": sgs,
-		"count":          len(sgs),
+		"securityGroups":   sgs,
+		"securityGroupIds": sgIDs, // Array of all security group IDs - will be concatenated as "sg-1_sg-2_sg-3"
+		"count":            len(sgs),
 	}
 
 	return t.CreateSuccessResponse(message, data)

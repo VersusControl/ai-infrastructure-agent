@@ -109,6 +109,25 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 		}
 	}
 
+	// Check for field-specific mapping (e.g., step-id.zones)
+	if requestedField != "resourceId" {
+		fieldKey := fmt.Sprintf("%s.%s", stepID, requestedField)
+		if fieldValue, fieldExists := a.resourceMappings[fieldKey]; fieldExists {
+			a.mappingsMutex.RUnlock()
+
+			// If this is an array field (concatenated) and we have an index, split it
+			if arrayIndex >= 0 && strings.Contains(fieldValue, "_") {
+				parts := strings.Split(fieldValue, "_")
+				if arrayIndex < len(parts) {
+					return parts[arrayIndex], nil
+				}
+				return "", fmt.Errorf("array index %d out of bounds for field %s (length: %d)", arrayIndex, requestedField, len(parts))
+			}
+
+			return fieldValue, nil
+		}
+	}
+
 	// Check for primary resource ID mapping
 	resourceID, exists := a.resourceMappings[stepID]
 	a.mappingsMutex.RUnlock()
@@ -174,8 +193,41 @@ func (a *StateAwareAgent) resolveFromInfrastructureState(stepID, requestedField,
 
 	// Handle array indexing for the requested field
 	if arrayIndex >= 0 {
-		// Try to find the field as an array
-		if arrayField, ok := mcpResponse[requestedField].([]interface{}); ok {
+		// First, check if we have a concatenated string value for this field
+		if concatenatedValue, ok := mcpResponse[requestedField].(string); ok && concatenatedValue != "" {
+			// Check if it looks like a concatenated array (contains _)
+			if strings.Contains(concatenatedValue, "_") {
+				// Split by _ delimiter to get array elements
+				parts := strings.Split(concatenatedValue, "_")
+
+				if arrayIndex < len(parts) {
+					id := parts[arrayIndex]
+
+					// Cache it for future use
+					indexedKey := fmt.Sprintf("%s.%d", stepID, arrayIndex)
+					a.mappingsMutex.Lock()
+					a.resourceMappings[indexedKey] = id
+					a.mappingsMutex.Unlock()
+
+					a.Logger.WithFields(map[string]interface{}{
+						"reference":       reference,
+						"step_id":         stepID,
+						"resource_id":     id,
+						"source":          "state_concatenated_array",
+						"requested_field": requestedField,
+						"array_index":     arrayIndex,
+						"total_elements":  len(parts),
+					}).Info("Resolved indexed dependency from concatenated array")
+
+					return id, nil
+				} else {
+					return "", fmt.Errorf("array index %d out of bounds for concatenated field %s (length: %d)", arrayIndex, requestedField, len(parts))
+				}
+			}
+		}
+
+		// Fallback: try to find the field as an original array (for backward compatibility)
+		if arrayField, ok := mcpResponse[requestedField+"_array"].([]interface{}); ok {
 			if arrayIndex < len(arrayField) {
 				if id, ok := arrayField[arrayIndex].(string); ok && id != "" {
 					// Cache it for future use
@@ -188,10 +240,10 @@ func (a *StateAwareAgent) resolveFromInfrastructureState(stepID, requestedField,
 						"reference":       reference,
 						"step_id":         stepID,
 						"resource_id":     id,
-						"source":          "state_array_field",
+						"source":          "state_original_array",
 						"requested_field": requestedField,
 						"array_index":     arrayIndex,
-					}).Info("Resolved array field dependency from state")
+					}).Info("Resolved array field dependency from original array (backward compatibility)")
 
 					return id, nil
 				}
@@ -200,45 +252,52 @@ func (a *StateAwareAgent) resolveFromInfrastructureState(stepID, requestedField,
 			}
 		}
 
-		// Special case: check if "all_zones" array exists for backward compatibility
-		if allZones, ok := mcpResponse["all_zones"].([]interface{}); ok && arrayIndex < len(allZones) {
-			if id, ok := allZones[arrayIndex].(string); ok && id != "" {
-				indexedKey := fmt.Sprintf("%s.%d", stepID, arrayIndex)
-				a.mappingsMutex.Lock()
-				a.resourceMappings[indexedKey] = id
-				a.mappingsMutex.Unlock()
-
-				a.Logger.WithFields(map[string]interface{}{
-					"reference":   reference,
-					"step_id":     stepID,
-					"resource_id": id,
-					"source":      "state_all_zones_array",
-					"array_index": arrayIndex,
-				}).Info("Resolved availability zone from all_zones array")
-
-				return id, nil
-			}
-		}
-
-		return "", fmt.Errorf("array field %s[%d] not found in mcp_response", requestedField, arrayIndex)
+		return "", fmt.Errorf("array field %s[%d] not found or invalid in mcp_response", requestedField, arrayIndex)
 	}
 
 	// Try to find the field directly in the MCP response
-	if id, ok := mcpResponse[requestedField].(string); ok && id != "" {
-		// Cache it for future use
-		a.mappingsMutex.Lock()
-		a.resourceMappings[stepID] = id
-		a.mappingsMutex.Unlock()
+	if fieldValue, exists := mcpResponse[requestedField]; exists {
+		// Handle string field
+		if id, ok := fieldValue.(string); ok && id != "" {
+			// Cache it for future use
+			a.mappingsMutex.Lock()
+			a.resourceMappings[stepID] = id
+			a.mappingsMutex.Unlock()
 
-		a.Logger.WithFields(map[string]interface{}{
-			"reference":       reference,
-			"step_id":         stepID,
-			"resource_id":     id,
-			"source":          "state_direct_field",
-			"requested_field": requestedField,
-		}).Info("Resolved field dependency directly from state")
+			a.Logger.WithFields(map[string]interface{}{
+				"reference":       reference,
+				"step_id":         stepID,
+				"resource_id":     id,
+				"source":          "state_direct_field",
+				"requested_field": requestedField,
+			}).Info("Resolved field dependency directly from state")
 
-		return id, nil
+			return id, nil
+		}
+
+		// Handle array field - serialize to JSON for use in other tools
+		if arrayValue, ok := fieldValue.([]interface{}); ok && len(arrayValue) > 0 {
+			jsonBytes, err := json.Marshal(arrayValue)
+			if err == nil {
+				jsonStr := string(jsonBytes)
+
+				// Cache it for future use
+				a.mappingsMutex.Lock()
+				a.resourceMappings[stepID] = jsonStr
+				a.mappingsMutex.Unlock()
+
+				a.Logger.WithFields(map[string]interface{}{
+					"reference":       reference,
+					"step_id":         stepID,
+					"resource_id":     jsonStr,
+					"source":          "state_array_field",
+					"requested_field": requestedField,
+					"array_length":    len(arrayValue),
+				}).Info("Resolved array field dependency from state")
+
+				return jsonStr, nil
+			}
+		}
 	}
 
 	// Use configuration-driven field resolver with resource type detection
@@ -251,151 +310,12 @@ func (a *StateAwareAgent) resolveFromInfrastructureState(stepID, requestedField,
 			a.resourceMappings[stepID] = id
 			a.mappingsMutex.Unlock()
 
-			a.Logger.WithFields(map[string]interface{}{
-				"reference":   reference,
-				"step_id":     stepID,
-				"resource_id": id,
-				"source":      "state_field_resolver",
-				"field":       field,
-			}).Debug("Resolved dependency reference from state")
-
 			return id, nil
 		}
 	}
 
 	return "", fmt.Errorf("field %s not found in mcp_response for step %s", requestedField, stepID)
 }
-
-// LEGACY FUNCTIONS - Using native MCP integration approach
-
-// // addMissingRequiredParameters adds intelligent defaults for missing required parameters
-// func (a *StateAwareAgent) addMissingRequiredParameters(toolName string, arguments map[string]interface{}, toolInfo MCPToolInfo) error {
-// 	if toolInfo.InputSchema == nil {
-// 		return nil // No schema to validate against
-// 	}
-
-// 	properties, ok := toolInfo.InputSchema["properties"].(map[string]interface{})
-// 	if !ok {
-// 		return nil
-// 	}
-
-// 	// Get required fields
-// 	requiredFields := make(map[string]bool)
-// 	if required, ok := toolInfo.InputSchema["required"].([]interface{}); ok {
-// 		for _, field := range required {
-// 			if fieldStr, ok := field.(string); ok {
-// 				requiredFields[fieldStr] = true
-// 			}
-// 		}
-// 	}
-
-// 	// Add defaults for missing required fields
-// 	for paramName := range properties {
-// 		if requiredFields[paramName] {
-// 			if _, exists := arguments[paramName]; !exists {
-// 				// Parameter is required but missing, add default
-// 				if defaultValue := a.resolveDefaultValue(toolName, paramName, arguments); defaultValue != nil {
-// 					arguments[paramName] = defaultValue
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
-
-// // resolveDefaultValue provides default values for required parameters
-// func (a *StateAwareAgent) resolveDefaultValue(toolName, paramName string, params map[string]interface{}) interface{} {
-// 	switch toolName {
-// 	case "create-ec2-instance":
-// 		switch paramName {
-// 		case "instanceType":
-// 			// Use params to choose appropriate instance type based on workload
-// 			if workload, exists := params["workload_type"]; exists {
-// 				switch workload {
-// 				case "compute-intensive":
-// 					return "c5.large"
-// 				case "memory-intensive":
-// 					return "r5.large"
-// 				case "storage-intensive":
-// 					return "i3.large"
-// 				default:
-// 					return "t3.micro"
-// 				}
-// 			}
-// 			return "t3.micro"
-// 		case "imageId":
-// 			// Try to find AMI from a previous API retrieval step
-// 			if amiStepRef, exists := params["ami_step_ref"]; exists {
-// 				stepRef := fmt.Sprintf("%v", amiStepRef)
-// 				amiID, err := a.resolveDependencyReference(stepRef)
-// 				if err == nil {
-// 					a.Logger.WithFields(map[string]interface{}{
-// 						"ami_id":   amiID,
-// 						"step_ref": stepRef,
-// 						"source":   "api_retrieval_step",
-// 					}).Info("Using AMI ID from API retrieval step")
-// 					return amiID
-// 				}
-
-// 				a.Logger.WithError(err).WithField("step_ref", stepRef).Error("Failed to resolve AMI step reference")
-// 				return nil
-// 			}
-
-// 			a.Logger.Error("No AMI ID available - ami_step_ref parameter is required")
-// 			return nil
-// 		case "keyName":
-// 			// Try to use key name from params if available
-// 			if keyName, exists := params["ssh_key"]; exists {
-// 				return keyName
-// 			}
-// 			return nil // Let AWS use account default
-// 		}
-// 	case "create-vpc":
-// 		switch paramName {
-// 		case "cidrBlock":
-// 			// Use params to determine appropriate CIDR block
-// 			if cidr, exists := params["cidr"]; exists {
-// 				return cidr
-// 			}
-// 			if environment, exists := params["environment"]; exists {
-// 				switch environment {
-// 				case "production":
-// 					return "10.0.0.0/16"
-// 				case "staging":
-// 					return "10.1.0.0/16"
-// 				case "development":
-// 					return "10.2.0.0/16"
-// 				default:
-// 					return "10.0.0.0/16"
-// 				}
-// 			}
-// 			return "10.0.0.0/16"
-// 		case "name":
-// 			// Generate name based on params
-// 			if name, exists := params["resource_name"]; exists {
-// 				return name
-// 			}
-// 			if environment, exists := params["environment"]; exists {
-// 				return fmt.Sprintf("vpc-%s", environment)
-// 			}
-// 			return "ai-agent-vpc"
-// 		}
-// 	case "create-security-group":
-// 		switch paramName {
-// 		case "description":
-// 			// Generate description based on params
-// 			if desc, exists := params["description"]; exists {
-// 				return desc
-// 			}
-// 			if purpose, exists := params["purpose"]; exists {
-// 				return fmt.Sprintf("Security group for %s", purpose)
-// 			}
-// 			return "Security group created by AI Agent"
-// 		}
-// 	}
-// 	return nil
-// }
 
 // validateNativeMCPArguments validates arguments against the tool's schema
 func (a *StateAwareAgent) validateNativeMCPArguments(toolName string, arguments map[string]interface{}, toolInfo MCPToolInfo) error {

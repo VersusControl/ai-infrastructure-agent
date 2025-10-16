@@ -18,11 +18,11 @@ cd ai-infrastructure-agent
 Choose your preferred AI provider and set up the configuration:
 
 ```bash
-# For OpenAI (Recommended)
-cp config.openai.yaml.example config.yaml
-
-# For Google Gemini
+# For Google Gemini (Recommended)
 cp config.gemini.yaml.example config.yaml
+
+# For OpenAI
+cp config.openai.yaml.example config.yaml
 
 # For AWS Bedrock Nova
 cp config.bedrock.yaml.example config.yaml
@@ -30,10 +30,16 @@ cp config.bedrock.yaml.example config.yaml
 
 ### Step 3: Run with Docker
 
+```
+mkdir states
+```
+
 ```bash
 docker run -d \
   -p 8080:8080 \
   -v $(pwd)/config.yaml:/app/config.yaml \
+  -v $(pwd)/states:/app/states \
+  -e GEMINI_API_KEY="your-gemini-api-key-here" \
   -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
   -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
   -e AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION \

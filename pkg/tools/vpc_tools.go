@@ -139,9 +139,18 @@ func (t *ListVPCsTool) Execute(ctx context.Context, arguments map[string]interfa
 
 	// Return success result with structured data
 	message := fmt.Sprintf("Successfully retrieved %d VPCs", len(vpcs))
+
+	// Create VPC IDs list for dependency resolution
+	var vpcIDs []string
+	for _, vpc := range vpcs {
+		vpcIDs = append(vpcIDs, vpc.ID)
+	}
+
+	// Build data response (always include fields for extraction consistency)
 	data := map[string]interface{}{
-		"vpcs":  vpcs,
-		"count": len(vpcs),
+		"vpcIds": vpcIDs,    // Array of VPC IDs - will be concatenated as "vpc-1_vpc-2_vpc-3"
+		"vpcs":   vpcs,      // VPC details
+		"count":  len(vpcs), // Count for convenience
 	}
 
 	return t.CreateSuccessResponse(message, data)

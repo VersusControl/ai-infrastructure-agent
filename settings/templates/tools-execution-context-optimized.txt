@@ -20,7 +20,7 @@ These steps MUST be placed FIRST in your execution plan.
 If you encounter a resource not explicitly documented below, follow these patterns:
 
 TOOL NAMING PATTERNS:
-├─ Discovery: get-default-{resource}, list-{resources}, get-latest-{type}
+├─ Discovery: get-default-{resource}, get-{resource}, list-{resources}, get-latest-{type}
 ├─ Creation: create-{resource}
 └─ Management: start-{resource}, stop-{resource}, delete-{resource}
 
@@ -95,6 +95,23 @@ METHOD B: List all VPCs:
 Output: Returns vpcId field
 
 PATTERN 2: SUBNET DISCOVERY
+Discover single subnet within a VPC
+
+METHOD A: Get subnet in VPC:
+{
+  "id": "step-discover-subnet",
+  "name": "Get subnet",
+  "description": "Get subnet in VPC",
+  "action": "query",
+  "resourceId": "subnet",
+  "mcpTool": "get-subnet",
+  "toolParameters": {
+    "vpcId": "{{step-discover-vpc.resourceId}}"
+  },
+  "dependsOn": ["step-discover-vpc"],
+  "status": "pending"
+}
+
 Discover subnets within a VPC
 
 METHOD A: List subnets in VPC:

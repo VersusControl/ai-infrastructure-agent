@@ -719,7 +719,6 @@ func (a *StateAwareAgent) AnalyzeInfrastructureState(ctx context.Context, scanLi
 	}
 
 	// Extract the JSON response and parse it
-	var analysisText string
 	var analysisData map[string]interface{}
 
 	if content, exists := resultMap["content"]; exists {
@@ -727,7 +726,6 @@ func (a *StateAwareAgent) AnalyzeInfrastructureState(ctx context.Context, scanLi
 			if firstContent, ok := contentArray[0].(map[string]interface{}); ok {
 				if text, exists := firstContent["text"]; exists {
 					if textStr, ok := text.(string); ok {
-						analysisText = textStr
 
 						// Try to parse as JSON to get structured data
 						if err := json.Unmarshal([]byte(textStr), &analysisData); err != nil {
@@ -807,15 +805,6 @@ func (a *StateAwareAgent) AnalyzeInfrastructureState(ctx context.Context, scanLi
 				}
 			}
 		}
-	}
-
-	if a.config.EnableDebug {
-		a.Logger.WithFields(map[string]interface{}{
-			"analysis_text":    analysisText,
-			"managed_count":    len(currentState.Resources),
-			"discovered_count": len(discoveredResources),
-			"drift_count":      len(driftDetections),
-		}).Info("Infrastructure state analysis completed")
 	}
 
 	return currentState, discoveredResources, driftDetections, nil

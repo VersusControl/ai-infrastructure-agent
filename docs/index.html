@@ -9,375 +9,1650 @@
     <link rel="icon" type="image/svg+xml" href="images/ai-infrastructure-agent.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        @import url('https://rsms.me/inter/inter.css');
-        .gradient-text {
-            background: -webkit-linear-gradient(45deg, #4F46E5, #EC4899);
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
+            color: #000000;
+            overflow-x: hidden;
+        }
+        
+        /* Vercel-style gradient background */
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(0, 0, 0, 0.02) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(0, 112, 243, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Navigation */
+        .nav-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .nav-logo {
+            height: 32px;
+            width: auto;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+        
+        .nav-menu a {
+            color: rgba(0, 0, 0, 0.7);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-menu a:hover {
+            color: #000000;
+        }
+        
+        .github-icon {
+            width: 20px;
+            height: 20px;
+            fill: rgba(0, 0, 0, 0.7);
+            transition: fill 0.2s ease;
+        }
+        
+        .github-icon:hover {
+            fill: #000000;
+        }
+        
+        /* Mobile menu */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .mobile-menu-btn span {
+            width: 20px;
+            height: 2px;
+            background: rgba(0, 0, 0, 0.7);
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+        
+        .mobile-menu.active {
+            display: block;
+        }
+        
+        .mobile-menu a {
+            display: block;
+            color: rgba(0, 0, 0, 0.7);
+            text-decoration: none;
+            padding: 12px 0;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .mobile-menu a:hover {
+            color: #000000;
+        }
+        
+        /* Main content */
+        .main-content {
+            position: relative;
+            z-index: 1;
+            padding-top: 64px;
+        }
+        
+        /* Hero section */
+        .hero-section {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 120px 24px 80px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 800px;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        /* Circle background */
+        .hero-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            pointer-events: none;
+        }
+        
+        /* Gridlines */
+        .hero-gridline-h-top,
+        .hero-gridline-h-center,
+        .hero-gridline-h-bottom,
+        .hero-gridline-v-left,
+        .hero-gridline-v-center,
+        .hero-gridline-v-right {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.06);
+            pointer-events: none;
+        }
+        
+        .hero-gridline-h-top,
+        .hero-gridline-h-center,
+        .hero-gridline-h-bottom {
+            left: 0;
+            right: 0;
+            height: 1px;
+        }
+        
+        .hero-gridline-h-top { top: 15%; }
+        .hero-gridline-h-center { top: 50%; }
+        .hero-gridline-h-bottom { bottom: 15%; }
+        
+        .hero-gridline-v-left,
+        .hero-gridline-v-center,
+        .hero-gridline-v-right {
+            top: 0;
+            bottom: 0;
+            width: 1px;
+        }
+        
+        .hero-gridline-v-left { left: 15%; }
+        .hero-gridline-v-center { left: 50%; }
+        .hero-gridline-v-right { right: 15%; }
+        
+        /* Corner gridlines */
+        .hero-gridline-corner {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            pointer-events: none;
+        }
+        
+        .hero-gridline-corner-tl {
+            top: 15%;
+            left: 15%;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            border-left: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .hero-gridline-corner-tr {
+            top: 15%;
+            right: 15%;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            border-right: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .hero-gridline-corner-bl {
+            bottom: 15%;
+            left: 15%;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            border-left: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .hero-gridline-corner-br {
+            bottom: 15%;
+            right: 15%;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            border-right: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        /* Dots */
+        .hero-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .hero-dot-tl {
+            top: 15%;
+            left: 15%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .hero-dot-tr {
+            top: 15%;
+            right: 15%;
+            transform: translate(50%, -50%);
+        }
+        
+        .hero-dot-bl {
+            bottom: 15%;
+            left: 15%;
+            transform: translate(-50%, 50%);
+        }
+        
+        .hero-dot-br {
+            bottom: 15%;
+            right: 15%;
+            transform: translate(50%, 50%);
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-title {
+            font-size: 72px;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 24px;
+            background: linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0.7) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .code-block {
-            background-color: #0D1117;
-            color: #E6EDF3;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #30363D;
-            font-family: 'Fira Code', monospace;
-            /* white-space: pre-wrap; */
-            word-break: break-word;
-            position: relative;
-            max-width: 900px;
-            width: fit-content;
-            margin: 0 auto;
+        
+        .hero-subtitle {
+            font-size: 20px;
+            line-height: 1.6;
+            color: rgba(0, 0, 0, 0.6);
+            max-width: 640px;
+            margin: 0 auto 40px;
         }
-        .code-block::before {
-            color: #7C3AED;
-            font-weight: bold;
-        }
-        .code-block .comment {
-            color: #8B949E;
-        }
-        .code-block .command {
-            color: #79C0FF;
-        }
-        .code-block .path {
-            color: #A5A5A5;
-        }
-        .nav-header {
-            background: rgba(17, 24, 39, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #374151;
-        }
-        .nav-logo {
-            height: 40px;
-            width: auto;
-        }
-        .nav-menu a {
-            color: #E5E7EB;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-        }
-        .nav-menu a:hover {
-            background-color: #374151;
-            color: #FFFFFF;
-        }
-                .github-icon {
-            width: 24px;
-            height: 24px;
-            fill: currentColor;
-        }
-        .mobile-menu-btn {
-            display: none;
-            flex-direction: column;
+        
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
             justify-content: center;
             align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            padding: 12px 24px;
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            padding: 12px !important;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
-            background: rgba(55, 65, 81, 0.8) !important;
-            border: 1px solid #6B7280 !important;
-            width: 48px;
-            height: 48px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .mobile-menu-btn:hover {
-            background-color: #374151;
+        
+        .btn-primary:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: translateY(-1px);
         }
-        .mobile-menu-btn span {
-            display: block !important;
-            width: 24px !important;
-            height: 3px !important;
-            background-color: #FFFFFF !important;
-            margin: 3px 0 !important;
-            border-radius: 2px !important;
-            transition: 0.3s ease !important;
+        
+        .btn-secondary {
+            padding: 12px 24px;
+            background: transparent;
+            color: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-        .mobile-menu {
-            display: none;
+        
+        .btn-secondary:hover {
+            border-color: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Code block - Raycast style */
+        .code-container {
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 0 24px;
+            position: relative;
+        }
+        
+        .code-frame-wrapper {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .code-pattern-top,
+        .code-pattern-bottom {
             position: absolute;
-            top: 100%;
             left: 0;
             right: 0;
-            background: rgba(17, 24, 39, 0.98);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid #374151;
-            padding: 1rem;
+            height: 100px;
+            background-image: url('images/pattern.879b8d77.svg');
+            background-repeat: repeat-x;
+            background-size: auto 100%;
+            pointer-events: none;
+            opacity: 0.3;
         }
-        .mobile-menu.active {
-            display: block;
+        
+        .code-pattern-top {
+            top: 0;
         }
-        .mobile-menu a {
-            display: block;
-            color: #E5E7EB;
-            text-decoration: none;
+        
+        .code-pattern-bottom {
+            bottom: 0;
+            transform: rotate(180deg);
+        }
+        
+        .code-window {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            width: auto;
+            min-width: 320px;
+            max-width: 100%;
+        }
+        
+        .code-gridlines-horizontal,
+        .code-gridlines-vertical {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .code-gridlines-horizontal {
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 20px
+            );
+        }
+        
+        .code-gridlines-vertical {
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: repeating-linear-gradient(
+                90deg,
+                rgba(0, 0, 0, 0.03) 0px,
+                rgba(0, 0, 0, 0.03) 1px,
+                transparent 1px,
+                transparent 20px
+            );
+        }
+        
+        .code-header {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.02);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .code-filename {
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.6);
+        }
+        
+        .code-language {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .code-editor {
+            position: relative;
+            z-index: 1;
+            padding: 20px 24px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            overflow-x: auto;
+            color: #2E2E4B;
+            width: fit-content;
+            max-width: 100%;
+        }
+        
+        .code-editor pre {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            border: none;
+            width: fit-content;
+        }
+        
+        .code-editor code {
+            display: block;
+            white-space: pre;
+            width: fit-content;
+        }
+        
+        .code-editor .line {
+            display: block;
+            min-height: 1.8em;
+            white-space: nowrap;
+        }
+        
+        .code-editor .keyword {
+            color: #B114D3;
+            font-weight: 600;
+        }
+        
+        .code-editor .function {
+            color: #5C40FF;
+            font-weight: 500;
+        }
+        
+        .code-editor .string {
+            color: #0879E2;
+        }
+        
+        .code-editor .comment {
+            color: #5F6570;
+            font-style: italic;
+        }
+        
+        .code-editor .constant {
+            color: #1E1E1E;
+        }
+        
+        .code-editor .punctuation {
+            color: #333333;
+        }
+        
+        .code-editor .command {
+            color: #0879E2;
+            font-weight: 600;
+        }
+        
+        .code-editor .path {
+            color: #404040;
+        }
+        
+        .code-editor .path {
+            color: #404040;
+        }
+        
+        /* Screenshot */
+        .screenshot-container {
+            max-width: 1280px;
+            margin: 60px auto;
+            padding: 0 24px;
+        }
+        
+        .screenshot {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Execution Plan Styles */
+        .execution-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+        }
+        
+        .execution-container * {
+            box-sizing: border-box;
+        }
+
+        .exec-main-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .exec-request-block {
+            background-color: #e7f5ff;
+            border: 1px solid #bce0fb;
+            border-left: 5px solid #007bff;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .exec-request-block p {
+            margin: 0;
+            line-height: 1.6;
+        }
+        .exec-request-block .exec-label {
+            font-weight: 600;
+            color: #0056b3;
+            margin-right: 8px;
+        }
+        .exec-request-block .exec-confidence {
+            background-color: #e6f7f0;
+            color: #0d6efd;
+            padding: 2px 8px;
             border-radius: 6px;
-            margin: 4px 0;
-            transition: all 0.2s ease;
+            font-weight: 500;
+            display: inline-block;
+            margin-left: 8px;
         }
-        .mobile-menu a:hover {
-            background-color: #374151;
-            color: #FFFFFF;
+        
+        .exec-card {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
+
+        .exec-card-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .exec-card-body {
+            padding: 20px;
+            color: #495057;
+            line-height: 1.6;
+        }
+        
+        .execution-plan-block .exec-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .execution-plan-block .exec-card-body {
+            padding: 0;
+        }
+
+        .exec-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .exec-step:last-child {
+            border-bottom: none;
+        }
+
+        .exec-step-number {
+            background-color: #f1f3f5;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            font-weight: 600;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+        
+        .exec-step-content {
+            flex-grow: 1;
+        }
+        .exec-step-content h4 {
+            margin: 0 0 5px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #212529;
+        }
+        .exec-step-content p {
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .exec-step-meta {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .exec-step-meta .exec-status-pending {
+            color: #fd7e14;
+        }
+
+        .exec-show-details-btn {
+            background: none;
+            border: 1px solid #ced4da;
+            color: #007bff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        .exec-show-details-btn:hover {
+            background-color: #f1f3f5;
+        }
+
+        .exec-step-status-icon {
+            color: #adb5bd;
+            flex-shrink: 0;
+        }
+
+        .exec-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .exec-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .exec-btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .exec-btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .exec-btn-secondary {
+            background-color: #ffffff;
+            color: #495057;
+            border: 1px solid #ced4da;
+        }
+        .exec-btn-secondary:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* Features section */
+        .features-section {
+            max-width: 1200px;
+            margin: auto;
+            padding: 80px 24px;
+            position: relative;
+        }
+        
+        .features-background {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 900px;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        
+        .features-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            pointer-events: none;
+        }
+        
+        .features-gridline-h,
+        .features-gridline-v {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.06);
+            pointer-events: none;
+        }
+        
+        .features-gridline-h {
+            left: 0;
+            right: 0;
+            height: 1px;
+        }
+        
+        .features-gridline-v {
+            top: 0;
+            bottom: 0;
+            width: 1px;
+        }
+        
+        .features-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+        
+        .section-title {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            color: #000000;
+        }
+        
+        .section-description {
+            font-size: 18px;
+            color: rgba(0, 0, 0, 0.6);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        
+        .feature-card {
+            background: transparent;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 112, 243, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .feature-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #000000;
+        }
+        
+        .feature-description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(0, 0, 0, 0.6);
+        }
+        
+        /* Providers section */
+        .providers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+        
+        .provider-card {
+            background: #f5f5f5;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .provider-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 50px;
+            background-image: url('images/pattern.879b8d77.svg');
+            background-repeat: repeat-x;
+            background-size: auto 50px;
+            pointer-events: none;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .provider-card::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 50px;
+            background-image: url('images/pattern.879b8d77.svg');
+            background-repeat: repeat-x;
+            background-size: auto 50px;
+            pointer-events: none;
+            opacity: 0.3;
+            transform: rotate(180deg);
+            z-index: 0;
+        }
+        
+        .provider-card:hover {
+            background: #ebebeb;
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+        
+        .provider-card > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .provider-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .provider-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.9);
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Demo sections */
+        .demo-section {
+            max-width: 1200px;
+            margin: 80px auto;
+            padding: 0 24px;
+        }
+        
+        .demo-card {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 48px;
+        }
+        
+        .demo-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+        }
+        
+        .demo-prompt {
+            background: rgba(0, 112, 243, 0.05);
+            border: 1px solid rgba(0, 112, 243, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            color: rgba(0, 0, 0, 0.9);
+        }
+        
+        .demo-result {
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(0, 0, 0, 0.6);
+            margin-bottom: 32px;
+        }
+        
+        /* Footer */
+        .footer {
+            max-width: 1280px;
+            margin: 120px auto 60px;
+            padding: 0 24px;
+            text-align: center;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            padding-top: 60px;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: rgba(0, 0, 0, 0.6);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-links a:hover {
+            color: #000000;
+        }
+        
+        .footer-text {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.4);
+        }
+        
+        .footer-text a {
+            color: rgba(0, 0, 0, 0.6);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .footer-text a:hover {
+            color: #000000;
+        }
+        
+        /* Badges */
+        .badges {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 60px 0;
+        }
+        
+        .badges img {
+            height: 28px;
+            transition: transform 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+        
+        .badges img:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) {
             .mobile-menu-btn {
-                display: flex !important;
+                display: flex;
+            }
+            
+            .nav-menu {
+                display: none;
+            }
+            
+            .hero-title {
+                font-size: 48px;
+            }
+            
+            .hero-subtitle {
+                font-size: 18px;
+            }
+            
+            .hero-section {
+                padding: 80px 24px 40px;
+            }
+            
+            .hero-circle {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .hero-background {
+                max-width: 100%;
+            }
+            
+            .section-title {
+                font-size: 36px;
+            }
+            
+            .section-header {
+                margin-bottom: 32px;
+            }
+            
+            .features-section {
+                margin: 60px auto 40px;
+                padding: 60px 24px 40px;
+            }
+            
+            .features-circle {
+                width: 280px;
+                height: 280px;
+            }
+            
+            .features-background {
+                max-width: 100%;
+            }
+            
+            .demo-section {
+                margin: 40px auto;
+            }
+            
+            .screenshot-container {
+                margin: 40px auto;
+                padding: 0;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .providers-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .demo-card {
+                padding: 32px 24px;
+            }
+            
+            .screenshot {
+                border-radius: 0;
+            }
+            
+            .code-container {
+                padding: 0 16px;
+            }
+            
+            .code-frame-wrapper {
+                padding: 24px 16px;
+            }
+            
+            .code-window {
+                min-width: 280px;
+            }
+            
+            .code-editor {
+                padding: 16px;
+                font-size: 11px;
+                line-height: 1.6;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .code-header {
+                padding: 10px 12px;
+            }
+            
+            .code-filename {
+                font-size: 12px;
+            }
+            
+            .code-language {
+                font-size: 11px;
+            }
+            
+            .execution-container {
+                padding: 10px;
+                border-radius: 0;
+            }
+            
+            .exec-main-container {
+                gap: 15px;
+            }
+            
+            .exec-request-block,
+            .exec-card-body {
+                padding: 15px;
+            }
+            
+            .exec-step {
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .exec-step-number {
+                width: 28px;
+                height: 28px;
+                font-size: 0.9rem;
+            }
+            
+            .exec-step-content h4 {
+                font-size: 0.9rem;
+            }
+            
+            .exec-step-content p {
+                font-size: 0.85rem;
+            }
+            
+            .exec-actions {
                 flex-direction: column;
-                justify-content: center;
-                align-items: center;
+            }
+            
+            .exec-btn {
+                width: 100%;
             }
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200">
-
+<body>
+    <!-- Gradient Background -->
+    <div class="gradient-bg"></div>
+    
     <!-- Navigation Header -->
-    <nav class="nav-header fixed top-0 left-0 right-0 z-50">
-        <div class="container mx-auto px-4">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
-                <div class="flex items-center">
-                    <img src="images/ai-infrastructure-agent.svg" alt="AI Infrastructure Agent" class="nav-logo">
-                </div>
-                
-                <!-- Center: Desktop Menu OR Mobile Menu Button -->
-                <div class="flex items-center">
-                    <!-- Desktop Menu -->
-                    <div class="hidden md:flex nav-menu space-x-6">
-                        <a href="#home">Home</a>
-                        <a href="docs.html">Docs</a>
-                        <a href="https://github.com/VersusControl/devops-ai-guidelines/blob/main/resources/ai-infrastructure-agent-for-aws.md" target="_blank">Quick Example</a>
-                        <a href="https://github.com/VersusControl/devops-ai-guidelines/blob/main/04-ai-agent-for-aws/00-toc.md" target="_blank">Tutorial</a>
-                        <a href="#pricing">Pricing</a>
-                    </div>
-                    
-                    <!-- Mobile Menu Button (Visible on Mobile) -->
-                    <button class="mobile-menu-btn block md:hidden" onclick="toggleMobileMenu()">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
-                </div>
-                
-                <!-- Right Side: GitHub Link Only -->
-                <div class="flex items-center">
-                    <!-- GitHub Link -->
-                    <a href="https://github.com/VersusControl/ai-infrastructure-agent" target="_blank" class="p-2 hover:bg-gray-700 rounded-lg transition-colors">
-                        <svg class="github-icon" viewBox="0 0 24 24">
-                            <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-                        </svg>
-                    </a>
-                </div>
+    <nav class="nav-header">
+        <div class="nav-container">
+            <!-- Logo -->
+            <div>
+                <img src="images/ai-infrastructure-agent.svg" alt="AI Infrastructure Agent" class="nav-logo">
             </div>
             
-            <!-- Mobile Menu -->
-            <div id="mobileMenu" class="mobile-menu">
+            <!-- Desktop Menu -->
+            <div class="nav-menu">
                 <a href="#home">Home</a>
                 <a href="docs.html">Docs</a>
-                <a href="https://github.com/VersusControl/devops-ai-guidelines/blob/main/resources/ai-infrastructure-agent-for-aws.md" target="_blank">Quick Example</a>
+                <a href="https://ai-agent.devopsvn.tech/docs.html#/examples/working-with-ec2-instance" target="_blank">Examples</a>
                 <a href="https://github.com/VersusControl/devops-ai-guidelines/blob/main/04-ai-agent-for-aws/00-toc.md" target="_blank">Tutorial</a>
-                <a href="#pricing">Pricing</a>
+                <a href="https://leanpub.com/the-aiops-book" target="_blank">Book</a>
+                <a href="#">Pricing</a>
+                <a href="https://github.com/VersusControl/ai-infrastructure-agent" target="_blank">
+                    <svg class="github-icon" viewBox="0 0 24 24">
+                        <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                </a>
             </div>
+            
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="mobile-menu">
+            <a href="#home">Home</a>
+            <a href="docs.html">Docs</a>
+            <a href="https://ai-agent.devopsvn.tech/docs.html#/examples/working-with-ec2-instance" target="_blank">Examples</a>
+            <a href="https://github.com/VersusControl/devops-ai-guidelines/blob/main/04-ai-agent-for-aws/00-toc.md" target="_blank">Tutorial</a>
+            <a href="#">Pricing</a>
         </div>
     </nav>
 
-    <div class="container mx-auto px-4 py-8" style="margin-top: 64px;">
-
-        <!-- Header -->
-        <header class="text-center mb-16">
-            <h1 class="text-5xl md:text-7xl font-bold mb-4 gradient-text">AI Infrastructure Agent</h1>
-            <p class="text-xl md:text-2xl text-gray-400">Intelligent AWS infrastructure management through natural language.</p>
-        </header>
-
-        <!-- Get Started Section -->
-        <section class="mb-12">
-            <!-- Section Title -->
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold mb-4 text-white">Get Started in Seconds</h2>
-                <p class="text-gray-400">Clone the repository and run the installation script to get started.</p>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Hero Section -->
+        <section class="hero-section" id="home">
+            <!-- Hero Background -->
+            <div class="hero-background">
+                <span class="hero-circle"></span>
+                <span class="hero-gridline-h-top"></span>
+                <span class="hero-gridline-h-center"></span>
+                <span class="hero-gridline-h-bottom"></span>
+                <span class="hero-gridline-v-left"></span>
+                <span class="hero-gridline-v-center"></span>
+                <span class="hero-gridline-v-right"></span>
+                <span class="hero-dot hero-dot-tl"></span>
+                <span class="hero-dot hero-dot-tr"></span>
+                <span class="hero-dot hero-dot-bl"></span>
+                <span class="hero-dot hero-dot-br"></span>
+                <span class="hero-gridline-corner hero-gridline-corner-tl"></span>
+                <span class="hero-gridline-corner hero-gridline-corner-tr"></span>
+                <span class="hero-gridline-corner hero-gridline-corner-bl"></span>
+                <span class="hero-gridline-corner hero-gridline-corner-br"></span>
             </div>
             
-            <!-- Code Block and UI Image in Two Rows -->
-            <div class="mx-auto">
-                <!-- Installation Guide Row -->
-                <div class="mb-8">
-                    <div class="code-block text-sm">
-                        <span class="comment"># Clone the repository</span></br>
-                        <span class="command">git clone</span> https://github.com/VersusControl/ai-infrastructure-agent.git</br>
-                        <span class="command">cd</span> <span class="path">ai-infrastructure-agent</span></br>
-                        </br>
-                        <span class="comment"># Run the installation script</span></br>
-                        <span class="command">./scripts/install.sh</span></br>
-                        </br>
-                        <span class="comment"># Start the Web UI</span></br>
-                        <span class="command">./scripts/run-web-ui.sh</span></br>
+            <!-- Hero Content -->
+            <div class="hero-content">
+                <h1 class="hero-title">AI Infrastructure Agent</h1>
+                <p class="hero-subtitle">Intelligent AWS infrastructure management through natural language. Build, modify, and manage your cloud resources with the power of AI.</p>
+                
+                <div class="cta-buttons">
+                    <a href="https://ai-agent.devopsvn.tech/docs.html#/getting-started" class="btn-primary">
+                        Get Started
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
+                    <a href="docs.html" class="btn-secondary">
+                        Documentation
+                    </a>
+                </div>
+                
+                <!-- Badges -->
+                <div class="badges">
+                    <a href="https://github.com/VersusControl/ai-infrastructure-agent/stargazers">
+                        <img src="https://img.shields.io/github/stars/VersusControl/ai-infrastructure-agent?style=for-the-badge&logo=github&color=white&labelColor=black" alt="GitHub Stars">
+                    </a>
+                    <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/LICENSE">
+                        <img src="https://img.shields.io/github/license/VersusControl/ai-infrastructure-agent?style=for-the-badge&color=white&labelColor=black" alt="License">
+                    </a>
+                    <a href="https://golang.org/">
+                        <img src="https://img.shields.io/badge/Go-1.24.2+-white?style=for-the-badge&logo=go&labelColor=black" alt="Go Version">
+                    </a>
+                    <a href="https://aws.amazon.com/">
+                        <img src="https://img.shields.io/badge/AWS-Cloud-white?style=for-the-badge&logo=amazon-aws&labelColor=black" alt="AWS">
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        </section>
+
+        <!-- Get Started Section -->
+        <section class="demo-section" id="get-started">
+            <div class="section-header">
+                <h2 class="section-title">Get Started in Seconds</h2>
+                <p class="section-description">Run with Docker - just set your API keys and go</p>
+            </div>
+            
+            <div class="code-container">
+                <div class="code-frame-wrapper">
+                    <div class="code-pattern-top"></div>
+                    <div class="code-pattern-bottom"></div>
+                    <div class="code-window">
+                        <span class="code-gridlines-horizontal" data-grid="true"></span>
+                        <span class="code-gridlines-vertical" data-grid="true"></span>
+                        <div class="code-header">
+                            <div class="code-filename">docker-run.sh</div>
+                            <span class="code-language">Shell</span>
+                        </div>
+                        <div class="code-editor">
+                            <pre><code><span class="line"><span class="command">docker</span> <span class="command">run</span> <span class="path">-d \</span></span>
+<span class="line">  <span class="path">-p</span> <span class="string">8080:8080</span> <span class="path">\</span></span>
+<span class="line">  <span class="path">-e</span> <span class="string">GEMINI_API_KEY=</span><span class="string">"your-gemini-api-key-here"</span> <span class="path">\</span></span>
+<span class="line">  <span class="path">-e</span> <span class="string">AWS_ACCESS_KEY_ID=</span><span class="path">$AWS_ACCESS_KEY_ID</span> <span class="path">\</span></span>
+<span class="line">  <span class="path">-e</span> <span class="string">AWS_SECRET_ACCESS_KEY=</span><span class="path">$AWS_SECRET_ACCESS_KEY</span> <span class="path">\</span></span>
+<span class="line">  <span class="path">-e</span> <span class="string">AWS_DEFAULT_REGION=</span><span class="path">$AWS_DEFAULT_REGION</span> <span class="path">\</span></span>
+<span class="line">  <span class="path">--name</span> <span class="string">ai-agent</span> <span class="path">\</span></span>
+<span class="line">  <span class="string">ghcr.io/versuscontrol/ai-infrastructure-agent</span></span></code></pre>
+                        </div>
                     </div>
                 </div>
-                <!-- Project UI Image Row -->
-                <div class="flex justify-center">
-                    <!-- Placeholder for Web UI Image. Replace docs/images/web-dashboard.svg with the actual path if different. -->
-                    <img src="images/web-dashboard.svg" alt="Project Web UI" class="rounded-lg shadow-2xl w-full" style="max-width: 1200px;">
-                </div>
+            </div>
+
+            <div class="section-header">
+                <h2 class="section-title">Access your browser</h2>
+                <p class="section-description">The web dashboard allows you to manage your infrastructure using natural language commands</p>
+            </div>
+
+            <div class="screenshot-container">
+                <img src="images/web-dashboard.svg" alt="Web Dashboard" class="screenshot">
             </div>
         </section>
 
-        <!-- GitHub Badges -->
-        <div class="flex justify-center space-x-4 mb-16">
-            <a href="https://github.com/VersusControl/ai-infrastructure-agent/stargazers"><img src="https://img.shields.io/github/stars/VersusControl/ai-infrastructure-agent?style=for-the-badge&logo=github&color=blue" alt="GitHub Stars"></a>
-            <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/LICENSE"><img src="https://img.shields.io/github/license/VersusControl/ai-infrastructure-agent?style=for-the-badge&color=brightgreen" alt="License"></a>
-            <a href="https://golang.org/"><img src="https://img.shields.io/badge/Go-1.24.2+-00ADD8?style=for-the-badge&logo=go" alt="Go Version"></a>
-            <a href="https://aws.amazon.com/"><img src="https://img.shields.io/badge/AWS-Cloud-FF9900?style=for-the-badge&logo=amazon-aws" alt="AWS"></a>
-        </div>
-
-        <!-- Main Features Section -->
-        <section class="mb-16">
-            <h2 class="text-4xl font-bold text-center mb-8 text-white">Main Features</h2>
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Natural Language Interface</h3>
-                    <p class="text-gray-400">Describe your desired infrastructure in plain English, and let the AI handle the rest.</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Multi-AI Provider Support</h3>
-                    <p class="text-gray-400">Flexibly switch between OpenAI, Google Gemini, and Anthropic models.</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Visual Web Dashboard</h3>
-                    <p class="text-gray-400">Manage and monitor your infrastructure through an intuitive web interface.</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Terraform-like State</h3>
-                    <p class="text-gray-400">Maintains an accurate state of your infrastructure to prevent drift.</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Conflict Detection</h3>
-                    <p class="text-gray-400">Safely execute plans with built-in conflict detection and dry-run mode.</p>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-lg">
-                    <h3 class="text-xl font-bold mb-2 text-indigo-400">Broad AWS Resource Support</h3>
-                    <p class="text-gray-400">Support for VPC, EC2, Security Groups, Auto Scaling Groups, and ALBs.</p>
-                </div>
+        <!-- Features Section -->
+        <section class="features-section">
+            <!-- Geometric Background -->
+            <div class="features-background">
+                <div class="features-circle"></div>
+                <div class="features-gridline-h" style="top: 25%;"></div>
+                <div class="features-gridline-h" style="top: 50%;"></div>
+                <div class="features-gridline-h" style="top: 75%;"></div>
+                <div class="features-gridline-v" style="left: 25%;"></div>
+                <div class="features-gridline-v" style="left: 50%;"></div>
+                <div class="features-gridline-v" style="left: 75%;"></div>
             </div>
-        </section>
-
-        <!-- Simple Demo Section -->
-        <section class="mb-16">
-            <h2 class="text-4xl font-bold text-center mb-8 text-white">Simple Demo</h2>
-            <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
-                <p class="text-lg text-gray-400 mb-4">Prompt:</p>
-                <div class="code-block mb-6">
-                    <p>"Create an EC2 for hosting an Apache Server with a dedicated security group that allows inbound HTTP (port 80) and SSH (port 22) traffic."</p>
+            
+            <div class="features-content">
+                <div class="section-header">
+                    <h2 class="section-title">Main Features</h2>
+                    <p class="section-description">Everything you need to manage AWS infrastructure with AI</p>
                 </div>
-                <p class="text-lg text-gray-400 mb-4">Result:</p>
-                <p class="text-gray-400 mb-6">The agent creates a detailed execution plan to provision an EC2 instance and a corresponding security group with the specified rules, then awaits your approval before applying the changes.</p>
-                <!-- Demo Image -->
-                <div class="flex justify-center">
-                    <img src="images/simple-demo.svg" alt="Simple Demo Result" class="rounded-lg shadow-2xl w-full" style="max-width: 1150px;">
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0070f3" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Natural Language Interface</h3>
+                    <p class="feature-description">Describe your desired infrastructure in plain English, and let the AI handle the rest.</p>
                 </div>
-            </div>
-        </section>
-
-        <!-- Advanced Demo Section -->
-        <section class="mb-16">
-            <h2 class="text-4xl font-bold text-center mb-8 text-white">Advanced Demo</h2>
-            <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
-                <p class="text-lg text-gray-400 mb-4">Prompt:</p>
-                <div class="code-block mb-6">
-                    <p>"Create a production VPC with a CIDR block of 10.0.0.0/16 across two availability zones. Set up public subnets (10.0.1.0/24 and 10.0.2.0/24) for internet-facing load balancers. Create private subnets for application servers (10.0.11.0/24 and 10.0.12.0/24). Set up dedicated database subnets (10.0.21.0/24 and 10.0.22.0/24). Configure Internet Gateway and NAT Gateway for proper routing."</p>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0070f3" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            <path d="M2 12h20"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Multi-AI Provider Support</h3>
+                    <p class="feature-description">Flexibly switch between OpenAI, Google Gemini, Anthropic Claude, and AWS Bedrock Nova.</p>
                 </div>
-                <p class="text-lg text-gray-400 mb-4">Result:</p>
-                <p class="text-gray-400 mb-6">The agent generates a comprehensive plan to build a multi-AZ, multi-tier VPC network architecture, including all necessary subnets, gateways, and routing configurations, ready for a production workload.</p>
-                <!-- Demo Image -->
-                <div class="flex justify-center">
-                    <img src="images/advanced-demo.svg" alt="Advanced Demo Result" class="rounded-lg shadow-2xl w-full" style="max-width: 1150px;">
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0070f3" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M3 9h18"/>
+                            <path d="M9 21V9"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Visual Web Dashboard</h3>
+                    <p class="feature-description">Manage and monitor your infrastructure through an intuitive web interface.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0070f3" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Terraform-like State</h3>
+                    <p class="feature-description">Maintains an accurate state of your infrastructure to prevent drift.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0070f3" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Conflict Detection</h3>
+                    <p class="feature-description">Safely execute plans with built-in conflict detection and dry-run mode.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0070f3" stroke-width="2">
+                            <path d="M2 20h.01"/>
+                            <path d="M7 20v-4"/>
+                            <path d="M12 20v-8"/>
+                            <path d="M17 20V8"/>
+                            <path d="M22 4v16"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Broad AWS Resource Support</h3>
+                    <p class="feature-description">Support for VPC, EC2, Security Groups, Auto Scaling Groups, and ALBs.</p>
                 </div>
             </div>
         </section>
 
         <!-- Model Support Section -->
-        <section class="mb-16">
-            <h2 class="text-4xl font-bold text-center mb-8 text-white">Supported AI Models</h2>
-            <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
-                <p class="text-lg text-gray-400 mb-8 text-center">Choose the AI provider that best fits your needs and infrastructure requirements.</p>
-                
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- OpenAI -->
-                    <div class="bg-gray-700 p-6 rounded-lg border border-gray-600 text-center">
-                        <div class="mb-4">
-                            <svg class="w-12 h-12 mx-auto text-blue-400" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold mb-3 text-blue-400">OpenAI</h3>
-                    </div>
-                    
-                    <!-- Google Gemini -->
-                    <div class="bg-gray-700 p-6 rounded-lg border border-gray-600 text-center">
-                        <div class="mb-4">
-                            <svg class="w-12 h-12 mx-auto text-green-400" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2.4c5.302 0 9.6 4.298 9.6 9.6s-4.298 9.6-9.6 9.6S2.4 17.302 2.4 12 6.698 2.4 12 2.4zm-1.2 4.8v9.6h2.4V7.2h-2.4zm-3.6 2.4v7.2h2.4V9.6H7.2zm7.2 0v7.2h2.4V9.6h-2.4z"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold mb-3 text-green-400">Google Gemini</h3>
-                    </div>
-                    
-                    <!-- Anthropic -->
-                    <div class="bg-gray-700 p-6 rounded-lg border border-gray-600 text-center">
-                        <div class="mb-4">
-                            <svg class="w-12 h-12 mx-auto text-purple-400" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold mb-3 text-purple-400">Anthropic Claude</h3>
-                    </div>
-                    
-                    <!-- AWS Bedrock Nova -->
-                    <div class="bg-gray-700 p-6 rounded-lg border border-gray-600 text-center">
-                        <div class="mb-4">
-                            <svg class="w-12 h-12 mx-auto text-orange-400" viewBox="0 0 24 24" fill="none">
-                                <!-- AWS Nova-style diamond/star pattern -->
-                                <path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z" fill="currentColor" opacity="0.8"/>
-                                <!-- Inner diamond -->
-                                <path d="M12 6L14 10L18 12L14 14L12 18L10 14L6 12L10 10L12 6Z" fill="currentColor" opacity="0.6"/>
-                                <!-- Central core -->
-                                <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
-                                <!-- Subtle outer glow -->
-                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="0.5" fill="none" opacity="0.3"/>
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold mb-3 text-orange-400">AWS Bedrock Nova</h3>
-                    </div>
+        <section class="features-section">
+            <div class="section-header">
+                <h2 class="section-title">Supported AI Models</h2>
+                <p class="section-description">Choose the AI provider that best fits your needs and infrastructure requirements</p>
+            </div>
+            
+            <div class="providers-grid">
+                <div class="provider-card">
+                    <svg class="provider-icon" viewBox="0 0 24 24" fill="currentColor" style="color: #0070f3;">
+                        <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/>
+                    </svg>
+                    <div class="provider-name">OpenAI</div>
                 </div>
                 
-                <div class="bg-gray-900 p-6 rounded-lg border border-gray-600 text-center">
-                    <h4 class="text-lg font-bold mb-4 text-white">Configuration Example</h4>
-                    <div class="mt-4 flex flex-wrap gap-2 justify-center">
-                        <a href="docs.html#/api-key-setup/openai-api-setup" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition-colors">OpenAI Setup Guide</a>
-                        <a href="docs.html#/api-key-setup/gemini-api-setup" class="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm transition-colors">Gemini Setup Guide</a>
-                        <a href="docs.html#/api-key-setup/aws-bedrock-nova-setup" class="inline-block bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-sm transition-colors">Bedrock Setup Guide</a>
-                    </div>
+                <div class="provider-card">
+                    <svg class="provider-icon" viewBox="0 0 24 24" fill="currentColor" style="color: #10a37f;">
+                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2.4c5.302 0 9.6 4.298 9.6 9.6s-4.298 9.6-9.6 9.6S2.4 17.302 2.4 12 6.698 2.4 12 2.4zm-1.2 4.8v9.6h2.4V7.2h-2.4zm-3.6 2.4v7.2h2.4V9.6H7.2zm7.2 0v7.2h2.4V9.6h-2.4z"/>
+                    </svg>
+                    <div class="provider-name">Google Gemini</div>
+                </div>
+                
+                <div class="provider-card">
+                    <svg class="provider-icon" viewBox="0 0 24 24" fill="currentColor" style="color: #9b87f5;">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    <div class="provider-name">Anthropic Claude</div>
+                </div>
+                
+                <div class="provider-card">
+                    <svg class="provider-icon" viewBox="0 0 24 24" fill="none" style="color: #ff9900;">
+                        <path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9L12 2Z" fill="currentColor" opacity="0.8"/>
+                        <path d="M12 6L14 10L18 12L14 14L12 18L10 14L6 12L10 10L12 6Z" fill="currentColor" opacity="0.6"/>
+                        <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="0.5" fill="none" opacity="0.3"/>
+                    </svg>
+                    <div class="provider-name">AWS Bedrock Nova</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 40px; text-align: center;">
+                <div class="cta-buttons">
+                    <a href="docs.html#/api-key-setup/openai-api-setup" class="btn-secondary">OpenAI Setup</a>
+                    <a href="docs.html#/api-key-setup/gemini-api-setup" class="btn-secondary">Gemini Setup</a>
+                    <a href="docs.html#/api-key-setup/aws-bedrock-nova-setup" class="btn-secondary">Bedrock Setup</a>
                 </div>
             </div>
         </section>
 
-        <!-- Additional Information Section -->
-        <footer class="text-center text-gray-500">
-            <p class="mb-4">We welcome contributions! Please read our <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/README.md#contributing" class="text-indigo-400 hover:underline">contribution guidelines</a> to get started.</p>
-            <div class="space-x-4 mb-4">
-                <a href="docs.html" class="hover:underline">Docs</a>
-                <span>&bull;</span>
-                <a href="https://github.com/VersusControl/ai-infrastructure-agent/issues" class="hover:underline">Issues</a>
-                <span>&bull;</span>
-                <a href="https://github.com/VersusControl/ai-infrastructure-agent/discussions" class="hover:underline">Discussions</a>
+        <!-- The Sample Section -->
+        <section class="demo-section">
+            <div class="section-header">
+                <h2 class="section-title">The Sample</h2>
+                <p class="section-description">See how the AI agent transforms your natural language request into a detailed execution plan</p>
             </div>
-            <p>Licensed under the <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/LICENSE" class="text-indigo-400 hover:underline">MIT License</a>.</p>
-        </footer>
+            
+            <div class="demo-card">
+                <div class="demo-label">Prompt</div>
+                <div class="demo-prompt">
+                    "Create an EC2 for hosting an Apache Server with a dedicated security group that allows inbound HTTP (port 80) and SSH (port 22) traffic."
+                </div>
+                
+                <div class="demo-label">Result</div>
+                <p class="demo-result">
+                    The agent creates a detailed execution plan to provision an EC2 instance and a corresponding security group with the specified rules, then awaits your approval before applying the changes.
+                </p>
+                
+                <div class="demo-label" style="margin-top: 30px;">For Example</div>
+                <p class="demo-result">
+                    Below is an interactive execution plan that shows how the AI agent breaks down your request into actionable steps, provides reasoning, and awaits your confirmation before making any changes to your infrastructure.
+                </p>
+                
+                <!-- Embedded Execution Plan -->
+                <div style="margin-top: 15px;">
+                    <div class="execution-container">
+                        <div class="exec-main-container">
+                            <!-- Request Block -->
+                            <div class="exec-request-block">
+                                <p><span class="exec-label">Request Processed</span> Create an EC2 instance for hosting an Apache Server with a dedicated security group that allows inbound HTTP (port 80) and SSH (port 22) traffic.</p>
+                                <p><span class="exec-label">Mode:</span> Live Execution</p>
+                                <p><span class="exec-label">Confidence:</span> <span class="exec-confidence">95.0%</span></p>
+                            </div>
 
+                            <!-- Reasoning -->
+                            <div class="exec-card">
+                                <div class="exec-card-header">Reasoning</div>
+                                <div class="exec-card-body">
+                                    The user wants to create an EC2 instance with a dedicated security group. I need to discover a VPC, create a security group that allows HTTP and SSH traffic, and then create the EC2 instance using a suitable AMI. Since no managed resources are provided, I will discover the default VPC and then proceed with creating the security group and the EC2 instance.
+                                </div>
+                            </div>
+                            
+                            <!-- Execution Plan -->
+                            <div class="exec-card execution-plan-block">
+                                <div class="exec-card-header">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                    <span>Execution Plan</span>
+                                </div>
+                                <div class="exec-card-body">
+                                    <!-- Step 1 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">1</div>
+                                        <div class="exec-step-content">
+                                            <h4>Discover Default VPC</h4>
+                                            <p>Discover the default VPC to host the EC2 instance and security group.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 2 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">2</div>
+                                        <div class="exec-step-content">
+                                            <h4>Create Security Group for Apache Server</h4>
+                                            <p>Create a security group that allows inbound HTTP (port 80) and SSH (port 22) traffic.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 3 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">3</div>
+                                        <div class="exec-step-content">
+                                            <h4>Add HTTP Ingress Rule</h4>
+                                            <p>Add an ingress rule to allow HTTP traffic on port 80.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 4 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">4</div>
+                                        <div class="exec-step-content">
+                                            <h4>Add SSH Ingress Rule</h4>
+                                            <p>Add an ingress rule to allow SSH traffic on port 22.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 5 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">5</div>
+                                        <div class="exec-step-content">
+                                            <h4>Get Latest Ubuntu AMI</h4>
+                                            <p>Find the latest Ubuntu LTS AMI ID for the EC2 instance.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 6 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">6</div>
+                                        <div class="exec-step-content">
+                                            <h4>Discover Subnet</h4>
+                                            <p>Discover a subnet within the default VPC to launch the EC2 instance.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                    <!-- Step 7 -->
+                                    <div class="exec-step">
+                                        <div class="exec-step-number">7</div>
+                                        <div class="exec-step-content">
+                                            <h4>Create EC2 Instance for Apache Server</h4>
+                                            <p>Create an EC2 instance to host the Apache server.</p>
+                                            <div class="exec-step-meta">Duration: Estimating... &nbsp;&nbsp; Status: <span class="exec-status-pending">pending</span></div>
+                                            <button class="exec-show-details-btn">Show Step Details</button>
+                                        </div>
+                                        <div class="exec-step-status-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="exec-actions">
+                                <button class="exec-btn exec-btn-secondary">✕ Cancel</button>
+                                <button class="exec-btn exec-btn-primary">✓ Confirm & Execute</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div> <!-- Close features-content -->
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-links">
+                <a href="docs.html">Documentation</a>
+                <a href="https://github.com/VersusControl/ai-infrastructure-agent/issues">Issues</a>
+                <a href="https://github.com/VersusControl/ai-infrastructure-agent/discussions">Discussions</a>
+                <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/README.md#contributing">Contributing</a>
+            </div>
+            <p class="footer-text">
+                Licensed under the <a href="https://github.com/VersusControl/ai-infrastructure-agent/blob/main/LICENSE">MIT License</a>. 
+                © 2025 AI Infrastructure Agent
+            </p>
+        </footer>
     </div>
 
     <script>
@@ -391,9 +1666,26 @@
             const mobileMenu = document.getElementById('mobileMenu');
             const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
             
-            if (!mobileMenuBtn.contains(event.target) && !mobileMenu.contains(event.target)) {
+            if (mobileMenuBtn && !mobileMenuBtn.contains(event.target) && !mobileMenu.contains(event.target)) {
                 mobileMenu.classList.remove('active');
             }
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#' && href.length > 1) {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                }
+            });
         });
     </script>
 

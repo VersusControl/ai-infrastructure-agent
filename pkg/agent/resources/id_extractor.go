@@ -1,7 +1,6 @@
 package resources
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -111,6 +110,7 @@ func (e *IDExtractor) matchesResourceType(patternTypes []string, resourceType st
 }
 
 // extractFromPath extracts a value from nested data using dot notation
+// Arrays are concatenated with "_" delimiter (unified array handling)
 func (e *IDExtractor) extractFromPath(data map[string]interface{}, path string) string {
 	if data == nil {
 		return ""
@@ -145,13 +145,19 @@ func (e *IDExtractor) extractFromPath(data map[string]interface{}, path string) 
 		if i == len(parts)-1 {
 			// Last part - return the value
 			if value, ok := current[part]; ok {
-				// Check if the value is an array - serialize it as JSON
+				// Check if the value is an array
 				if arrayValue, isArray := value.([]interface{}); isArray {
-					jsonBytes, err := json.Marshal(arrayValue)
-					if err == nil {
-						return string(jsonBytes)
+					// With unified array handling, arrays should be pre-processed to concatenated strings
+					// If still an array (not yet processed), concatenate with "_" delimiter
+					var strValues []string
+					for _, item := range arrayValue {
+						if item != nil {
+							strValues = append(strValues, fmt.Sprintf("%v", item))
+						}
 					}
+					return strings.Join(strValues, "_")
 				}
+				// Return string value (already concatenated for pre-processed arrays)
 				return fmt.Sprintf("%v", value)
 			}
 		} else {

@@ -303,18 +303,136 @@ func (t *ListSubnetsTool) Execute(ctx context.Context, arguments map[string]inte
 		subnetIDs = append(subnetIDs, subnet.ID)
 	}
 
-	data := map[string]interface{}{}
-
-	// Add dependency resolution fields (following retrieveSubnetsInVPC pattern)
-	if len(subnetIDs) > 0 {
-		data["subnetId"] = subnetIDs[0] // First subnet ID for {{step-id.subnetId}} resolution
-		data["value"] = subnetIDs[0]    // For {{step-id.resourceId}} resolution
-		data["subnet_ids"] = subnetIDs  // Full list for comprehensive access
-		data["subnets"] = subnets       // Subnet details
+	data := map[string]interface{}{
+		"subnetIds": subnetIDs, // Array of subnet IDs - will be concatenated as "subnet-1_subnet-2_subnet-3"
+		"subnets":   subnets,   // Subnet details
 	}
 
 	if vpcID != "" {
 		data["vpcId"] = vpcID // VPC ID
+	}
+
+	return t.CreateSuccessResponse(message, data)
+}
+
+// GetSubnetTool implements MCPTool for getting a single subnet from a VPC
+type GetSubnetTool struct {
+	*BaseTool
+	adapter *adapters.SubnetAdapter
+}
+
+// NewGetSubnetTool creates a new get subnet tool
+func NewGetSubnetTool(awsClient *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"vpcId": map[string]interface{}{
+				"type":        "string",
+				"description": "The VPC ID to get a subnet from (e.g., 'vpc-12345678')",
+			},
+			"availabilityZone": map[string]interface{}{
+				"type":        "string",
+				"description": "Optional: Filter by specific availability zone (e.g., 'us-west-2a')",
+			},
+		},
+		"required": []string{"vpcId"},
+	}
+
+	baseTool := NewBaseTool(
+		"get-subnet",
+		"Get a single subnet from a VPC. Returns ONE subnet ID that can be used by other tools. If availability zone is specified, returns a subnet in that zone. IMPORTANT: Returns a single subnetId, not an array.",
+		"networking",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	baseTool.AddExample(
+		"Get a subnet from VPC",
+		map[string]interface{}{
+			"vpcId": "vpc-12345678",
+		},
+		"Successfully retrieved subnet subnet-abc123 from VPC vpc-12345678. Returns: { subnetId: \"subnet-abc123\", vpcId: \"vpc-12345678\", availabilityZone: \"us-west-2a\" }. Use {{step-id.subnetId}} to reference this subnet in subsequent steps.",
+	)
+
+	baseTool.AddExample(
+		"Get subnet in specific availability zone",
+		map[string]interface{}{
+			"vpcId":            "vpc-12345678",
+			"availabilityZone": "us-west-2b",
+		},
+		"Successfully retrieved subnet subnet-def456 in zone us-west-2b from VPC vpc-12345678. Use {{step-id.subnetId}} to reference this subnet.",
+	)
+
+	// Cast to SubnetAdapter for type safety
+	adapter := adapters.NewSubnetAdapter(awsClient, logger).(*adapters.SubnetAdapter)
+
+	return &GetSubnetTool{
+		BaseTool: baseTool,
+		adapter:  adapter,
+	}
+}
+
+func (t *GetSubnetTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	vpcID, ok := arguments["vpcId"].(string)
+	if !ok || vpcID == "" {
+		return t.CreateErrorResponse("vpcId parameter is required and must be a string")
+	}
+
+	availabilityZone, _ := arguments["availabilityZone"].(string)
+
+	// Use the adapter to list all subnets
+	subnets, err := t.adapter.List(ctx)
+	if err != nil {
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to list subnets: %s", err.Error()))
+	}
+
+	// Filter by VPC and optionally by availability zone
+	var matchingSubnet *types.AWSResource
+	for _, subnet := range subnets {
+		subnetVpcID, _ := subnet.Details["vpcId"].(string)
+		if subnetVpcID != vpcID {
+			continue
+		}
+
+		// If availability zone specified, filter by it
+		if availabilityZone != "" {
+			subnetAZ, _ := subnet.Details["availabilityZone"].(string)
+			if subnetAZ != availabilityZone {
+				continue
+			}
+		}
+
+		// Found a matching subnet
+		matchingSubnet = subnet
+		break
+	}
+
+	if matchingSubnet == nil {
+		if availabilityZone != "" {
+			return t.CreateErrorResponse(fmt.Sprintf("No subnet found in VPC %s in availability zone %s", vpcID, availabilityZone))
+		}
+		return t.CreateErrorResponse(fmt.Sprintf("No subnet found in VPC %s", vpcID))
+	}
+
+	message := fmt.Sprintf("Successfully retrieved subnet %s from VPC %s", matchingSubnet.ID, vpcID)
+	if availabilityZone != "" {
+		message = fmt.Sprintf("Successfully retrieved subnet %s in zone %s from VPC %s", matchingSubnet.ID, availabilityZone, vpcID)
+	}
+
+	// Extract key details from subnet
+	data := map[string]interface{}{
+		"subnetId": matchingSubnet.ID, // Primary field for dependency resolution
+		"subnet":   matchingSubnet,
+		"resource": matchingSubnet,
+	}
+
+	// Add commonly used fields for easier access
+	if az, ok := matchingSubnet.Details["availabilityZone"].(string); ok {
+		data["availabilityZone"] = az
+	}
+	if cidr, ok := matchingSubnet.Details["cidrBlock"].(string); ok {
+		data["cidrBlock"] = cidr
 	}
 
 	return t.CreateSuccessResponse(message, data)
@@ -861,17 +979,69 @@ func (t *SelectSubnetsForALBTool) Execute(ctx context.Context, arguments map[str
 
 	// Filter subnets by VPC and collect by availability zone
 	subnetsByAZ := make(map[string][]*types.AWSResource)
+	subnetsInVPC := 0
+	skippedSubnets := 0
+
 	for _, subnet := range subnets {
 		if subnetVPC, ok := subnet.Details["vpcId"].(string); ok && subnetVPC == vpcID {
-			if az, ok := subnet.Details["availabilityZone"].(string); ok {
+			subnetsInVPC++
+
+			// Try both field names: "availabilityZone" and "az"
+			az, ok := subnet.Details["availabilityZone"].(string)
+			if !ok {
+				az, ok = subnet.Details["az"].(string)
+			}
+
+			if ok && az != "" {
 				subnetsByAZ[az] = append(subnetsByAZ[az], subnet)
+			} else {
+				skippedSubnets++
+				t.logger.WithFields(map[string]interface{}{
+					"subnet_id": subnet.ID,
+					"vpc_id":    vpcID,
+				}).Warn("Subnet missing availability zone information, skipping")
 			}
 		}
 	}
 
-	// Ensure we have at least 2 different AZs
+	// Check if VPC has any subnets
+	if subnetsInVPC == 0 {
+		return t.CreateErrorResponse(fmt.Sprintf("VPC %s has no subnets. Create at least 2 subnets in different Availability Zones before creating an ALB.", vpcID))
+	}
+
+	// Check if we collected any valid subnets with AZ info
+	if len(subnetsByAZ) == 0 {
+		return t.CreateErrorResponse(fmt.Sprintf("Found %d subnets in VPC %s but none have availability zone information. This may indicate a data consistency issue.", subnetsInVPC, vpcID))
+	}
+
+	// Ensure we have at least 2 different AZs (AWS ALB requirement)
 	if len(subnetsByAZ) < 2 {
-		return t.CreateErrorResponse(fmt.Sprintf("Need at least 2 subnets in different Availability Zones, found %d AZs in VPC %s", len(subnetsByAZ), vpcID))
+		// Build detailed error message
+		azList := make([]string, 0, len(subnetsByAZ))
+		subnetDetails := make([]string, 0)
+		for az, subnetsInAZ := range subnetsByAZ {
+			azList = append(azList, az)
+			for _, subnet := range subnetsInAZ {
+				isPublic := false
+				if mapPublic, ok := subnet.Details["mapPublicIpOnLaunch"].(bool); ok {
+					isPublic = mapPublic
+				}
+				publicStr := "private"
+				if isPublic {
+					publicStr = "public"
+				}
+				subnetDetails = append(subnetDetails, fmt.Sprintf("  - %s (%s, AZ: %s)", subnet.ID, publicStr, az))
+			}
+		}
+
+		errMsg := fmt.Sprintf(
+			"ALB requires subnets in at least 2 different Availability Zones, but VPC %s only has subnets in %d AZ(s): %v\n\nFound subnets:\n%s\n\nAWS requires ALBs to span multiple AZs for high availability. Please create additional subnets in a different availability zone.",
+			vpcID,
+			len(subnetsByAZ),
+			azList,
+			strings.Join(subnetDetails, "\n"),
+		)
+		return t.CreateErrorResponse(errMsg)
 	}
 
 	// Select subnets with preference for the right type, but be flexible
@@ -918,7 +1088,34 @@ func (t *SelectSubnetsForALBTool) Execute(ctx context.Context, arguments map[str
 	}
 
 	if len(selectedSubnets) < 2 {
-		return t.CreateErrorResponse("Could not find at least 2 suitable subnets in different AZs for ALB creation")
+		// Build detailed explanation of why selection failed
+		azDetails := make([]string, 0)
+		for az, subnetsInAZ := range subnetsByAZ {
+			publicCount := 0
+			privateCount := 0
+			for _, subnet := range subnetsInAZ {
+				isPublic := false
+				if mapPublic, ok := subnet.Details["mapPublicIpOnLaunch"].(bool); ok {
+					isPublic = mapPublic
+				}
+				if isPublic {
+					publicCount++
+				} else {
+					privateCount++
+				}
+			}
+			azDetails = append(azDetails, fmt.Sprintf("  - %s: %d public, %d private subnets", az, publicCount, privateCount))
+		}
+
+		errMsg := fmt.Sprintf(
+			"Could not select at least 2 subnets in different AZs for %s ALB.\n\nVPC %s has subnets in %d availability zone(s):\n%s\n\nSelected: %d subnet(s)\n\nNote: This is unexpected given that we passed the initial AZ count check. This may indicate an issue with subnet filtering logic.",
+			scheme,
+			vpcID,
+			len(subnetsByAZ),
+			strings.Join(azDetails, "\n"),
+			len(selectedSubnets),
+		)
+		return t.CreateErrorResponse(errMsg)
 	}
 
 	message := fmt.Sprintf("Selected %d subnets in %d different Availability Zones for %s ALB", len(selectedSubnets), len(selectedAZs), scheme)

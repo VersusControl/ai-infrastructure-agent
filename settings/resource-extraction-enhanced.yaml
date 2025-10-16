@@ -177,23 +177,15 @@ resource_id_extraction:
         priority: 10
         
   query_tools:
-    # Query tools return arrays of resources - extract from first element or specific field
+    # Query tools return arrays of resources - arrays are concatenated with _ delimiter
+    # Example: ["az-1a", "az-1b", "az-1c"] becomes "az-1a_az-1b_az-1c"
+    # Access via {{step-id.fieldname}} for full concatenated value, or {{step-id.fieldname.0}} for indexed access
     patterns:
       # List tools return arrays - the query result itself may be what we need
-      
-      # For get-availability-zones - returns single zone name
-      - field_paths: ["availabilityZone"]
-        resource_types: ["availability_zone"]
-        priority: 1
         
       # For get-subnet - returns single subnet
       - field_paths: ["subnetId"]
         resource_types: ["subnet"]
-        priority: 1
-
-      # For list array of subnet IDs
-      - field_paths: ["subnetIds"]
-        resource_types: ["subnets"]
         priority: 1
 
       # For get-vpc - returns single VPC
@@ -201,6 +193,7 @@ resource_id_extraction:
         resource_types: ["vpc"]
         priority: 1
 
+      # For get-latest-amazon-linux-ami, get-latest-ubuntu-ami, get-latest-windows-ami
       - field_paths: ["amiId", "imageId"]
         resource_types: ["ami"]
         priority: 1
@@ -209,7 +202,27 @@ resource_id_extraction:
       - field_paths: ["keyName", "keyPairId"]
         resource_types: ["key_pair"]
         priority: 1
-        
+
+      # For get-availability-zones - returns single zone name
+      - field_paths: ["availabilityZones"]
+        resource_types: ["availability_zone"]
+        priority: 1
+
+      # For list array of subnet IDs
+      - field_paths: ["subnetIds"]
+        resource_types: ["subnets"]
+        priority: 1
+
+      # For list array of vpc IDs
+      - field_paths: ["vpcIds"]
+        resource_types: ["vpcs"]
+        priority: 1
+
+      # For list array of sg IDs
+      - field_paths: ["securityGroupIds"]
+        resource_types: ["security_groups"]
+        priority: 1
+
       # Universal fallback for query tools
       - field_paths: ["resourceId", "id"]
         resource_types: ["*"]
