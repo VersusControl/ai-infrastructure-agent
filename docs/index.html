@@ -975,6 +975,33 @@
             margin-bottom: 32px;
         }
         
+        /* Video section */
+        .video-section {
+            max-width: 1200px;
+            margin: 120px auto 80px;
+            padding: 0 24px;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            border-radius: 12px;
+        }
+        
         /* Footer */
         .footer {
             max-width: 1280px;
@@ -1095,6 +1122,10 @@
             
             .demo-section {
                 margin: 40px auto;
+            }
+            
+            .video-section {
+                margin: 60px auto 40px;
             }
             
             .screenshot-container {
@@ -1638,6 +1669,23 @@
                 </div>
             </div>
             </div> <!-- Close features-content -->
+        </section>
+
+        <!-- Live Demo Section -->
+        <section class="video-section">
+            <div class="section-header">
+                <h2 class="section-title">Live Demo</h2>
+                <p class="section-description">Watch the AI Infrastructure Agent in action as it manages AWS resources through natural language</p>
+            </div>
+            
+            <div class="video-container">
+                <iframe 
+                    src="https://www.youtube.com/embed/41tupPs-BEU" 
+                    title="AI Infrastructure Agent Live Demo" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowfullscreen>
+                </iframe>
+            </div>
         </section>
 
         <!-- Footer -->
