@@ -558,13 +558,18 @@ func (ws *WebServer) executeWithPlanRecoveryHandler(w http.ResponseWriter, r *ht
 
 	ws.aiAgent.Logger.WithField("decision_id", executeRequest.DecisionID).Info("Executing plan with plan-level recovery")
 
-	// Retrieve the stored decision
-	decision, _, exists := ws.getStoredDecisionWithDryRun(executeRequest.DecisionID)
+	// Retrieve the stored decision with dry_run flag
+	decision, dryRun, exists := ws.getStoredDecisionWithDryRun(executeRequest.DecisionID)
 	if !exists {
 		ws.aiAgent.Logger.WithField("decision_id", executeRequest.DecisionID).Error("Decision not found")
 		http.Error(w, "Decision not found", http.StatusNotFound)
 		return
 	}
+
+	ws.aiAgent.Logger.WithFields(map[string]interface{}{
+		"decision_id": executeRequest.DecisionID,
+		"dry_run":     dryRun,
+	}).Info("Starting plan execution")
 
 	// Create a buffered progress channel to avoid blocking
 	progressChan := make(chan *types.ExecutionUpdate, 100)
@@ -577,8 +582,21 @@ func (ws *WebServer) executeWithPlanRecoveryHandler(w http.ResponseWriter, r *ht
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*20) // 20 minutes for plan-level recovery
 		defer cancel()
 
-		// Use new plan-level recovery execution
-		execution, err := ws.aiAgent.ExecutePlanWithReActRecovery(ctx, decision, progressChan, ws)
+		var execution *types.PlanExecution
+		var err error
+
+		// Check if dry_run mode - simulate execution instead of real execution
+		if dryRun {
+			ws.aiAgent.Logger.Info("Dry run mode enabled - simulating execution")
+			execution = ws.aiAgent.SimulatePlanExecution(decision, progressChan)
+			// Simulation doesn't return errors
+			err = nil
+		} else {
+			ws.aiAgent.Logger.Info("Live mode - executing plan with ReAct recovery")
+			// Use new plan-level recovery execution
+			execution, err = ws.aiAgent.ExecutePlanWithReActRecovery(ctx, decision, progressChan, ws)
+		}
+
 		if err != nil {
 			ws.aiAgent.Logger.WithError(err).Error("Plan execution with recovery failed")
 			// Send error update

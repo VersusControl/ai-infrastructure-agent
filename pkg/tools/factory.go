@@ -93,6 +93,8 @@ func (f *ToolFactoryImpl) CreateTool(toolType string, actionType string, depende
 		return NewCreatePublicSubnetTool(deps.AWSClient, actionType, f.logger), nil
 	case "list-subnets":
 		return NewListSubnetsTool(deps.AWSClient, actionType, f.logger), nil
+	case "get-subnet":
+		return NewGetSubnetTool(deps.AWSClient, actionType, f.logger), nil
 	case "list-subnets-for-alb":
 		return NewListSubnetsForALBTool(deps.AWSClient, actionType, f.logger), nil
 	case "create-internet-gateway":
@@ -235,6 +237,7 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"list-vpcs",
 			"get-default-vpc",
 			"list-subnets",
+			"get-subnet",
 			"list-subnets-for-alb",
 			"describe-nat-gateways",
 			"list-security-groups",

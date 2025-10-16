@@ -17,7 +17,7 @@ import (
 //
 // Available Functions:
 //   - ExecuteConfirmedPlanWithDryRun() : Execute confirmed plans with dry-run support
-//   - simulatePlanExecution()          : Simulate plan execution for dry-run mode
+//   - SimulatePlanExecution()          : Simulate plan execution for dry-run mode
 //   - executeExecutionStep()           : Execute individual plan steps
 //   - executeCreateAction()            : Execute create actions via MCP tools
 //   - executeQueryAction()             : Execute query actions via MCP tools
@@ -160,6 +160,11 @@ func (a *StateAwareAgent) ExecutePlanWithReActRecovery(
 					Message:     fmt.Sprintf("Step %d completed: %s", i+1, planStep.Name),
 					Timestamp:   time.Now(),
 				}
+			}
+
+			// Add delay after successful step for smooth frontend display
+			if a.config.StepDelayMS > 0 {
+				time.Sleep(time.Millisecond * time.Duration(a.config.StepDelayMS))
 			}
 
 			// Persist state after successful step
@@ -658,8 +663,8 @@ func (a *StateAwareAgent) buildPlanFailureContext(
 func (a *StateAwareAgent) ExecuteConfirmedPlanWithDryRun(ctx context.Context, decision *types.AgentDecision, progressChan chan<- *types.ExecutionUpdate, dryRun bool) (*types.PlanExecution, error) {
 	if dryRun {
 		a.Logger.Info("Dry run mode - simulating execution")
-		a.Logger.Debug("About to call simulatePlanExecution")
-		result := a.simulatePlanExecution(decision, progressChan)
+		a.Logger.Debug("About to call SimulatePlanExecution")
+		result := a.SimulatePlanExecution(decision, progressChan)
 		a.Logger.WithField("simulation_result", result.Status).Debug("Simulation completed")
 		return result, nil
 	}
@@ -777,9 +782,9 @@ func (a *StateAwareAgent) ExecuteConfirmedPlanWithDryRun(ctx context.Context, de
 	return execution, nil
 }
 
-// simulatePlanExecution simulates plan execution for dry run mode
-func (a *StateAwareAgent) simulatePlanExecution(decision *types.AgentDecision, progressChan chan<- *types.ExecutionUpdate) *types.PlanExecution {
-	a.Logger.WithField("plan_steps", len(decision.ExecutionPlan)).Debug("Starting simulatePlanExecution")
+// SimulatePlanExecution simulates plan execution for dry run mode (exported version)
+func (a *StateAwareAgent) SimulatePlanExecution(decision *types.AgentDecision, progressChan chan<- *types.ExecutionUpdate) *types.PlanExecution {
+	a.Logger.WithField("plan_steps", len(decision.ExecutionPlan)).Debug("Starting SimulatePlanExecution")
 
 	now := time.Now()
 	execution := &types.PlanExecution{
@@ -840,10 +845,11 @@ func (a *StateAwareAgent) simulatePlanExecution(decision *types.AgentDecision, p
 
 		// Simulate step execution with delay
 		a.Logger.Debug("Sleeping for step simulation delay")
-		time.Sleep(time.Millisecond * 500)
+		stepDelayDuration := time.Millisecond * time.Duration(a.config.StepDelayMS)
+		time.Sleep(stepDelayDuration)
 
 		stepStart := time.Now()
-		stepEnd := stepStart.Add(time.Millisecond * 500)
+		stepEnd := stepStart.Add(stepDelayDuration)
 
 		step := &types.ExecutionStep{
 			ID:          planStep.ID,
@@ -853,7 +859,7 @@ func (a *StateAwareAgent) simulatePlanExecution(decision *types.AgentDecision, p
 			Action:      planStep.Action,
 			StartedAt:   &stepStart,
 			CompletedAt: &stepEnd,
-			Duration:    time.Millisecond * 500,
+			Duration:    stepDelayDuration,
 			Output:      map[string]interface{}{"simulated": true, "message": "Dry run - no actual changes made"},
 		}
 

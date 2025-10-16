@@ -137,6 +137,7 @@ tool_resource_patterns:
     - '^create-subnet$'
     - '^create-private-subnet$'
     - '^create-public-subnet$'
+    - '^get-subnet$'
     
   subnets:
     - '^list-subnets$'

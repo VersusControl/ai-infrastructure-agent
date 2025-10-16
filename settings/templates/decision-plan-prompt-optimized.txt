@@ -65,11 +65,11 @@ Universal Rule: For ANY resource type, extract primary identifier from [property
 🔧 TOOL NAMING CONVENTIONS
 ═══════════════════════════════════════════════════════════════════
 
-Discovery: get-default-{resource}, list-{resources}, get-latest-{type}, select-{resources}-for-{purpose}
+Discovery: get-default-{resource}, get-{resource}, list-{resources}, get-latest-{type}, select-{resources}-for-{purpose}
 Creation: create-{resource}
 Management: start-{resource}, stop-{resource}
 
-Examples: get-default-vpc, list-subnets, get-latest-ubuntu-ami, list-subnets-for-alb, create-ec2-instance
+Examples: get-default-vpc, get-subnet, list-subnets, get-latest-ubuntu-ami, list-subnets-for-alb, create-ec2-instance
 
 ═══════════════════════════════════════════════════════════════════
 🧠 DEPENDENCY ANALYSIS

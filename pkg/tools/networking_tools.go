@@ -315,6 +315,129 @@ func (t *ListSubnetsTool) Execute(ctx context.Context, arguments map[string]inte
 	return t.CreateSuccessResponse(message, data)
 }
 
+// GetSubnetTool implements MCPTool for getting a single subnet from a VPC
+type GetSubnetTool struct {
+	*BaseTool
+	adapter *adapters.SubnetAdapter
+}
+
+// NewGetSubnetTool creates a new get subnet tool
+func NewGetSubnetTool(awsClient *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"vpcId": map[string]interface{}{
+				"type":        "string",
+				"description": "The VPC ID to get a subnet from (e.g., 'vpc-12345678')",
+			},
+			"availabilityZone": map[string]interface{}{
+				"type":        "string",
+				"description": "Optional: Filter by specific availability zone (e.g., 'us-west-2a')",
+			},
+		},
+		"required": []string{"vpcId"},
+	}
+
+	baseTool := NewBaseTool(
+		"get-subnet",
+		"Get a single subnet from a VPC. Returns ONE subnet ID that can be used by other tools. If availability zone is specified, returns a subnet in that zone. IMPORTANT: Returns a single subnetId, not an array.",
+		"networking",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	baseTool.AddExample(
+		"Get a subnet from VPC",
+		map[string]interface{}{
+			"vpcId": "vpc-12345678",
+		},
+		"Successfully retrieved subnet subnet-abc123 from VPC vpc-12345678. Returns: { subnetId: \"subnet-abc123\", vpcId: \"vpc-12345678\", availabilityZone: \"us-west-2a\" }. Use {{step-id.subnetId}} to reference this subnet in subsequent steps.",
+	)
+
+	baseTool.AddExample(
+		"Get subnet in specific availability zone",
+		map[string]interface{}{
+			"vpcId":            "vpc-12345678",
+			"availabilityZone": "us-west-2b",
+		},
+		"Successfully retrieved subnet subnet-def456 in zone us-west-2b from VPC vpc-12345678. Use {{step-id.subnetId}} to reference this subnet.",
+	)
+
+	// Cast to SubnetAdapter for type safety
+	adapter := adapters.NewSubnetAdapter(awsClient, logger).(*adapters.SubnetAdapter)
+
+	return &GetSubnetTool{
+		BaseTool: baseTool,
+		adapter:  adapter,
+	}
+}
+
+func (t *GetSubnetTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	vpcID, ok := arguments["vpcId"].(string)
+	if !ok || vpcID == "" {
+		return t.CreateErrorResponse("vpcId parameter is required and must be a string")
+	}
+
+	availabilityZone, _ := arguments["availabilityZone"].(string)
+
+	// Use the adapter to list all subnets
+	subnets, err := t.adapter.List(ctx)
+	if err != nil {
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to list subnets: %s", err.Error()))
+	}
+
+	// Filter by VPC and optionally by availability zone
+	var matchingSubnet *types.AWSResource
+	for _, subnet := range subnets {
+		subnetVpcID, _ := subnet.Details["vpcId"].(string)
+		if subnetVpcID != vpcID {
+			continue
+		}
+
+		// If availability zone specified, filter by it
+		if availabilityZone != "" {
+			subnetAZ, _ := subnet.Details["availabilityZone"].(string)
+			if subnetAZ != availabilityZone {
+				continue
+			}
+		}
+
+		// Found a matching subnet
+		matchingSubnet = subnet
+		break
+	}
+
+	if matchingSubnet == nil {
+		if availabilityZone != "" {
+			return t.CreateErrorResponse(fmt.Sprintf("No subnet found in VPC %s in availability zone %s", vpcID, availabilityZone))
+		}
+		return t.CreateErrorResponse(fmt.Sprintf("No subnet found in VPC %s", vpcID))
+	}
+
+	message := fmt.Sprintf("Successfully retrieved subnet %s from VPC %s", matchingSubnet.ID, vpcID)
+	if availabilityZone != "" {
+		message = fmt.Sprintf("Successfully retrieved subnet %s in zone %s from VPC %s", matchingSubnet.ID, availabilityZone, vpcID)
+	}
+
+	// Extract key details from subnet
+	data := map[string]interface{}{
+		"subnetId": matchingSubnet.ID, // Primary field for dependency resolution
+		"subnet":   matchingSubnet,
+		"resource": matchingSubnet,
+	}
+
+	// Add commonly used fields for easier access
+	if az, ok := matchingSubnet.Details["availabilityZone"].(string); ok {
+		data["availabilityZone"] = az
+	}
+	if cidr, ok := matchingSubnet.Details["cidrBlock"].(string); ok {
+		data["cidrBlock"] = cidr
+	}
+
+	return t.CreateSuccessResponse(message, data)
+}
+
 // CreateInternetGatewayTool implements MCPTool for creating internet gateways
 type CreateInternetGatewayTool struct {
 	*BaseTool

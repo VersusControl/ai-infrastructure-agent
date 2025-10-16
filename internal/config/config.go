@@ -41,6 +41,7 @@ type AgentConfig struct {
 	DryRun               bool    `mapstructure:"dry_run"`
 	AutoResolveConflicts bool    `mapstructure:"auto_resolve_conflicts"`
 	EnableDebug          bool    `mapstructure:"enable_debug"`
+	StepDelayMS          int     `mapstructure:"step_delay_ms"` // Delay after successful step execution (for smooth frontend display)
 }
 
 // LoggingConfig contains logging configuration
@@ -129,6 +130,7 @@ func setDefaults() {
 	viper.SetDefault("agent.dry_run", true)
 	viper.SetDefault("agent.auto_resolve_conflicts", false)
 	viper.SetDefault("agent.enable_debug", false)
+	viper.SetDefault("agent.step_delay_ms", 500)
 
 	// Logging defaults
 	viper.SetDefault("logging.level", "info")
