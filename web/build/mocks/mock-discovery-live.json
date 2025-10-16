@@ -1,0 +1,2837 @@
+{
+    "format": "mermaid",
+    "graph": {
+        "edges": [
+            {
+                "source": "i-03782dff6cae7637f",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-03782dff6cae7637f",
+                "target": "subnet-09f3945f9c90e54f3"
+            },
+            {
+                "source": "i-05aa470c716a40c28",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-05aa470c716a40c28",
+                "target": "subnet-09f3945f9c90e54f3"
+            },
+            {
+                "source": "i-0a532d8660f6b60b9",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-0a532d8660f6b60b9",
+                "target": "subnet-09f3945f9c90e54f3"
+            },
+            {
+                "source": "i-033da5a88b1f3aaaf",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-033da5a88b1f3aaaf",
+                "target": "subnet-09f3945f9c90e54f3"
+            },
+            {
+                "source": "i-0c6475fb8be1b1554",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-0c6475fb8be1b1554",
+                "target": "subnet-09f3945f9c90e54f3"
+            },
+            {
+                "source": "i-08d0e4de828509ef3",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-08d0e4de828509ef3",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-0b38ea51987d5b2a0",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-0b38ea51987d5b2a0",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-0495a331dbb558a26",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-0495a331dbb558a26",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-0331967dd2e411a06",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-0331967dd2e411a06",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-029078dd45c5bb1df",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-029078dd45c5bb1df",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-0d7adeb40cb11341d",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-0d7adeb40cb11341d",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-01ecdc558dd45f319",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-01ecdc558dd45f319",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-04e34d3c676c8b846",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-04e34d3c676c8b846",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-08ee611964ea3239c",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-08ee611964ea3239c",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-0e64b0ab4902de1b0",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-0e64b0ab4902de1b0",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-08914f7d945ba636d",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-08914f7d945ba636d",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-098ffa4a128dc4589",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-098ffa4a128dc4589",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-01b66d0cbf8dbd8b8",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-01b66d0cbf8dbd8b8",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-02e26d38b13abf4ec",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-02e26d38b13abf4ec",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-0ab0d31f329bcfc10",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-0ab0d31f329bcfc10",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-009ddc03502b6bb74",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-009ddc03502b6bb74",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-0e37fec58b6426dc4",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-0e37fec58b6426dc4",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "i-011dec62bea559fe2",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "i-011dec62bea559fe2",
+                "target": "subnet-0480d6114031d03fa"
+            },
+            {
+                "source": "sg-00175120ee7df2f59",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-04160695b501c9212",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0468009f10f1ef67e",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0272b2711c8a8d54a",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0ba6f3ce9ebc031da",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0ef386b72eecd8eb4",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-016926c88fbf4e4e1",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-09c68343997f1c56e",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0a68af37829eb0b92",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0d2fa05614b9c7c61",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0e7eb631896569155",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0fdc83a289a34861d",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-05429136ab5d41a95",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0bf8a3e3614151763",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-005241448dc47f210",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-07f079c6f75967165",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0a3d379ee23f003d1",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0ad95ad5f2ad23454",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0c8485e8967015d67",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0e8ecadd6280d35ae",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-09cfa2a9ecffcc550",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-08a384f5f29c46b19",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-089cb950b6afd4b68",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0e3622f424bf186a0",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "sg-0f4789a4dfc456cfc",
+                "target": "vpc-0faa86f3ab9606731"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/net/nlb-apse5-dev-open-banking-gw/2af4c1a718070656",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/net/nlb-apse5-dev-open-banking-gw/2af4c1a718070656",
+                "target": "sg-0468009f10f1ef67e"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/net/nlb-apse5-dev-vikki-mobile-gw/55587e5b707b8a7a",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/net/nlb-apse5-dev-vikki-mobile-gw/55587e5b707b8a7a",
+                "target": "sg-0ba6f3ce9ebc031da"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-backoffice/14c8c157ef718162",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-backoffice/14c8c157ef718162",
+                "target": "sg-005241448dc47f210"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-backoffice/14c8c157ef718162",
+                "target": "sg-09c68343997f1c56e"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-conductor/26d1c52dc0dc6c8c",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-conductor/26d1c52dc0dc6c8c",
+                "target": "sg-09c68343997f1c56e"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-conductor/26d1c52dc0dc6c8c",
+                "target": "sg-0d2fa05614b9c7c61"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-kafka-conn/c4ba4e12e4f1804f",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-kafka-conn/c4ba4e12e4f1804f",
+                "target": "sg-09c68343997f1c56e"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-kafka-conn/c4ba4e12e4f1804f",
+                "target": "sg-0ad95ad5f2ad23454"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms-gw/3ab6ec694d34b971",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms-gw/3ab6ec694d34b971",
+                "target": "sg-00175120ee7df2f59"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms/4867f7f38266b84a",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms/4867f7f38266b84a",
+                "target": "sg-016926c88fbf4e4e1"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms/4867f7f38266b84a",
+                "target": "sg-09c68343997f1c56e"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-digital-gw/c6dcb25f560addf2",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-digital-gw/c6dcb25f560addf2",
+                "target": "sg-09c68343997f1c56e"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-digital-gw/c6dcb25f560addf2",
+                "target": "sg-0ef386b72eecd8eb4"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/dev-vikkibank-io-alb/676871a8be05f436",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/dev-vikkibank-io-alb/676871a8be05f436",
+                "target": "sg-09c68343997f1c56e"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/dev-vikkibank-io-alb/676871a8be05f436",
+                "target": "sg-0e3622f424bf186a0"
+            },
+            {
+                "source": "subnet-0941a4bc502700bea",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-0cff3b3d6f197f79a",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-08755adb60f82b9fc",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-074b4021ba9a35e1c",
+                "target": "vpc-0faa86f3ab9606731"
+            },
+            {
+                "source": "subnet-0bb00ac7a4b460fb5",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-0480d6114031d03fa",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-02594cd48bffd5f45",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-08cac0e868e1e5f3b",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-070574030ae04706a",
+                "target": "vpc-0faa86f3ab9606731"
+            },
+            {
+                "source": "subnet-00751928204b4cb46",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-0d50ad7cd22392adf",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-0193affe1919d0671",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-0c37287a1674d4c72",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-00fb2bec9aff5cfa9",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-0697d30b204ee5b41",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-08257bc2e60c3f4cd",
+                "target": "vpc-0faa86f3ab9606731"
+            },
+            {
+                "source": "subnet-0b46b0691e967bcc5",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-0e6696116f6f8bf90",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-0a8eb011ef4fd200b",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-0e01d5ac373635c98",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-086be95d79260aac1",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-01e5111135328f99d",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-09f3945f9c90e54f3",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-001fab5ac309da0ac",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "subnet-09232500f215db949",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "nat-01362b6377f2de539",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "nat-01362b6377f2de539",
+                "target": "subnet-0cff3b3d6f197f79a"
+            },
+            {
+                "source": "nat-0bd3de61f0e5dc322",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "nat-0bd3de61f0e5dc322",
+                "target": "subnet-08755adb60f82b9fc"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-0ce1c51201/9428646a68274a3b",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-29e09502c8/72e4b61a9032a048",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-fb474df2bd/78e5b5c559c61d15",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-kafkacon-kafkacon-8d2811e27d/dec37f6918952de8",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-kafkacon-schemare-387719cb65/221cc59c948d8888",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-portalpl-vikkimob-592ce9a3c4/211515e4f1ad0f31",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-69e6457b9d/0da1cb06346a1847",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-6f90962d7d/8c1a7e4aadc54242",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-84b218fc9e/f62108b786596252",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-c63e120481/da7f204714ba1837",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-e4a83b3b67/4e43c35ebbee034f",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-workflow-devcondu-4157112a97/8b897e7764cd2d20",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-open-banking-https-443/59f9e2410e499cb7",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-vikki-cms-https-443/cbd0cba1dea4af13",
+                "target": "vpc-0d67cc5f2b5193e49"
+            },
+            {
+                "source": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-vikki-mobile-https-443/7a8981b19cfdef84",
+                "target": "vpc-0d67cc5f2b5193e49"
+            }
+        ],
+        "nodes": [
+            {
+                "id": "vpc-0d67cc5f2b5193e49",
+                "status": "available",
+                "tags": {
+                    "Name": "vpc-apse5-dev-network-vikki-mobile",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "vpc"
+            },
+            {
+                "id": "vpc-0faa86f3ab9606731",
+                "status": "available",
+                "tags": {
+                    "Name": "aws-controltower-VPC",
+                    "aws:cloudformation:logical-id": "VPC",
+                    "aws:cloudformation:stack-id": "arn:aws:cloudformation:ap-southeast-5:820057617222:stack/StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-f0678303-183d-44ff-94b1-26173d1e49a0/0793b450-4f6f-11f0-96e1-06093c2ea7bf",
+                    "aws:cloudformation:stack-name": "StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-f0678303-183d-44ff-94b1-26173d1e49a0"
+                },
+                "type": "vpc"
+            },
+            {
+                "id": "i-03782dff6cae7637f",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-96-58-28.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-611f9796-f626-ec0f-2c1a-2122b4847b2b",
+                    "aws:ec2launchtemplate:id": "lt-04ab164b347e819a6",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "monitoring-class",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "monitoring-on-demand-pool-kgm9g",
+                    "karpenter.sh/nodepool": "monitoring-on-demand-pool",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "monitoring-class"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-05aa470c716a40c28",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-96-217-5.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-413f971e-f68e-e60d-0e12-238a6f891c33",
+                    "aws:ec2launchtemplate:id": "lt-0c1138f3cdf47cd6d",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "portal-services-provisioner-5x5nv",
+                    "karpenter.sh/nodepool": "portal-services-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-0a532d8660f6b60b9",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-96-10-100.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-c33fb516-dc26-e6a7-86ba-018a35fe3e61",
+                    "aws:ec2launchtemplate:id": "lt-070430098d6debc29",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "digital-platform-provisioner-2q2b7",
+                    "karpenter.sh/nodepool": "digital-platform-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-033da5a88b1f3aaaf",
+                "status": "running",
+                "tags": {
+                    "Name": "infra-node",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "aws:autoscaling:groupName": "eks-infra-node-20250826041220620900000001-52cc7249-d7a4-a29b-742f-63a19c456ff3",
+                    "aws:ec2:fleet-id": "fleet-dd9d818f-eb26-cebe-2c9a-0720f35783ca",
+                    "aws:ec2launchtemplate:id": "lt-00f1edbd1e456b5ea",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "eks:nodegroup-name": "infra-node-20250826041220620900000001",
+                    "env": "dev",
+                    "k8s.io/cluster-autoscaler/enabled": "true",
+                    "k8s.io/cluster-autoscaler/vikki-mobile-dev-cluster": "owned",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-0c6475fb8be1b1554",
+                "status": "running",
+                "tags": {
+                    "Name": "infra-node",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "aws:autoscaling:groupName": "eks-infra-node-20250826041220620900000001-52cc7249-d7a4-a29b-742f-63a19c456ff3",
+                    "aws:ec2:fleet-id": "fleet-dd9d818f-eb26-cebe-2c9a-0720f35783ca",
+                    "aws:ec2launchtemplate:id": "lt-00f1edbd1e456b5ea",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "eks:nodegroup-name": "infra-node-20250826041220620900000001",
+                    "env": "dev",
+                    "k8s.io/cluster-autoscaler/enabled": "true",
+                    "k8s.io/cluster-autoscaler/vikki-mobile-dev-cluster": "owned",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-08d0e4de828509ef3",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-94-43.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-c33d9f16-568e-cc8d-8698-a12a20f6d490",
+                    "aws:ec2launchtemplate:id": "lt-06f24d9202dd830c5",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "on-demand-provisioner-866jn",
+                    "karpenter.sh/nodepool": "on-demand-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-0b38ea51987d5b2a0",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-57-111.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-5f1d03af-612e-46b4-26b0-8f0a7e91787e",
+                    "aws:ec2launchtemplate:id": "lt-0fd55dbb0f6ae1af2",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "portal-services-provisioner-hf62f",
+                    "karpenter.sh/nodepool": "portal-services-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-0495a331dbb558a26",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-108-57.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-ff862827-1135-cb14-043a-2402ded90c79",
+                    "aws:ec2launchtemplate:id": "lt-044a471e788de5861",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "monitoring-class",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "monitoring-on-demand-pool-nwsvn",
+                    "karpenter.sh/nodepool": "monitoring-on-demand-pool",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "monitoring-class"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-0331967dd2e411a06",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-24-13.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-df9f8b8f-e92e-4e36-2c10-27aa7525911b",
+                    "aws:ec2launchtemplate:id": "lt-0b2829ae6710a726c",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-b2bt4",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-029078dd45c5bb1df",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-119-81.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-558e820f-1937-6914-863a-0600cc005d4b",
+                    "aws:ec2launchtemplate:id": "lt-0cc98dd8310c475b9",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-sdkpb",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-0d7adeb40cb11341d",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-236-107.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-dd3781a5-e90e-e43c-0630-8f22d8ce75b1",
+                    "aws:ec2launchtemplate:id": "lt-00f612b9d271ade51",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-zbt7j",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-01ecdc558dd45f319",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-185-14.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-7f848007-91b7-c136-0e3a-8e0a56e3ab30",
+                    "aws:ec2launchtemplate:id": "lt-0580e2a545889112c",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-4jfzq",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-04e34d3c676c8b846",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-155-196.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-df8c8a8f-bb9d-c936-0690-2e2284fd1c19",
+                    "aws:ec2launchtemplate:id": "lt-0573d9dae96927a05",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-249ng",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-08ee611964ea3239c",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-181-32.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-f70e08ad-b91f-e93c-0e32-8608411f8724",
+                    "aws:ec2launchtemplate:id": "lt-0da9642fd47695726",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-jv6xc",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-0e64b0ab4902de1b0",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-144-180.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-558428af-33bd-e99e-a698-8ea2ef20a6d0",
+                    "aws:ec2launchtemplate:id": "lt-0abfacf4724172804",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-kds2r",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-08914f7d945ba636d",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-200-70.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-dd8caa05-3917-eb3c-0e10-06a84154f664",
+                    "aws:ec2launchtemplate:id": "lt-0bd8cb852ff9a8bdc",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-6rjmk",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-098ffa4a128dc4589",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-135-186.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-773789af-e32c-4cbc-0630-8720738566fd",
+                    "aws:ec2launchtemplate:id": "lt-03f0a58ad30a152b1",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-rhx9h",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-01b66d0cbf8dbd8b8",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-48-238.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-758480af-bbbd-6314-04ba-8ea0b66fbe49",
+                    "aws:ec2launchtemplate:id": "lt-03f0a58ad30a152b1",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-9g77x",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-02e26d38b13abf4ec",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-96-242.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-5f0e2027-bbb5-ebb4-8412-0ca8d30fba68",
+                    "aws:ec2launchtemplate:id": "lt-0b14f012c31e447d7",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "on-demand-provisioner-4gxp8",
+                    "karpenter.sh/nodepool": "on-demand-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-0ab0d31f329bcfc10",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-179-102.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-e19f9516-f606-640f-861a-0120dcd024bf",
+                    "aws:ec2launchtemplate:id": "lt-0a539b42f952dc2c9",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "worker-node-template",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "worker-spot-provisioner-97kx2",
+                    "karpenter.sh/nodepool": "worker-spot-provisioner",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "worker-provisioner"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-009ddc03502b6bb74",
+                "status": "running",
+                "tags": {
+                    "Name": "ip-100-97-66-191.ap-southeast-5.compute.internal",
+                    "aws:ec2:fleet-id": "fleet-493d3714-f626-6e8d-a41a-23a2f71102dc",
+                    "aws:ec2launchtemplate:id": "lt-072cc868f5d5766e3",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "business_unit": "vikki",
+                    "eks:eks-cluster-name": "vikki-mobile-dev-cluster",
+                    "karpenter.k8s.aws/ec2nodeclass": "monitoring-class",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "karpenter.sh/nodeclaim": "monitoring-spot-pool-7f9x4",
+                    "karpenter.sh/nodepool": "monitoring-spot-pool",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "name": "monitoring-class"
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-0e37fec58b6426dc4",
+                "status": "running",
+                "tags": {
+                    "Name": "infra-node",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "aws:autoscaling:groupName": "eks-infra-node-20250826041220620900000001-52cc7249-d7a4-a29b-742f-63a19c456ff3",
+                    "aws:ec2:fleet-id": "fleet-f72e8205-1b3d-c91c-0412-2e2032a56d7a",
+                    "aws:ec2launchtemplate:id": "lt-00f1edbd1e456b5ea",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "eks:nodegroup-name": "infra-node-20250826041220620900000001",
+                    "env": "dev",
+                    "k8s.io/cluster-autoscaler/enabled": "true",
+                    "k8s.io/cluster-autoscaler/vikki-mobile-dev-cluster": "owned",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "i-011dec62bea559fe2",
+                "status": "running",
+                "tags": {
+                    "Name": "infra-node",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "aws:autoscaling:groupName": "eks-infra-node-20250826041220620900000001-52cc7249-d7a4-a29b-742f-63a19c456ff3",
+                    "aws:ec2:fleet-id": "fleet-f72e8205-1b3d-c91c-0412-2e2032a56d7a",
+                    "aws:ec2launchtemplate:id": "lt-00f1edbd1e456b5ea",
+                    "aws:ec2launchtemplate:version": "1",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "eks:nodegroup-name": "infra-node-20250826041220620900000001",
+                    "env": "dev",
+                    "k8s.io/cluster-autoscaler/enabled": "true",
+                    "k8s.io/cluster-autoscaler/vikki-mobile-dev-cluster": "owned",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "ec2_instance"
+            },
+            {
+                "id": "sg-00175120ee7df2f59",
+                "name": "alb-apse5-dev-vikki-cms-gw-sg",
+                "status": "active",
+                "tags": {
+                    "Name": "alb-apse5-dev-vikki-cms-gw-sg",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-04160695b501c9212",
+                "name": "vikki-mobile-dev-vpc-link-sg",
+                "status": "active",
+                "tags": {
+                    "STAGE": "dev",
+                    "aws:cloudformation:logical-id": "APIGWVPClinkSG",
+                    "aws:cloudformation:stack-id": "arn:aws:cloudformation:ap-southeast-5:820057617222:stack/apigateway-dev/5725cbb0-6217-11f0-88cc-06d51585f4e7",
+                    "aws:cloudformation:stack-name": "apigateway-dev"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0468009f10f1ef67e",
+                "name": "nlb-apse5-dev-open-banking-gw-sg",
+                "status": "active",
+                "tags": {
+                    "Name": "nlb-apse5-dev-open-banking-gw-sg",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0272b2711c8a8d54a",
+                "name": "non-prod-dev-vpc-link-sg",
+                "status": "active",
+                "tags": {
+                    "STAGE": "dev",
+                    "aws:cloudformation:logical-id": "APIGWVPClinkSG",
+                    "aws:cloudformation:stack-id": "arn:aws:cloudformation:ap-southeast-5:820057617222:stack/apigateway-dev/5725cbb0-6217-11f0-88cc-06d51585f4e7",
+                    "aws:cloudformation:stack-name": "apigateway-dev"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0ba6f3ce9ebc031da",
+                "name": "nlb-apse5-dev-vikki-mobile-gw-sg",
+                "status": "active",
+                "tags": {
+                    "Name": "nlb-apse5-dev-vikki-mobile-gw-sg",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0ef386b72eecd8eb4",
+                "name": "k8s-albapse5devdigita-cd7018c040",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "CreatedBy": "Terraform",
+                    "Environment": "DEV",
+                    "Project": "Vikki-Portal",
+                    "SystemOwner": "SystemOwner",
+                    "elbv2.k8s.aws/cluster": "vikki-mobile-dev-cluster",
+                    "ingress.k8s.aws/resource": "ManagedLBSecurityGroup",
+                    "ingress.k8s.aws/stack": "alb-apse5-dev-digital-gw-group",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-016926c88fbf4e4e1",
+                "name": "k8s-albapse5devvikkic-ecf1f304e8",
+                "status": "active",
+                "tags": {
+                    "elbv2.k8s.aws/cluster": "vikki-mobile-dev-cluster",
+                    "ingress.k8s.aws/resource": "ManagedLBSecurityGroup",
+                    "ingress.k8s.aws/stack": "alb-apse5-dev-vikki-cms-group"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-09c68343997f1c56e",
+                "name": "k8s-traffic-vikkimobiledevcluster-186e88735a",
+                "status": "active",
+                "tags": {
+                    "elbv2.k8s.aws/cluster": "vikki-mobile-dev-cluster",
+                    "elbv2.k8s.aws/resource": "backend-sg"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0a68af37829eb0b92",
+                "name": "lambda-vikki-mobile-dev-dev-SecurityGroup-RF9CZknZ77RC",
+                "status": "active",
+                "tags": {
+                    "Name": "vikki-mobile-dev-dev-serverless-sg",
+                    "STAGE": "vikki-mobile-dev-dev",
+                    "aws:cloudformation:logical-id": "SecurityGroup",
+                    "aws:cloudformation:stack-id": "arn:aws:cloudformation:ap-southeast-5:820057617222:stack/lambda-vikki-mobile-dev-dev/7487d880-6387-11f0-88eb-0e740594cb98",
+                    "aws:cloudformation:stack-name": "lambda-vikki-mobile-dev-dev"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0d2fa05614b9c7c61",
+                "name": "k8s-albapse5devmobile-cde24d156b",
+                "status": "active",
+                "tags": {
+                    "elbv2.k8s.aws/cluster": "vikki-mobile-dev-cluster",
+                    "ingress.k8s.aws/resource": "ManagedLBSecurityGroup",
+                    "ingress.k8s.aws/stack": "alb-apse5-dev-mobile-conductor-group"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0e7eb631896569155",
+                "name": "terraform-20250918075031988600000001",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "vikki",
+                    "CreatedBy": "Terraform",
+                    "Environment": "DEV",
+                    "Name": "",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0fdc83a289a34861d",
+                "name": "nsg-apse5-payment-dev-mobile-sg",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "CreatedBy": "Terraform",
+                    "DBEngine": "Redis",
+                    "Environment": "DEV",
+                    "Name": "nsg-apse5-payment-dev-mobile-sg",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-05429136ab5d41a95",
+                "name": "eks-cluster-sg-vikki-mobile-dev-cluster-867746638",
+                "status": "active",
+                "tags": {
+                    "Name": "eks-cluster-sg-vikki-mobile-dev-cluster-867746638",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "aws:eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0bf8a3e3614151763",
+                "name": "vikki-mobile-dev-cluster-node-20250716075853072800000003",
+                "status": "active",
+                "tags": {
+                    "Name": "vikki-mobile-dev-cluster-node",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "karpenter.sh/discovery": "vikki-mobile-dev-cluster",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-005241448dc47f210",
+                "name": "k8s-albapse5devmobile-f3a4920e51",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "Environment": "DEV",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "elbv2.k8s.aws/cluster": "vikki-mobile-dev-cluster",
+                    "ingress.k8s.aws/resource": "ManagedLBSecurityGroup",
+                    "ingress.k8s.aws/stack": "alb-apse5-dev-mobile-backoffice-group",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-07f079c6f75967165",
+                "name": "nsg-apse5-dev-vpc-apse5-dev-network-vikki-mobile-elasticache-redis-sg",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "CreatedBy": "Terraform",
+                    "DBEngine": "Redis",
+                    "Environment": "DEV",
+                    "Name": "nsg-apse5-dev-vpc-apse5-dev-network-vikki-mobile-elasticache-redis-sg",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0a3d379ee23f003d1",
+                "name": "nsg-apse5-dev-vpc-apse5-dev-network-vikki-mobile-msk-sg",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "CreatedBy": "Terraform",
+                    "Environment": "DEV",
+                    "Name": "nsg-apse5-dev-vpc-apse5-dev-network-vikki-mobile-msk-sg",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0ad95ad5f2ad23454",
+                "name": "k8s-albapse5devmobile-e576bfc6d6",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "Environment": "DEV",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "elbv2.k8s.aws/cluster": "vikki-mobile-dev-cluster",
+                    "ingress.k8s.aws/resource": "ManagedLBSecurityGroup",
+                    "ingress.k8s.aws/stack": "alb-apse5-dev-mobile-kafka-conn-group",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0c8485e8967015d67",
+                "name": "vikki-mobile-dev-cluster-cluster-20250716075853072000000001",
+                "status": "active",
+                "tags": {
+                    "Name": "vikki-mobile-dev-cluster-cluster",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0e8ecadd6280d35ae",
+                "name": "nsg-apse5-dev-vpc-apse5-dev-network-vikki-mobile-aurora-postgresql-sg",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "CreatedBy": "Terraform",
+                    "DBEngine": "PostgreSQL",
+                    "DBEngineVersion": "13.9",
+                    "Environment": "DEV",
+                    "Name": "nsg-apse5-dev-vpc-apse5-dev-network-vikki-mobile-aurora-postgresql-sg",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-09cfa2a9ecffcc550",
+                "name": "nsg-apse5-dev-vpc-apse5-prd-network-vikki-portal-rds-postgresql-sg",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "CreatedBy": "Terraform",
+                    "Environment": "DEV",
+                    "Name": "nsg-apse5-dev-vpc-apse5-prd-network-vikki-portal-rds-postgresql-sg",
+                    "Project": "Vikki-Portal",
+                    "SystemOwner": "SystemOwner",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-08a384f5f29c46b19",
+                "name": "default",
+                "status": "active",
+                "type": "security_group"
+            },
+            {
+                "id": "sg-089cb950b6afd4b68",
+                "name": "nsg-apse5-auth-dev-mobile-sg",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "CreatedBy": "Terraform",
+                    "DBEngine": "Redis",
+                    "Environment": "DEV",
+                    "Name": "nsg-apse5-auth-dev-mobile-sg",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0e3622f424bf186a0",
+                "name": "k8s-devvikkibankio-3eafaefc45",
+                "status": "active",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "Environment": "DEV",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "elbv2.k8s.aws/cluster": "vikki-mobile-dev-cluster",
+                    "ingress.k8s.aws/resource": "ManagedLBSecurityGroup",
+                    "ingress.k8s.aws/stack": "dev-vikkibank-io",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "security_group"
+            },
+            {
+                "id": "sg-0f4789a4dfc456cfc",
+                "name": "default",
+                "status": "active",
+                "type": "security_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/net/nlb-apse5-dev-open-banking-gw/2af4c1a718070656",
+                "status": "active",
+                "type": "load_balancer"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/net/nlb-apse5-dev-vikki-mobile-gw/55587e5b707b8a7a",
+                "status": "active",
+                "type": "load_balancer"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-backoffice/14c8c157ef718162",
+                "status": "active",
+                "type": "load_balancer"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-conductor/26d1c52dc0dc6c8c",
+                "status": "active",
+                "type": "load_balancer"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-kafka-conn/c4ba4e12e4f1804f",
+                "status": "active",
+                "type": "load_balancer"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms-gw/3ab6ec694d34b971",
+                "status": "active",
+                "type": "load_balancer"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms/4867f7f38266b84a",
+                "status": "active",
+                "type": "load_balancer"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-digital-gw/c6dcb25f560addf2",
+                "status": "active",
+                "type": "load_balancer"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/dev-vikkibank-io-alb/676871a8be05f436",
+                "status": "active",
+                "type": "load_balancer"
+            },
+            {
+                "id": "eks-infra-node-20250826041220620900000001-52cc7249-d7a4-a29b-742f-63a19c456ff3",
+                "status": "active",
+                "tags": {
+                    "eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "eks:nodegroup-name": "infra-node-20250826041220620900000001",
+                    "k8s.io/cluster-autoscaler/enabled": "true",
+                    "k8s.io/cluster-autoscaler/vikki-mobile-dev-cluster": "owned",
+                    "kubernetes.io/cluster/vikki-mobile-dev-cluster": "owned"
+                },
+                "type": "auto_scaling_group"
+            },
+            {
+                "id": "subnet-0941a4bc502700bea",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-control-plane",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0cff3b3d6f197f79a",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-ngw",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-08755adb60f82b9fc",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-ngw",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-074b4021ba9a35e1c",
+                "status": "available",
+                "tags": {
+                    "Name": "aws-controltower-PrivateSubnet3A",
+                    "Network": "Private",
+                    "aws:cloudformation:logical-id": "PrivateSubnet3A",
+                    "aws:cloudformation:stack-id": "arn:aws:cloudformation:ap-southeast-5:820057617222:stack/StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-f0678303-183d-44ff-94b1-26173d1e49a0/0793b450-4f6f-11f0-96e1-06093c2ea7bf",
+                    "aws:cloudformation:stack-name": "StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-f0678303-183d-44ff-94b1-26173d1e49a0"
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0bb00ac7a4b460fb5",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-db",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0480d6114031d03fa",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-container",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "karpenter.sh/discovery": "true",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-02594cd48bffd5f45",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-data-streaming",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-08cac0e868e1e5f3b",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-app",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-070574030ae04706a",
+                "status": "available",
+                "tags": {
+                    "Name": "aws-controltower-PrivateSubnet1A",
+                    "Network": "Private",
+                    "aws:cloudformation:logical-id": "PrivateSubnet1A",
+                    "aws:cloudformation:stack-id": "arn:aws:cloudformation:ap-southeast-5:820057617222:stack/StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-f0678303-183d-44ff-94b1-26173d1e49a0/0793b450-4f6f-11f0-96e1-06093c2ea7bf",
+                    "aws:cloudformation:stack-name": "StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-f0678303-183d-44ff-94b1-26173d1e49a0"
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-00751928204b4cb46",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-lb",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0d50ad7cd22392adf",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-svc",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0193affe1919d0671",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-vpce",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0c37287a1674d4c72",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-lambda",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-00fb2bec9aff5cfa9",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-tgw",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0697d30b204ee5b41",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-tgw",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-08257bc2e60c3f4cd",
+                "status": "available",
+                "tags": {
+                    "Name": "aws-controltower-PrivateSubnet2A",
+                    "Network": "Private",
+                    "aws:cloudformation:logical-id": "PrivateSubnet2A",
+                    "aws:cloudformation:stack-id": "arn:aws:cloudformation:ap-southeast-5:820057617222:stack/StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-f0678303-183d-44ff-94b1-26173d1e49a0/0793b450-4f6f-11f0-96e1-06093c2ea7bf",
+                    "aws:cloudformation:stack-name": "StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-f0678303-183d-44ff-94b1-26173d1e49a0"
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0b46b0691e967bcc5",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-lb",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0e6696116f6f8bf90",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-app",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0a8eb011ef4fd200b",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-vpce",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-0e01d5ac373635c98",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-data-streaming",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-086be95d79260aac1",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-lambda",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-01e5111135328f99d",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-svc",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-09f3945f9c90e54f3",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-container",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "karpenter.sh/discovery": "true",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-001fab5ac309da0ac",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az1-pri-dev-vikki-mobile-control-plane",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "subnet-09232500f215db949",
+                "status": "available",
+                "tags": {
+                    "Name": "subnet-apse5-az2-pri-dev-vikki-mobile-db",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "subnet"
+            },
+            {
+                "id": "nat-01362b6377f2de539",
+                "status": "available",
+                "tags": {
+                    "Name": "natgw-ngw1-dev-vikki-mobile",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "nat_gateway"
+            },
+            {
+                "id": "nat-0bd3de61f0e5dc322",
+                "status": "available",
+                "tags": {
+                    "Name": "natgw-ngw2-dev-vikki-mobile",
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "nat_gateway"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-0ce1c51201/9428646a68274a3b",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-29e09502c8/72e4b61a9032a048",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-fb474df2bd/78e5b5c559c61d15",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-kafkacon-kafkacon-8d2811e27d/dec37f6918952de8",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-kafkacon-schemare-387719cb65/221cc59c948d8888",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-portalpl-vikkimob-592ce9a3c4/211515e4f1ad0f31",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-69e6457b9d/0da1cb06346a1847",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-6f90962d7d/8c1a7e4aadc54242",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-84b218fc9e/f62108b786596252",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-c63e120481/da7f204714ba1837",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-e4a83b3b67/4e43c35ebbee034f",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-workflow-devcondu-4157112a97/8b897e7764cd2d20",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-open-banking-https-443/59f9e2410e499cb7",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-vikki-cms-https-443/cbd0cba1dea4af13",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-vikki-mobile-https-443/7a8981b19cfdef84",
+                "status": "active",
+                "type": "target_group"
+            },
+            {
+                "id": "aurora-postgresql-apse5-dev-mobile-reader-1",
+                "status": "unknown",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "CreatedBy": "Terraform",
+                    "DBEngine": "PostgreSQL",
+                    "DBEngineVersion": "13.9",
+                    "Environment": "DEV",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "rds_instance"
+            },
+            {
+                "id": "aurora-postgresql-apse5-dev-mobile-writer",
+                "status": "unknown",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "CreatedBy": "Terraform",
+                    "DBEngine": "PostgreSQL",
+                    "DBEngineVersion": "13.9",
+                    "Environment": "DEV",
+                    "Project": "Vikki-Mobile",
+                    "SystemOwner": "SystemOwner",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "rds_instance"
+            },
+            {
+                "id": "rds-postgresql-apse5-dev-vikki-portal-cluster",
+                "status": "unknown",
+                "tags": {
+                    "BillingRoute": "G1",
+                    "BusinessOwner": "",
+                    "BusinessUnit": "",
+                    "CreatedBy": "Terraform",
+                    "DBEngine": "PostgreSQL",
+                    "DBEngineVersion": "16.8",
+                    "Environment": "DEV",
+                    "Project": "Vikki-Portal",
+                    "SystemOwner": "SystemOwner",
+                    "map-migrated": "mig5ADD4L9T85"
+                },
+                "type": "rds_instance"
+            },
+            {
+                "id": "lt-0247f92456343e9db",
+                "status": "active",
+                "tags": {
+                    "application_id": "",
+                    "application_name": "vikki-mobile",
+                    "auto_start": "",
+                    "auto_stop": "",
+                    "backup_schedule": "",
+                    "budget_owner": "",
+                    "business_owner": "",
+                    "business_unit": "vikki",
+                    "cost_center": "",
+                    "create_date": "",
+                    "created_by": "",
+                    "data_protection": "",
+                    "dba_operation": "",
+                    "disaster_recovery": "",
+                    "env": "dev",
+                    "maintenance_window": "",
+                    "map-migrated": "mig5ADD4L9T85",
+                    "os_support": "",
+                    "patch_schedule": "",
+                    "record_retention": "",
+                    "schedule": "",
+                    "security_compliance": "",
+                    "technical_owner": ""
+                },
+                "type": "launch_template"
+            },
+            {
+                "id": "lt-00f1edbd1e456b5ea",
+                "status": "active",
+                "tags": {
+                    "eks:cluster-name": "vikki-mobile-dev-cluster",
+                    "eks:nodegroup-name": "infra-node-20250826041220620900000001"
+                },
+                "type": "launch_template"
+            }
+        ]
+    },
+    "mermaid": "graph TD\n    subnet_0480d6114031d03fa[\"subnet-0480d6114031d03fa\"]:::subnet\n    subnet_09f3945f9c90e54f3[\"subnet-09f3945f9c90e54f3\"]:::subnet\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_backoffi_vikkimob_fb474df2bd_78e5b5c559c61d15[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-fb474df2bd/78e5b5c559c61d15\"]:::tg\n    i_0495a331dbb558a26[\"i-0495a331dbb558a26\"]:::ec2\n    sg_00175120ee7df2f59[\"sg-00175120ee7df2f59\"]:::sg\n    sg_0bf8a3e3614151763[\"sg-0bf8a3e3614151763\"]:::sg\n    sg_089cb950b6afd4b68[\"sg-089cb950b6afd4b68\"]:::sg\n    subnet_08cac0e868e1e5f3b[\"subnet-08cac0e868e1e5f3b\"]:::subnet\n    subnet_0e01d5ac373635c98[\"subnet-0e01d5ac373635c98\"]:::subnet\n    nat_01362b6377f2de539[\"nat-01362b6377f2de539\"]:::natgw\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_kafkacon_schemare_387719cb65_221cc59c948d8888[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-kafkacon-schemare-387719cb65/221cc59c948d8888\"]:::tg\n    i_0d7adeb40cb11341d[\"i-0d7adeb40cb11341d\"]:::ec2\n    sg_04160695b501c9212[\"sg-04160695b501c9212\"]:::sg\n    sg_0fdc83a289a34861d[\"sg-0fdc83a289a34861d\"]:::sg\n    sg_09cfa2a9ecffcc550[\"sg-09cfa2a9ecffcc550\"]:::sg\n    subnet_00fb2bec9aff5cfa9[\"subnet-00fb2bec9aff5cfa9\"]:::subnet\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_portalpl_vikkimob_592ce9a3c4_211515e4f1ad0f31[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-portalpl-vikkimob-592ce9a3c4/211515e4f1ad0f31\"]:::tg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_tempo_vikkimob_6f90962d7d_8c1a7e4aadc54242[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-6f90962d7d/8c1a7e4aadc54242\"]:::tg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_tempo_vikkimob_e4a83b3b67_4e43c35ebbee034f[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-e4a83b3b67/4e43c35ebbee034f\"]:::tg\n    i_0c6475fb8be1b1554[\"i-0c6475fb8be1b1554\"]:::ec2\n    sg_0c8485e8967015d67[\"sg-0c8485e8967015d67\"]:::sg\n    eks_infra_node_20250826041220620900000001_52cc7249_d7a4_a29b_742f_63a19c456ff3[\"eks-infra-node-20250826041220620900000001-52cc7249-d7a4-a29b-742f-63a19c456ff3\"]:::asg\n    subnet_086be95d79260aac1[\"subnet-086be95d79260aac1\"]:::subnet\n    subnet_001fab5ac309da0ac[\"subnet-001fab5ac309da0ac\"]:::subnet\n    nat_0bd3de61f0e5dc322[\"nat-0bd3de61f0e5dc322\"]:::natgw\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_tempo_vikkimob_84b218fc9e_f62108b786596252[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-84b218fc9e/f62108b786596252\"]:::tg\n    lt_0247f92456343e9db[\"lt-0247f92456343e9db\"]:::lt\n    sg_09c68343997f1c56e[\"sg-09c68343997f1c56e\"]:::sg\n    sg_0a68af37829eb0b92[\"sg-0a68af37829eb0b92\"]:::sg\n    sg_0a3d379ee23f003d1[\"sg-0a3d379ee23f003d1\"]:::sg\n    sg_08a384f5f29c46b19[\"sg-08a384f5f29c46b19\"]:::sg\n    subnet_00751928204b4cb46[\"subnet-00751928204b4cb46\"]:::subnet\n    subnet_01e5111135328f99d[\"subnet-01e5111135328f99d\"]:::subnet\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_backoffi_vikkimob_0ce1c51201_9428646a68274a3b[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-0ce1c51201/9428646a68274a3b\"]:::tg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_tg_ip_dev_vikki_mobile_https_443_7a8981b19cfdef84[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-vikki-mobile-https-443/7a8981b19cfdef84\"]:::tg\n    vpc_0d67cc5f2b5193e49[\"vpc-0d67cc5f2b5193e49\"]:::vpc\n    i_0b38ea51987d5b2a0[\"i-0b38ea51987d5b2a0\"]:::ec2\n    i_0e64b0ab4902de1b0[\"i-0e64b0ab4902de1b0\"]:::ec2\n    i_0e37fec58b6426dc4[\"i-0e37fec58b6426dc4\"]:::ec2\n    sg_05429136ab5d41a95[\"sg-05429136ab5d41a95\"]:::sg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_kafka_conn_c4ba4e12e4f1804f[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-kafka-conn/c4ba4e12e4f1804f\"]:::lb\n    subnet_070574030ae04706a[\"subnet-070574030ae04706a\"]:::subnet\n    subnet_0b46b0691e967bcc5[\"subnet-0b46b0691e967bcc5\"]:::subnet\n    i_029078dd45c5bb1df[\"i-029078dd45c5bb1df\"]:::ec2\n    subnet_0941a4bc502700bea[\"subnet-0941a4bc502700bea\"]:::subnet\n    subnet_0cff3b3d6f197f79a[\"subnet-0cff3b3d6f197f79a\"]:::subnet\n    subnet_08755adb60f82b9fc[\"subnet-08755adb60f82b9fc\"]:::subnet\n    i_08d0e4de828509ef3[\"i-08d0e4de828509ef3\"]:::ec2\n    i_01b66d0cbf8dbd8b8[\"i-01b66d0cbf8dbd8b8\"]:::ec2\n    i_02e26d38b13abf4ec[\"i-02e26d38b13abf4ec\"]:::ec2\n    sg_0e3622f424bf186a0[\"sg-0e3622f424bf186a0\"]:::sg\n    subnet_074b4021ba9a35e1c[\"subnet-074b4021ba9a35e1c\"]:::subnet\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_net_nlb_apse5_dev_vikki_mobile_gw_55587e5b707b8a7a[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/net/nlb-apse5-dev-vikki-mobile-gw/55587e5b707b8a7a\"]:::lb\n    i_009ddc03502b6bb74[\"i-009ddc03502b6bb74\"]:::ec2\n    sg_016926c88fbf4e4e1[\"sg-016926c88fbf4e4e1\"]:::sg\n    sg_0f4789a4dfc456cfc[\"sg-0f4789a4dfc456cfc\"]:::sg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_digital_gw_c6dcb25f560addf2[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-digital-gw/c6dcb25f560addf2\"]:::lb\n    subnet_0193affe1919d0671[\"subnet-0193affe1919d0671\"]:::subnet\n    subnet_0e6696116f6f8bf90[\"subnet-0e6696116f6f8bf90\"]:::subnet\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_backoffi_vikkimob_29e09502c8_72e4b61a9032a048[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-29e09502c8/72e4b61a9032a048\"]:::tg\n    i_0a532d8660f6b60b9[\"i-0a532d8660f6b60b9\"]:::ec2\n    i_08ee611964ea3239c[\"i-08ee611964ea3239c\"]:::ec2\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_dev_vikkibank_io_alb_676871a8be05f436[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/dev-vikkibank-io-alb/676871a8be05f436\"]:::lb\n    subnet_09232500f215db949[\"subnet-09232500f215db949\"]:::subnet\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_kafkacon_kafkacon_8d2811e27d_dec37f6918952de8[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-kafkacon-kafkacon-8d2811e27d/dec37f6918952de8\"]:::tg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_tempo_vikkimob_69e6457b9d_0da1cb06346a1847[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-69e6457b9d/0da1cb06346a1847\"]:::tg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_tempo_vikkimob_c63e120481_da7f204714ba1837[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-c63e120481/da7f204714ba1837\"]:::tg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_workflow_devcondu_4157112a97_8b897e7764cd2d20[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-workflow-devcondu-4157112a97/8b897e7764cd2d20\"]:::tg\n    sg_0ba6f3ce9ebc031da[\"sg-0ba6f3ce9ebc031da\"]:::sg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_backoffice_14c8c157ef718162[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-backoffice/14c8c157ef718162\"]:::lb\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_vikki_cms_4867f7f38266b84a[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms/4867f7f38266b84a\"]:::lb\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_tg_ip_dev_open_banking_https_443_59f9e2410e499cb7[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-open-banking-https-443/59f9e2410e499cb7\"]:::tg\n    rds_postgresql_apse5_dev_vikki_portal_cluster[\"rds-postgresql-apse5-dev-vikki-portal-cluster\"]:::rds\n    subnet_0a8eb011ef4fd200b[\"subnet-0a8eb011ef4fd200b\"]:::subnet\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_tg_ip_dev_vikki_cms_https_443_cbd0cba1dea4af13[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-vikki-cms-https-443/cbd0cba1dea4af13\"]:::tg\n    aurora_postgresql_apse5_dev_mobile_writer[\"aurora-postgresql-apse5-dev-mobile-writer\"]:::rds\n    lt_00f1edbd1e456b5ea[\"lt-00f1edbd1e456b5ea\"]:::lt\n    i_05aa470c716a40c28[\"i-05aa470c716a40c28\"]:::ec2\n    sg_005241448dc47f210[\"sg-005241448dc47f210\"]:::sg\n    sg_0e8ecadd6280d35ae[\"sg-0e8ecadd6280d35ae\"]:::sg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_net_nlb_apse5_dev_open_banking_gw_2af4c1a718070656[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/net/nlb-apse5-dev-open-banking-gw/2af4c1a718070656\"]:::lb\n    subnet_0c37287a1674d4c72[\"subnet-0c37287a1674d4c72\"]:::subnet\n    subnet_0697d30b204ee5b41[\"subnet-0697d30b204ee5b41\"]:::subnet\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_vikki_cms_gw_3ab6ec694d34b971[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms-gw/3ab6ec694d34b971\"]:::lb\n    i_03782dff6cae7637f[\"i-03782dff6cae7637f\"]:::ec2\n    i_01ecdc558dd45f319[\"i-01ecdc558dd45f319\"]:::ec2\n    subnet_08257bc2e60c3f4cd[\"subnet-08257bc2e60c3f4cd\"]:::subnet\n    aurora_postgresql_apse5_dev_mobile_reader_1[\"aurora-postgresql-apse5-dev-mobile-reader-1\"]:::rds\n    vpc_0faa86f3ab9606731[\"vpc-0faa86f3ab9606731\"]:::vpc\n    i_08914f7d945ba636d[\"i-08914f7d945ba636d\"]:::ec2\n    i_098ffa4a128dc4589[\"i-098ffa4a128dc4589\"]:::ec2\n    i_0ab0d31f329bcfc10[\"i-0ab0d31f329bcfc10\"]:::ec2\n    sg_0e7eb631896569155[\"sg-0e7eb631896569155\"]:::sg\n    sg_07f079c6f75967165[\"sg-07f079c6f75967165\"]:::sg\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_conductor_26d1c52dc0dc6c8c[\"arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-conductor/26d1c52dc0dc6c8c\"]:::lb\n    subnet_0bb00ac7a4b460fb5[\"subnet-0bb00ac7a4b460fb5\"]:::subnet\n    i_033da5a88b1f3aaaf[\"i-033da5a88b1f3aaaf\"]:::ec2\n    i_0331967dd2e411a06[\"i-0331967dd2e411a06\"]:::ec2\n    i_04e34d3c676c8b846[\"i-04e34d3c676c8b846\"]:::ec2\n    i_011dec62bea559fe2[\"i-011dec62bea559fe2\"]:::ec2\n    sg_0468009f10f1ef67e[\"sg-0468009f10f1ef67e\"]:::sg\n    sg_0ef386b72eecd8eb4[\"sg-0ef386b72eecd8eb4\"]:::sg\n    subnet_02594cd48bffd5f45[\"subnet-02594cd48bffd5f45\"]:::subnet\n    subnet_0d50ad7cd22392adf[\"subnet-0d50ad7cd22392adf\"]:::subnet\n    sg_0272b2711c8a8d54a[\"sg-0272b2711c8a8d54a\"]:::sg\n    sg_0d2fa05614b9c7c61[\"sg-0d2fa05614b9c7c61\"]:::sg\n    sg_0ad95ad5f2ad23454[\"sg-0ad95ad5f2ad23454\"]:::sg\n\n    subnet_09f3945f9c90e54f3 --> vpc_0d67cc5f2b5193e49\n    sg_0a68af37829eb0b92 --> vpc_0d67cc5f2b5193e49\n    sg_005241448dc47f210 --> vpc_0d67cc5f2b5193e49\n    sg_0e3622f424bf186a0 --> vpc_0d67cc5f2b5193e49\n    sg_0f4789a4dfc456cfc --> vpc_0faa86f3ab9606731\n    i_011dec62bea559fe2 --> vpc_0d67cc5f2b5193e49\n    i_011dec62bea559fe2 --> subnet_0480d6114031d03fa\n    i_08ee611964ea3239c --> vpc_0d67cc5f2b5193e49\n    i_08ee611964ea3239c --> subnet_0480d6114031d03fa\n    i_05aa470c716a40c28 --> vpc_0d67cc5f2b5193e49\n    i_05aa470c716a40c28 --> subnet_09f3945f9c90e54f3\n    i_08d0e4de828509ef3 --> vpc_0d67cc5f2b5193e49\n    i_08d0e4de828509ef3 --> subnet_0480d6114031d03fa\n    i_0d7adeb40cb11341d --> vpc_0d67cc5f2b5193e49\n    i_0d7adeb40cb11341d --> subnet_0480d6114031d03fa\n    i_08914f7d945ba636d --> vpc_0d67cc5f2b5193e49\n    i_08914f7d945ba636d --> subnet_0480d6114031d03fa\n    i_098ffa4a128dc4589 --> vpc_0d67cc5f2b5193e49\n    i_098ffa4a128dc4589 --> subnet_0480d6114031d03fa\n    i_01b66d0cbf8dbd8b8 --> vpc_0d67cc5f2b5193e49\n    i_01b66d0cbf8dbd8b8 --> subnet_0480d6114031d03fa\n    subnet_0480d6114031d03fa --> vpc_0d67cc5f2b5193e49\n    subnet_0697d30b204ee5b41 --> vpc_0d67cc5f2b5193e49\n    subnet_001fab5ac309da0ac --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_backoffi_vikkimob_fb474df2bd_78e5b5c559c61d15 --> vpc_0d67cc5f2b5193e49\n    i_0495a331dbb558a26 --> vpc_0d67cc5f2b5193e49\n    i_0495a331dbb558a26 --> subnet_0480d6114031d03fa\n    sg_0d2fa05614b9c7c61 --> vpc_0d67cc5f2b5193e49\n    sg_0e8ecadd6280d35ae --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_conductor_26d1c52dc0dc6c8c --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_conductor_26d1c52dc0dc6c8c --> sg_09c68343997f1c56e\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_conductor_26d1c52dc0dc6c8c --> sg_0d2fa05614b9c7c61\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_vikki_cms_4867f7f38266b84a --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_vikki_cms_4867f7f38266b84a --> sg_016926c88fbf4e4e1\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_vikki_cms_4867f7f38266b84a --> sg_09c68343997f1c56e\n    subnet_02594cd48bffd5f45 --> vpc_0d67cc5f2b5193e49\n    subnet_00fb2bec9aff5cfa9 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_portalpl_vikkimob_592ce9a3c4_211515e4f1ad0f31 --> vpc_0d67cc5f2b5193e49\n    sg_09c68343997f1c56e --> vpc_0d67cc5f2b5193e49\n    subnet_074b4021ba9a35e1c --> vpc_0faa86f3ab9606731\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_tempo_vikkimob_c63e120481_da7f204714ba1837 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_tempo_vikkimob_e4a83b3b67_4e43c35ebbee034f --> vpc_0d67cc5f2b5193e49\n    sg_0fdc83a289a34861d --> vpc_0d67cc5f2b5193e49\n    sg_05429136ab5d41a95 --> vpc_0d67cc5f2b5193e49\n    sg_07f079c6f75967165 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_vikki_cms_gw_3ab6ec694d34b971 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_vikki_cms_gw_3ab6ec694d34b971 --> sg_00175120ee7df2f59\n    i_0a532d8660f6b60b9 --> vpc_0d67cc5f2b5193e49\n    i_0a532d8660f6b60b9 --> subnet_09f3945f9c90e54f3\n    sg_0c8485e8967015d67 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_net_nlb_apse5_dev_open_banking_gw_2af4c1a718070656 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_net_nlb_apse5_dev_open_banking_gw_2af4c1a718070656 --> sg_0468009f10f1ef67e\n    subnet_08755adb60f82b9fc --> vpc_0d67cc5f2b5193e49\n    subnet_08cac0e868e1e5f3b --> vpc_0d67cc5f2b5193e49\n    subnet_070574030ae04706a --> vpc_0faa86f3ab9606731\n    subnet_0193affe1919d0671 --> vpc_0d67cc5f2b5193e49\n    subnet_09232500f215db949 --> vpc_0d67cc5f2b5193e49\n    i_029078dd45c5bb1df --> vpc_0d67cc5f2b5193e49\n    i_029078dd45c5bb1df --> subnet_0480d6114031d03fa\n    i_01ecdc558dd45f319 --> vpc_0d67cc5f2b5193e49\n    i_01ecdc558dd45f319 --> subnet_0480d6114031d03fa\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_tempo_vikkimob_84b218fc9e_f62108b786596252 --> vpc_0d67cc5f2b5193e49\n    sg_04160695b501c9212 --> vpc_0d67cc5f2b5193e49\n    sg_0a3d379ee23f003d1 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_backoffice_14c8c157ef718162 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_backoffice_14c8c157ef718162 --> sg_005241448dc47f210\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_backoffice_14c8c157ef718162 --> sg_09c68343997f1c56e\n    subnet_0941a4bc502700bea --> vpc_0d67cc5f2b5193e49\n    subnet_00751928204b4cb46 --> vpc_0d67cc5f2b5193e49\n    subnet_0b46b0691e967bcc5 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_kafkacon_kafkacon_8d2811e27d_dec37f6918952de8 --> vpc_0d67cc5f2b5193e49\n    sg_0272b2711c8a8d54a --> vpc_0d67cc5f2b5193e49\n    i_04e34d3c676c8b846 --> vpc_0d67cc5f2b5193e49\n    i_04e34d3c676c8b846 --> subnet_0480d6114031d03fa\n    nat_0bd3de61f0e5dc322 --> vpc_0d67cc5f2b5193e49\n    nat_0bd3de61f0e5dc322 --> subnet_08755adb60f82b9fc\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_tempo_vikkimob_69e6457b9d_0da1cb06346a1847 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_workflow_devcondu_4157112a97_8b897e7764cd2d20 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_tg_ip_dev_open_banking_https_443_59f9e2410e499cb7 --> vpc_0d67cc5f2b5193e49\n    i_033da5a88b1f3aaaf --> vpc_0d67cc5f2b5193e49\n    i_033da5a88b1f3aaaf --> subnet_09f3945f9c90e54f3\n    sg_0ba6f3ce9ebc031da --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_digital_gw_c6dcb25f560addf2 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_digital_gw_c6dcb25f560addf2 --> sg_09c68343997f1c56e\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_digital_gw_c6dcb25f560addf2 --> sg_0ef386b72eecd8eb4\n    subnet_0bb00ac7a4b460fb5 --> vpc_0d67cc5f2b5193e49\n    subnet_0d50ad7cd22392adf --> vpc_0d67cc5f2b5193e49\n    subnet_0e6696116f6f8bf90 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_backoffi_vikkimob_29e09502c8_72e4b61a9032a048 --> vpc_0d67cc5f2b5193e49\n    sg_0e7eb631896569155 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_dev_vikkibank_io_alb_676871a8be05f436 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_dev_vikkibank_io_alb_676871a8be05f436 --> sg_09c68343997f1c56e\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_dev_vikkibank_io_alb_676871a8be05f436 --> sg_0e3622f424bf186a0\n    sg_016926c88fbf4e4e1 --> vpc_0d67cc5f2b5193e49\n    sg_09cfa2a9ecffcc550 --> vpc_0d67cc5f2b5193e49\n    sg_08a384f5f29c46b19 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_tg_ip_dev_vikki_mobile_https_443_7a8981b19cfdef84 --> vpc_0d67cc5f2b5193e49\n    i_0331967dd2e411a06 --> vpc_0d67cc5f2b5193e49\n    i_0331967dd2e411a06 --> subnet_0480d6114031d03fa\n    i_0e64b0ab4902de1b0 --> vpc_0d67cc5f2b5193e49\n    i_0e64b0ab4902de1b0 --> subnet_0480d6114031d03fa\n    subnet_08257bc2e60c3f4cd --> vpc_0faa86f3ab9606731\n    subnet_0e01d5ac373635c98 --> vpc_0d67cc5f2b5193e49\n    subnet_086be95d79260aac1 --> vpc_0d67cc5f2b5193e49\n    subnet_01e5111135328f99d --> vpc_0d67cc5f2b5193e49\n    nat_01362b6377f2de539 --> vpc_0d67cc5f2b5193e49\n    nat_01362b6377f2de539 --> subnet_0cff3b3d6f197f79a\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_tg_ip_dev_vikki_cms_https_443_cbd0cba1dea4af13 --> vpc_0d67cc5f2b5193e49\n    i_0c6475fb8be1b1554 --> vpc_0d67cc5f2b5193e49\n    i_0c6475fb8be1b1554 --> subnet_09f3945f9c90e54f3\n    i_0b38ea51987d5b2a0 --> vpc_0d67cc5f2b5193e49\n    i_0b38ea51987d5b2a0 --> subnet_0480d6114031d03fa\n    i_0ab0d31f329bcfc10 --> vpc_0d67cc5f2b5193e49\n    i_0ab0d31f329bcfc10 --> subnet_0480d6114031d03fa\n    i_0e37fec58b6426dc4 --> vpc_0d67cc5f2b5193e49\n    i_0e37fec58b6426dc4 --> subnet_0480d6114031d03fa\n    sg_0ad95ad5f2ad23454 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_kafka_conn_c4ba4e12e4f1804f --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_kafka_conn_c4ba4e12e4f1804f --> sg_09c68343997f1c56e\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_app_alb_apse5_dev_mobile_kafka_conn_c4ba4e12e4f1804f --> sg_0ad95ad5f2ad23454\n    subnet_0a8eb011ef4fd200b --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_backoffi_vikkimob_0ce1c51201_9428646a68274a3b --> vpc_0d67cc5f2b5193e49\n    i_03782dff6cae7637f --> vpc_0d67cc5f2b5193e49\n    i_03782dff6cae7637f --> subnet_09f3945f9c90e54f3\n    i_009ddc03502b6bb74 --> vpc_0d67cc5f2b5193e49\n    i_009ddc03502b6bb74 --> subnet_0480d6114031d03fa\n    sg_0bf8a3e3614151763 --> vpc_0d67cc5f2b5193e49\n    sg_089cb950b6afd4b68 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_net_nlb_apse5_dev_vikki_mobile_gw_55587e5b707b8a7a --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_loadbalancer_net_nlb_apse5_dev_vikki_mobile_gw_55587e5b707b8a7a --> sg_0ba6f3ce9ebc031da\n    subnet_0cff3b3d6f197f79a --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_kafkacon_schemare_387719cb65_221cc59c948d8888 --> vpc_0d67cc5f2b5193e49\n    arn_aws_elasticloadbalancing_ap_southeast_5_820057617222_targetgroup_k8s_tempo_vikkimob_6f90962d7d_8c1a7e4aadc54242 --> vpc_0d67cc5f2b5193e49\n    i_02e26d38b13abf4ec --> vpc_0d67cc5f2b5193e49\n    i_02e26d38b13abf4ec --> subnet_0480d6114031d03fa\n    sg_00175120ee7df2f59 --> vpc_0d67cc5f2b5193e49\n    sg_0468009f10f1ef67e --> vpc_0d67cc5f2b5193e49\n    sg_0ef386b72eecd8eb4 --> vpc_0d67cc5f2b5193e49\n    subnet_0c37287a1674d4c72 --> vpc_0d67cc5f2b5193e49\n\n    classDef vpc fill:#e1f5fe\n    classDef subnet fill:#b3e5fc\n    classDef ec2 fill:#fff3e0\n    classDef sg fill:#f3e5f5\n    classDef lb fill:#e8f5e8\n    classDef asg fill:#fce4ec\n    classDef natgw fill:#e0f2f1\n    classDef tg fill:#f1f8e9\n    classDef rds fill:#fff9c4\n    classDef lt fill:#fce4ec\n",
+    "metadata": {
+        "bottlenecks": [
+            {
+                "dependentCount": 18,
+                "dependents": [
+                    "i-009ddc03502b6bb74",
+                    "i-011dec62bea559fe2",
+                    "i-01b66d0cbf8dbd8b8",
+                    "i-01ecdc558dd45f319",
+                    "i-029078dd45c5bb1df",
+                    "i-02e26d38b13abf4ec",
+                    "i-0331967dd2e411a06",
+                    "i-0495a331dbb558a26",
+                    "i-04e34d3c676c8b846",
+                    "i-08914f7d945ba636d",
+                    "i-08d0e4de828509ef3",
+                    "i-08ee611964ea3239c",
+                    "i-098ffa4a128dc4589",
+                    "i-0ab0d31f329bcfc10",
+                    "i-0b38ea51987d5b2a0",
+                    "i-0d7adeb40cb11341d",
+                    "i-0e37fec58b6426dc4",
+                    "i-0e64b0ab4902de1b0"
+                ],
+                "impact": "critical",
+                "resourceId": "subnet-0480d6114031d03fa",
+                "resourceType": "subnet"
+            },
+            {
+                "dependentCount": 5,
+                "dependents": [
+                    "i-033da5a88b1f3aaaf",
+                    "i-03782dff6cae7637f",
+                    "i-05aa470c716a40c28",
+                    "i-0a532d8660f6b60b9",
+                    "i-0c6475fb8be1b1554"
+                ],
+                "impact": "high",
+                "resourceId": "subnet-09f3945f9c90e54f3",
+                "resourceType": "subnet"
+            },
+            {
+                "dependentCount": 6,
+                "dependents": [
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-digital-gw/c6dcb25f560addf2",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-backoffice/14c8c157ef718162",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-conductor/26d1c52dc0dc6c8c",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-kafka-conn/c4ba4e12e4f1804f",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms/4867f7f38266b84a",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/dev-vikkibank-io-alb/676871a8be05f436"
+                ],
+                "impact": "high",
+                "resourceId": "sg-09c68343997f1c56e",
+                "resourceType": "security_group"
+            },
+            {
+                "dependentCount": 95,
+                "dependents": [
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-digital-gw/c6dcb25f560addf2",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-backoffice/14c8c157ef718162",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-conductor/26d1c52dc0dc6c8c",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-mobile-kafka-conn/c4ba4e12e4f1804f",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms-gw/3ab6ec694d34b971",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/alb-apse5-dev-vikki-cms/4867f7f38266b84a",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/app/dev-vikkibank-io-alb/676871a8be05f436",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/net/nlb-apse5-dev-open-banking-gw/2af4c1a718070656",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:loadbalancer/net/nlb-apse5-dev-vikki-mobile-gw/55587e5b707b8a7a",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-0ce1c51201/9428646a68274a3b",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-29e09502c8/72e4b61a9032a048",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-backoffi-vikkimob-fb474df2bd/78e5b5c559c61d15",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-kafkacon-kafkacon-8d2811e27d/dec37f6918952de8",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-kafkacon-schemare-387719cb65/221cc59c948d8888",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-portalpl-vikkimob-592ce9a3c4/211515e4f1ad0f31",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-69e6457b9d/0da1cb06346a1847",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-6f90962d7d/8c1a7e4aadc54242",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-84b218fc9e/f62108b786596252",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-c63e120481/da7f204714ba1837",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-tempo-vikkimob-e4a83b3b67/4e43c35ebbee034f",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/k8s-workflow-devcondu-4157112a97/8b897e7764cd2d20",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-open-banking-https-443/59f9e2410e499cb7",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-vikki-cms-https-443/cbd0cba1dea4af13",
+                    "arn:aws:elasticloadbalancing:ap-southeast-5:820057617222:targetgroup/tg-ip-dev-vikki-mobile-https-443/7a8981b19cfdef84",
+                    "i-009ddc03502b6bb74",
+                    "i-011dec62bea559fe2",
+                    "i-01b66d0cbf8dbd8b8",
+                    "i-01ecdc558dd45f319",
+                    "i-029078dd45c5bb1df",
+                    "i-02e26d38b13abf4ec",
+                    "i-0331967dd2e411a06",
+                    "i-033da5a88b1f3aaaf",
+                    "i-03782dff6cae7637f",
+                    "i-0495a331dbb558a26",
+                    "i-04e34d3c676c8b846",
+                    "i-05aa470c716a40c28",
+                    "i-08914f7d945ba636d",
+                    "i-08d0e4de828509ef3",
+                    "i-08ee611964ea3239c",
+                    "i-098ffa4a128dc4589",
+                    "i-0a532d8660f6b60b9",
+                    "i-0ab0d31f329bcfc10",
+                    "i-0b38ea51987d5b2a0",
+                    "i-0c6475fb8be1b1554",
+                    "i-0d7adeb40cb11341d",
+                    "i-0e37fec58b6426dc4",
+                    "i-0e64b0ab4902de1b0",
+                    "nat-01362b6377f2de539",
+                    "nat-0bd3de61f0e5dc322",
+                    "sg-00175120ee7df2f59",
+                    "sg-005241448dc47f210",
+                    "sg-016926c88fbf4e4e1",
+                    "sg-0272b2711c8a8d54a",
+                    "sg-04160695b501c9212",
+                    "sg-0468009f10f1ef67e",
+                    "sg-05429136ab5d41a95",
+                    "sg-07f079c6f75967165",
+                    "sg-089cb950b6afd4b68",
+                    "sg-08a384f5f29c46b19",
+                    "sg-09c68343997f1c56e",
+                    "sg-09cfa2a9ecffcc550",
+                    "sg-0a3d379ee23f003d1",
+                    "sg-0a68af37829eb0b92",
+                    "sg-0ad95ad5f2ad23454",
+                    "sg-0ba6f3ce9ebc031da",
+                    "sg-0bf8a3e3614151763",
+                    "sg-0c8485e8967015d67",
+                    "sg-0d2fa05614b9c7c61",
+                    "sg-0e3622f424bf186a0",
+                    "sg-0e7eb631896569155",
+                    "sg-0e8ecadd6280d35ae",
+                    "sg-0ef386b72eecd8eb4",
+                    "sg-0fdc83a289a34861d",
+                    "subnet-001fab5ac309da0ac",
+                    "subnet-00751928204b4cb46",
+                    "subnet-00fb2bec9aff5cfa9",
+                    "subnet-0193affe1919d0671",
+                    "subnet-01e5111135328f99d",
+                    "subnet-02594cd48bffd5f45",
+                    "subnet-0480d6114031d03fa",
+                    "subnet-0697d30b204ee5b41",
+                    "subnet-086be95d79260aac1",
+                    "subnet-08755adb60f82b9fc",
+                    "subnet-08cac0e868e1e5f3b",
+                    "subnet-09232500f215db949",
+                    "subnet-0941a4bc502700bea",
+                    "subnet-09f3945f9c90e54f3",
+                    "subnet-0a8eb011ef4fd200b",
+                    "subnet-0b46b0691e967bcc5",
+                    "subnet-0bb00ac7a4b460fb5",
+                    "subnet-0c37287a1674d4c72",
+                    "subnet-0cff3b3d6f197f79a",
+                    "subnet-0d50ad7cd22392adf",
+                    "subnet-0e01d5ac373635c98",
+                    "subnet-0e6696116f6f8bf90"
+                ],
+                "impact": "critical",
+                "resourceId": "vpc-0d67cc5f2b5193e49",
+                "resourceType": "vpc"
+            },
+            {
+                "dependentCount": 4,
+                "dependents": [
+                    "sg-0f4789a4dfc456cfc",
+                    "subnet-070574030ae04706a",
+                    "subnet-074b4021ba9a35e1c",
+                    "subnet-08257bc2e60c3f4cd"
+                ],
+                "impact": "medium",
+                "resourceId": "vpc-0faa86f3ab9606731",
+                "resourceType": "vpc"
+            }
+        ],
+        "edgeCount": 139,
+        "nodeCount": 107,
+        "resourceTypeCounts": {
+            "auto_scaling_group": 1,
+            "ec2_instance": 23,
+            "launch_template": 2,
+            "load_balancer": 9,
+            "nat_gateway": 2,
+            "rds_instance": 3,
+            "security_group": 25,
+            "subnet": 25,
+            "target_group": 15,
+            "vpc": 2
+        }
+    },
+    "source": "live",
+    "timestamp": "2025-10-13T10:17:18.412546+07:00"
+}
