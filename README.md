@@ -71,6 +71,10 @@ The agent presents the plan for your review:
 - Shows exactly what will be created
 - Waits for your approval
 
+<h1 align="center" style="border-bottom: none">
+  <img alt="Execution & Monitoring" src="docs/images/simple-demo.png" width="650">
+</h1>
+
 ### 2. Execution & Monitoring
 
 Once approved, the agent:
@@ -79,9 +83,7 @@ Once approved, the agent:
 - Handles dependencies automatically
 - Reports completion status
 
-<h1 align="center" style="border-bottom: none">
-  <img alt="Execution & Monitoring" src="docs/images/simple-demo.svg">
-</h1>
+Check <a href="https://www.youtube.com/watch?v=41tupPs-BEU]" target="_blank">Live Demo</a>
 
 ### 3. More Examples
 
