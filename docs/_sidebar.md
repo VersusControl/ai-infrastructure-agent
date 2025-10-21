@@ -5,7 +5,9 @@
 - **Setup Guides**
   - [OpenAI API Setup](/api-key-setup/openai-api-setup.md)
   - [Google Gemini API Setup](/api-key-setup/gemini-api-setup.md)  
+  - [Anthropic Claude API Setup](/api-key-setup/anthropic-api-setup.md)
   - [AWS Bedrock Nova Setup](/api-key-setup/aws-bedrock-nova-setup.md)
+  - [Local LLM Setup](/api-key-setup/ollama-setup.md)
 
 - **Architecture**
   - [Architecture Overview](/architecture/architecture-overview.md)
