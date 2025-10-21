@@ -14,7 +14,7 @@ agent:
   dry_run: true
   auto_resolve_conflicts: false
   enable_debug: true
-  step_delay_ms: 1500
+  step_delay_ms: 1000
   # Note: Set GEMINI_API_KEY environment variable
 
 logging:

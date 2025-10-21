@@ -1,6 +1,8 @@
 module github.com/versus-control/ai-infrastructure-agent
 
-go 1.24.2
+go 1.24.4
+
+toolchain go1.24.9
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.38.0
@@ -15,7 +17,7 @@ require (
 	github.com/mark3labs/mcp-go v0.37.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.20.1
-	github.com/tmc/langchaingo v0.1.14-pre.3
+	github.com/tmc/langchaingo v0.1.14
 	golang.org/x/text v0.28.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -74,8 +76,7 @@ require (
 	go.opentelemetry.io/otel v1.36.0 // indirect
 	go.opentelemetry.io/otel/metric v1.36.0 // indirect
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/multierr v1.9.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect

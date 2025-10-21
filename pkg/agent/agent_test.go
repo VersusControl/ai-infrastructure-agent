@@ -1265,7 +1265,7 @@ func validateExecutionPlanStructure(t *testing.T, agent *StateAwareAgent, decisi
 	planValidActions := map[string]bool{
 		"create": true,
 		"query":  true,
-		// "update":   true,
+		"modify": true,
 		// "delete":   true,
 		// "validate": true,
 	}

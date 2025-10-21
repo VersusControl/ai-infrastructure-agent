@@ -25,7 +25,7 @@ import (
 //   - executeUpdateAction()            : Execute update actions on existing resources
 //   - executeDeleteAction()            : Execute delete actions on resources
 //   - executeValidateAction()          : Execute validation actions
-//   - updateStateFromMCPResult()       : Update state from MCP operation results
+//   - addStateFromMCPResult()       : Update state from MCP operation results
 //   - extractResourceTypeFromStep()    : Extract resource type from execution step
 //   - getAvailableToolsContext()       : Get available tools context for AI prompts
 //   - persistCurrentState()            : Persist current state to storage
@@ -948,8 +948,9 @@ func (a *StateAwareAgent) executeExecutionStep(planStep *types.ExecutionPlanStep
 	case "query":
 		// Query action - executes MCP tools for data retrieval (unified with create)
 		result, err = a.executeQueryAction(planStep, progressChan, execution.ID)
-	// case "update":
-	// 	result, err = a.executeUpdateAction(ctx, planStep, progressChan, execution.ID)
+	case "modify":
+		// Modify action - updates existing resources (only works on managed resources)
+		result, err = a.executeModifyAction(planStep, progressChan, execution.ID)
 	// case "delete":
 	// 	result, err = a.executeDeleteAction(planStep, progressChan, execution.ID)
 	// case "validate":
@@ -1006,6 +1007,66 @@ func (a *StateAwareAgent) executeQueryAction(planStep *types.ExecutionPlanStep, 
 
 	// Execute the MCP tool using the same path as create
 	return a.executeNativeMCPTool(planStep, progressChan, executionID)
+}
+
+// executeModifyAction handles resource modification operations using native MCP tool calls
+// This action ONLY updates existing resources that are managed by the AI Agent.
+// For security reasons, it will reject attempts to modify resources not in the managed state.
+func (a *StateAwareAgent) executeModifyAction(planStep *types.ExecutionPlanStep, progressChan chan<- *types.ExecutionUpdate, executionID string) (map[string]interface{}, error) {
+	// Send progress update
+	if progressChan != nil {
+		progressChan <- &types.ExecutionUpdate{
+			Type:        "step_progress",
+			ExecutionID: executionID,
+			StepID:      planStep.ID,
+			Message:     fmt.Sprintf("Modifying resource: %s", planStep.Name),
+			Timestamp:   time.Now(),
+		}
+	}
+
+	// Log modify operation
+	a.Logger.WithFields(map[string]interface{}{
+		"step_id":     planStep.ID,
+		"resource_id": planStep.ResourceID,
+		"mcp_tool":    planStep.MCPTool,
+		"action":      "modify",
+	}).Info("Executing modify action via MCP tool")
+
+	// Execute the MCP tool (modify tools handle exists check internally)
+	result, err := a.executeNativeMCPTool(planStep, progressChan, executionID)
+
+	if err != nil {
+		return nil, fmt.Errorf("modify operation failed: %w", err)
+	}
+
+	// Update state from result using modify-specific logic (update existing resources only)
+	if err := a.updateStateFromMCPResult(planStep, result); err != nil {
+		return nil, fmt.Errorf("failed to update state after modify operation: %w", err)
+	}
+
+	// Store resource mapping for dependency resolution using configuration-driven extraction
+	// The result from executeNativeMCPTool is wrapped, so unwrap the mcp_response
+	var mcpResponse map[string]interface{}
+	if wrapped, ok := result["mcp_response"].(map[string]interface{}); ok {
+		mcpResponse = wrapped
+	} else {
+		// Use result directly if not wrapped
+		mcpResponse = result
+	}
+
+	// Process arrays first to get concatenated values
+	processedResult := a.processArraysInMCPResponse(mcpResponse)
+
+	// Extract resource ID using the same configuration-driven approach as create action
+	resourceID, err := a.extractResourceIDFromResponse(processedResult, planStep.MCPTool, planStep.ID)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract resource ID after modify operation: %w", err)
+	}
+
+	a.storeResourceMapping(planStep.ID, resourceID, processedResult)
+
+	return result, nil
 }
 
 // executeNativeMCPTool executes MCP tools directly with AI-provided parameters
@@ -1191,7 +1252,7 @@ func (a *StateAwareAgent) executeNativeMCPTool(planStep *types.ExecutionPlanStep
 	}
 
 	// Update state manager with the new resource (use processed result)
-	if err := a.updateStateFromMCPResult(planStep, processedResult); err != nil {
+	if err := a.addStateFromMCPResult(planStep, processedResult); err != nil {
 		a.Logger.WithError(err).WithFields(map[string]interface{}{
 			"step_id":     planStep.ID,
 			"tool_name":   toolName,
@@ -1212,184 +1273,6 @@ func (a *StateAwareAgent) executeNativeMCPTool(planStep *types.ExecutionPlanStep
 	}
 
 	return resultMap, nil
-}
-
-// // executeUpdateAction handles resource updates using real MCP tools
-// func (a *StateAwareAgent) executeUpdateAction(_ context.Context, planStep *types.ExecutionPlanStep, progressChan chan<- *types.ExecutionUpdate, executionID string) (map[string]interface{}, error) {
-// 	// Send progress update
-// 	if progressChan != nil {
-// 		progressChan <- &types.ExecutionUpdate{
-// 			Type:        "step_progress",
-// 			ExecutionID: executionID,
-// 			StepID:      planStep.ID,
-// 			Message:     fmt.Sprintf("Updating %s resource: %s", planStep.ResourceID, planStep.Name),
-// 			Timestamp:   time.Now(),
-// 		}
-// 	}
-
-// 	// For update actions, we mainly just simulate for now since the focus is on create operations
-// 	// The native MCP approach will be extended to update/delete actions in future iterations
-// 	a.Logger.WithField("step_id", planStep.ID).Info("Simulating update action as focus is on create operations")
-// 	time.Sleep(time.Second * 1)
-// 	return map[string]interface{}{
-// 		"resource_id": planStep.ResourceID,
-// 		"status":      "updated",
-// 		"message":     fmt.Sprintf("%s updated successfully (simulated)", planStep.Name),
-// 		"changes":     planStep.Parameters,
-// 		"simulated":   true,
-// 	}, nil
-// }
-
-// // executeDeleteAction handles resource deletion
-// func (a *StateAwareAgent) executeDeleteAction(planStep *types.ExecutionPlanStep, progressChan chan<- *types.ExecutionUpdate, executionID string) (map[string]interface{}, error) {
-// 	// Send progress update
-// 	if progressChan != nil {
-// 		progressChan <- &types.ExecutionUpdate{
-// 			Type:        "step_progress",
-// 			ExecutionID: executionID,
-// 			StepID:      planStep.ID,
-// 			Message:     fmt.Sprintf("Deleting %s resource: %s", planStep.ResourceID, planStep.Name),
-// 			Timestamp:   time.Now(),
-// 		}
-// 	}
-
-// 	// Simulate resource deletion
-// 	time.Sleep(time.Second * 1)
-
-// 	return map[string]interface{}{
-// 		"resource_id": planStep.ResourceID,
-// 		"status":      "deleted",
-// 		"message":     fmt.Sprintf("%s deleted successfully", planStep.Name),
-// 	}, nil
-// }
-
-// // executeValidateAction handles validation steps using real MCP tools where possible
-// func (a *StateAwareAgent) executeValidateAction(planStep *types.ExecutionPlanStep, progressChan chan<- *types.ExecutionUpdate, executionID string) (map[string]interface{}, error) {
-// 	// Send progress update
-// 	if progressChan != nil {
-// 		progressChan <- &types.ExecutionUpdate{
-// 			Type:        "step_progress",
-// 			ExecutionID: executionID,
-// 			StepID:      planStep.ID,
-// 			Message:     fmt.Sprintf("Validating %s: %s", planStep.ResourceID, planStep.Name),
-// 			Timestamp:   time.Now(),
-// 		}
-// 	}
-
-// 	// For validation actions, we mainly just simulate for now since the focus is on create operations
-// 	// The native MCP approach will be extended to validation actions in future iterations
-// 	a.Logger.WithField("step_id", planStep.ID).Info("Simulating validation action as focus is on create operations")
-// 	time.Sleep(time.Millisecond * 500)
-// 	return map[string]interface{}{
-// 		"resource_id": planStep.ResourceID,
-// 		"status":      "validated",
-// 		"message":     fmt.Sprintf("%s validation completed (simulated)", planStep.Name),
-// 		"checks":      []string{"basic_validation"},
-// 	}, nil
-// }
-
-// updateStateFromMCPResult updates the state manager with results from MCP operations
-func (a *StateAwareAgent) updateStateFromMCPResult(planStep *types.ExecutionPlanStep, result map[string]interface{}) error {
-	a.Logger.WithFields(map[string]interface{}{
-		"step_id":      planStep.ID,
-		"step_name":    planStep.Name,
-		"resource_id":  planStep.ResourceID,
-		"mcp_response": result,
-	}).Info("Starting state update from MCP result")
-
-	// Note: result is already processed (arrays concatenated) from executeNativeMCPTool
-	// Create a simple properties map from MCP result
-	resultData := map[string]interface{}{
-		"mcp_response": result,
-		"status":       "created_via_mcp",
-	}
-
-	// Extract resource type
-	resourceType := a.extractResourceTypeFromStep(planStep)
-
-	// Create a resource state entry
-	resourceState := &types.ResourceState{
-		ID:           planStep.ResourceID,
-		Name:         planStep.Name,
-		Description:  planStep.Description,
-		Type:         resourceType,
-		Status:       "created",
-		Properties:   resultData,
-		Dependencies: planStep.DependsOn,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
-	}
-
-	a.Logger.WithFields(map[string]interface{}{
-		"step_id":           planStep.ID,
-		"resource_state_id": resourceState.ID,
-		"resource_type":     resourceState.Type,
-		"dependencies":      resourceState.Dependencies,
-	}).Info("Calling AddResourceToState for main AWS resource")
-
-	// Add to state manager via MCP server
-	if err := a.AddResourceToState(resourceState); err != nil {
-		a.Logger.WithError(err).WithFields(map[string]interface{}{
-			"step_id":           planStep.ID,
-			"resource_state_id": resourceState.ID,
-			"resource_type":     resourceState.Type,
-		}).Error("Failed to add resource to state via MCP server")
-		return fmt.Errorf("failed to add resource %s to state: %w", resourceState.ID, err)
-	}
-
-	a.Logger.WithFields(map[string]interface{}{
-		"step_id":           planStep.ID,
-		"resource_state_id": resourceState.ID,
-		"resource_type":     resourceState.Type,
-	}).Info("Successfully added main AWS resource to state")
-
-	// Also store the resource with the step ID as the key for dependency resolution
-	// This ensures that {{step-create-xxx.resourceId}} references can be resolved
-	if planStep.ID != planStep.ResourceID {
-
-		stepResourceState := &types.ResourceState{
-			ID:           planStep.ID, // Use step ID as the key
-			Name:         planStep.Name,
-			Description:  planStep.Description + " (Step Reference)",
-			Type:         "step_reference",
-			Status:       "created",
-			Properties:   resultData,
-			Dependencies: planStep.DependsOn,
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
-		}
-
-		if err := a.AddResourceToState(stepResourceState); err != nil {
-			if a.config.EnableDebug {
-				a.Logger.WithError(err).WithFields(map[string]interface{}{
-					"step_id":          planStep.ID,
-					"step_resource_id": stepResourceState.ID,
-				}).Warn("Failed to add step-based resource to state - dependency resolution may be affected")
-			}
-			// Don't fail the whole operation for this, just log the warning
-		} else {
-			a.Logger.WithFields(map[string]interface{}{
-				"step_id":          planStep.ID,
-				"step_resource_id": stepResourceState.ID,
-				"type":             "step_reference",
-			}).Info("Successfully added step reference to state for dependency resolution")
-		}
-	} else {
-		a.Logger.WithFields(map[string]interface{}{
-			"step_id":     planStep.ID,
-			"resource_id": planStep.ResourceID,
-			"reason":      "step_id equals resource_id",
-		}).Info("Skipping step reference creation - not needed for dependency resolution")
-	}
-
-	a.Logger.WithFields(map[string]interface{}{
-		"step_id":                planStep.ID,
-		"main_resource_id":       resourceState.ID,
-		"main_resource_type":     resourceState.Type,
-		"step_reference_created": planStep.ID != planStep.ResourceID,
-	}).Info("Successfully completed state update from MCP result")
-
-	return nil
 }
 
 // Helper function to extract resource type from plan step
@@ -1561,24 +1444,6 @@ func (a *StateAwareAgent) generateMCPToolsSchema() string {
 	}
 
 	return context.String()
-}
-
-// persistCurrentState saves the current infrastructure state to persistent storage
-// This ensures that successfully completed steps are not lost if later steps fail
-func (a *StateAwareAgent) persistCurrentState() error {
-	a.Logger.Info("Starting state persistence via MCP server")
-
-	// Use MCP server to save the current state
-	result, err := a.callMCPTool("save-state", map[string]interface{}{
-		"force": true, // Force save even if state hasn't changed much
-	})
-	if err != nil {
-		a.Logger.WithError(err).Error("Failed to call save-state MCP tool")
-		return fmt.Errorf("failed to save state via MCP: %w", err)
-	}
-
-	a.Logger.WithField("result", result).Info("State persistence completed successfully via MCP server")
-	return nil
 }
 
 // extractResourceIDFromResponse extracts the actual AWS resource ID from MCP response

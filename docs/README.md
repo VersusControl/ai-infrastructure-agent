@@ -20,13 +20,15 @@ Welcome to the AI Infrastructure Agent documentation! This is an intelligent sys
 ## API Setup Guides
 
 - [OpenAI API Setup](/api-key-setup/openai-api-setup.md)
-- [Google Gemini API Setup](/api-key-setup/gemini-api-setup.md) 
+- [Google Gemini API Setup](/api-key-setup/gemini-api-setup.md)
+- [Anthropic Claude API Setup](/api-key-setup/anthropic-api-setup.md)
 - [AWS Bedrock Nova Setup](/api-key-setup/aws-bedrock-nova-setup.md)
+- [Ollama Local LLM Setup](/api-key-setup/ollama-setup.md)
 
 ## Features
 
 - **Natural Language Interface** - Describe what you want, not how to build it
-- **Multi-AI Provider Support** - Choose between OpenAI, Google Gemini, Anthropic, or AWS Bedrock Nova
+- **Multi-AI Provider Support** - Choose between OpenAI, Google Gemini, Anthropic, AWS Bedrock Nova, or Ollama (local LLM)
 - **Web Dashboard** - Visual interface for infrastructure management
 - **Terraform-like State** - Maintains accurate infrastructure state
 - **Conflict Detection** - Built-in safety mechanisms and dry-run mode
