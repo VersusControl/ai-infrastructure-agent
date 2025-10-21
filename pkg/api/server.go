@@ -75,6 +75,9 @@ func (ws *WebServer) initializeAIAgent(cfg *config.Config, awsClient *aws.Client
 	case "bedrock", "nova":
 		// For Bedrock, AWS credentials are handled by default credential chain
 		hasAPIKey = true
+	case "ollama":
+		// For Ollama, model is required, server URL is optional (defaults to localhost:11434)
+		hasAPIKey = true
 	default:
 		logger.WithField("provider", provider).Warn("Unknown AI provider - AI agent will run in demo mode")
 		return

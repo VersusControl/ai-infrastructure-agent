@@ -1,0 +1,75 @@
+# Development configuration for AWS MCP Server with Ollama (Local LLM)
+server:
+  port: 3000
+  host: "localhost"
+
+aws:
+  region: "us-west-2"
+
+mcp:
+  server_name: "aws-infrastructure-server"
+  version: "1.0.0"
+
+agent:
+  provider: "ollama"          # openai, gemini, anthropic, bedrock, ollama
+  # Ollama server URL (default: http://localhost:11434)
+  # You can set this via environment variable: OLLAMA_SERVER_URL
+  # ollama_server_url: "http://localhost:11434"
+  
+  # Available Ollama models (examples - depends on what you have pulled):
+  # Latest Models (2025):
+  # - gemma3                  (Gemma 3 - 4B parameters, default)
+  # - gemma3:1b               (Gemma 3 - 1B, 815MB, fastest)
+  # - gemma3:12b              (Gemma 3 - 12B, 8.1GB)
+  # - gemma3:27b              (Gemma 3 - 27B, 17GB)
+  # - qwq                     (QwQ - 32B, 20GB, reasoning model)
+  # - deepseek-r1             (DeepSeek R1 - 7B, 4.7GB, reasoning)
+  # - deepseek-r1:671b        (DeepSeek R1 - 671B, 404GB, advanced reasoning)
+  # 
+  # Llama Models:
+  # - llama4:scout            (Llama 4 Scout - 109B, 67GB)
+  # - llama4:maverick         (Llama 4 Maverick - 400B, 245GB)
+  # - llama3.3                (Llama 3.3 - 70B, 43GB)
+  # - llama3.2                (Llama 3.2 - 3B, 2.0GB)
+  # - llama3.2:1b             (Llama 3.2 - 1B, 1.3GB, faster)
+  # - llama3.2-vision         (Llama 3.2 Vision - 11B, 7.9GB)
+  # - llama3.2-vision:90b     (Llama 3.2 Vision - 90B, 55GB)
+  # - llama3.1                (Llama 3.1 - 8B, 4.7GB)
+  # - llama3.1:405b           (Llama 3.1 - 405B, 231GB)
+  # 
+  # Other Models:
+  # - phi4                    (Phi 4 - 14B, 9.1GB)
+  # - phi4-mini               (Phi 4 Mini - 3.8B, 2.5GB)
+  # - mistral                 (Mistral - 7B, 4.1GB)
+  # - codellama               (Code Llama - 7B, 3.8GB, code-focused)
+  # - granite3.3              (Granite 3.3 - 8B, 4.9GB)
+  # 
+  # Note: You must pull the model first using: ollama pull <model-name>
+  # Recommended: gemma3:27b (good balance) or deepseek-r1 (reasoning tasks)
+  model: "gemma3:27b"
+  
+  # Context window size (number of tokens)
+  # Larger values allow more context but use more memory
+  # Typical values: 2048, 4096, 8192, 16384, 32768
+  max_tokens: 8192
+  
+  temperature: 0.1
+  dry_run: true
+  auto_resolve_conflicts: false
+
+logging:
+  level: "debug"
+  format: "text"
+  output: "stdout"
+
+state:
+  file_path: "./states/infrastructure-state.json"
+  backup_enabled: true
+  backup_dir: "./backups"
+
+web:
+  port: 8080
+  host: "localhost"
+  template_dir: "web/templates"
+  static_dir: "web/static"
+  enable_websockets: true

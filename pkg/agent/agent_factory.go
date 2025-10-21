@@ -7,8 +7,10 @@ import (
 	"sync"
 
 	"github.com/tmc/langchaingo/llms"
+	"github.com/tmc/langchaingo/llms/anthropic"
 	"github.com/tmc/langchaingo/llms/bedrock"
 	"github.com/tmc/langchaingo/llms/googleai"
+	"github.com/tmc/langchaingo/llms/ollama"
 	"github.com/tmc/langchaingo/llms/openai"
 	"github.com/versus-control/ai-infrastructure-agent/internal/config"
 	"github.com/versus-control/ai-infrastructure-agent/internal/logging"
@@ -208,10 +210,57 @@ func initializeLLM(agentConfig *config.AgentConfig, logger *logging.Logger) (llm
 		return llm, nil
 
 	case "anthropic":
-		return nil, fmt.Errorf("AnthropicAI provider not yet implemented")
+		if agentConfig.AnthropicAPIKey == "" {
+			logger.Error("Anthropic API key is missing")
+			return nil, fmt.Errorf("AnthropicAI API key is required but not provided. Set ANTHROPIC_API_KEY environment variable or configure it in config file")
+		}
+
+		logger.WithFields(map[string]interface{}{
+			"api_key_length": len(agentConfig.AnthropicAPIKey),
+			"api_key_prefix": agentConfig.AnthropicAPIKey[:min(8, len(agentConfig.AnthropicAPIKey))],
+		}).Debug("Anthropic configuration")
+
+		llm, err := anthropic.New(
+			anthropic.WithToken(agentConfig.AnthropicAPIKey),
+			anthropic.WithModel(agentConfig.Model),
+		)
+		if err != nil {
+			logger.WithError(err).Error("Failed to initialize Anthropic client")
+			return nil, fmt.Errorf("failed to initialize Anthropic client: %w", err)
+		}
+
+		logger.Info("Anthropic client initialized successfully")
+
+		return llm, nil
+
+	case "ollama":
+		// Validate required configuration
+		if agentConfig.Model == "" {
+			logger.Error("Ollama model is missing")
+			return nil, fmt.Errorf("Ollama model is required but not provided. Configure 'model' in config file")
+		}
+
+		logger.WithFields(map[string]interface{}{
+			"provider":   "ollama",
+			"server_url": agentConfig.OllamaServerURL,
+			"model":      agentConfig.Model,
+		}).Info("Initializing Ollama client")
+
+		llm, err := ollama.New(
+			ollama.WithServerURL(agentConfig.OllamaServerURL),
+			ollama.WithModel(agentConfig.Model),
+		)
+		if err != nil {
+			logger.WithError(err).Error("Failed to initialize Ollama client")
+			return nil, fmt.Errorf("failed to initialize Ollama client: %w", err)
+		}
+
+		logger.Info("Ollama client initialized successfully")
+
+		return llm, nil
 
 	default:
-		return nil, fmt.Errorf("unsupported LLM provider: %s. Supported providers: openai, gemini", provider)
+		return nil, fmt.Errorf("unsupported LLM provider: %s. Supported providers: openai, gemini, anthropic, bedrock, ollama", provider)
 	}
 }
 

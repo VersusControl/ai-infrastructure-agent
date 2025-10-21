@@ -8,7 +8,7 @@ Before diving in, make sure you have:
 
 - ✅ **AWS Account** with appropriate IAM permissions
 - ✅ **Go 1.19+** installed on your system
-- ✅ **AI Provider API Key** (OpenAI, Gemini, or AWS Bedrock Nova)
+- ✅ **AI Provider API Key** (OpenAI, Gemini, Anthropic, AWS Bedrock Nova) or **Ollama** for local LLM
 - ✅ **Basic understanding** of AWS services (EC2, VPC, Security Groups)
 
 ## Step 1: Installation & Setup
@@ -50,17 +50,33 @@ cp config.gemini.yaml.example config.yaml
 # Edit config.yaml with your Gemini API key
 ```
 
-**Option C: AWS Bedrock Nova**
+**Option C: Anthropic Claude**
+```bash
+# Copy and edit configuration
+cp config.anthropic.yaml.example config.yaml
+# Edit config.yaml with your Anthropic API key
+```
+
+**Option D: AWS Bedrock Nova**
 ```bash
 # Copy and edit configuration
 cp config.bedrock.yaml.example config.yaml
 # Configure AWS credentials for Bedrock access
 ```
 
+**Option E: Ollama (Local LLM)**
+```bash
+# Copy and edit configuration
+cp config.ollama.yaml.example config.yaml
+# Edit config.yaml with your preferred model
+```
+
 > 📖 **Need help with API setup?** Check our detailed guides:
 > - [OpenAI API Setup](/api-key-setup/openai-api-setup.md)
-> - [Google Gemini API Setup](/api-key-setup/gemini-api-setup.md) 
+> - [Google Gemini API Setup](/api-key-setup/gemini-api-setup.md)
+> - [Anthropic Claude API Setup](/api-key-setup/anthropic-api-setup.md)
 > - [AWS Bedrock Nova Setup](/api-key-setup/aws-bedrock-nova-setup.md)
+> - [Ollama Local LLM Setup](/api-key-setup/ollama-setup.md)
 
 2. **Configure AWS credentials:**
 
