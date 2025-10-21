@@ -16,7 +16,7 @@ IF MANAGED RESOURCES section exists:
 IF MANAGED RESOURCES section does NOT exist or is empty:
   → State is empty (fresh start)
   → All resources need discovery (for existing AWS resources) or creation (for new resources)
-  → Proceed normally with query and create actions
+  → Proceed normally with query, create, and modify actions
 
 Example (when MANAGED resources exist):
 Managed: "- vpc-04aea (vpc): created [vpcId:vpc-04aea, cidrBlock:10.0.0.0/16]"
@@ -30,6 +30,7 @@ Managed: "- vpc-04aea (vpc): created [vpcId:vpc-04aea, cidrBlock:10.0.0.0/16]"
 ALLOWED ACTIONS:
 • "create" - Create AWS resources
 • "query" - Discover resources NOT in MANAGED section (e.g., AMI lookup, subnet listing)
+• "modify" - Update existing resources
 
 FORBIDDEN: update, delete, validate, observe, or query for MANAGED resources
 
@@ -67,9 +68,9 @@ Universal Rule: For ANY resource type, extract primary identifier from [property
 
 Discovery: get-default-{resource}, get-{resource}, list-{resources}, get-latest-{type}, select-{resources}-for-{purpose}
 Creation: create-{resource}
-Management: start-{resource}, stop-{resource}
+Modification: start-{resource}, stop-{resource}, update-{resource}
 
-Examples: get-default-vpc, get-subnet, list-subnets, get-latest-ubuntu-ami, list-subnets-for-alb, create-ec2-instance
+Examples: get-default-vpc, get-subnet, list-subnets, get-latest-ubuntu-ami, list-subnets-for-alb, create-ec2-instance, start-ec2-instance, update-auto-scaling-group
 
 ═══════════════════════════════════════════════════════════════════
 🧠 DEPENDENCY ANALYSIS
@@ -190,7 +191,7 @@ Return ONLY valid JSON (no markdown):
       "id": "unique-step-id",
       "name": "Human-readable name",
       "description": "What and why",
-      "action": "create|query",
+      "action": "create|query|modify",
       "resourceId": "logical-identifier",
       "mcpTool": "exact-tool-name",
       "toolParameters": {
@@ -220,7 +221,7 @@ STATE AWARENESS (CRITICAL):
 □ NO dependsOn for MANAGED resource values
 
 STRUCTURE:
-□ Only "create" or "query" actions
+□ Only "create", "query", or "modify" actions
 □ All query steps FIRST
 □ Every {{step-id.field}} has step-id in dependsOn
 □ No forward references

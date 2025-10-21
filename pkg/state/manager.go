@@ -123,16 +123,20 @@ func (m *Manager) AddResource(ctx context.Context, resource *types.ResourceState
 	return m.SaveState(ctx)
 }
 
-// UpdateResource updates a resource in the state
+// UpdateResource updates only the properties of a resource in state
+// All other fields (dependencies, name, description, type, etc.) are preserved
 func (m *Manager) UpdateResource(ctx context.Context, resourceID string, updates map[string]interface{}) error {
 	resource, exists := m.state.Resources[resourceID]
 	if !exists {
 		return fmt.Errorf("resource %s not found in state", resourceID)
 	}
 
-	m.logger.WithField("resource_id", resourceID).Info("Updating resource in state")
+	m.logger.WithField("resource_id", resourceID).Info("Updating resource properties in state")
 
-	// Apply updates
+	// ONLY update the Properties map - preserve all other fields:
+	// - Dependencies: Must be preserved
+	// - Name, Description, Type: Immutable
+	// - Status: Updated separately if needed
 	for key, value := range updates {
 		resource.Properties[key] = value
 	}

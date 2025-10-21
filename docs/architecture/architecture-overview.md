@@ -2,7 +2,7 @@
 
 The AI Infrastructure Agent is a sophisticated infrastructure-as-code system that combines Large Language Model (LLM) capabilities with AWS resource management through the Model Context Protocol (MCP). It provides both programmatic and web interfaces for managing cloud infrastructure using natural language requests while maintaining safety through comprehensive conflict detection, state management, and execution planning.
 
-The system is architected as a multi-layered application written in Go, supporting multiple AI providers (OpenAI GPT, Google Gemini, Anthropic Claude) and implementing enterprise-grade features including dry-run execution, real-time monitoring, dependency resolution, and conflict detection.
+The system is architected as a multi-layered application written in Go, supporting multiple AI providers (OpenAI GPT, Google Gemini, Anthropic Claude, AWS Bedrock Nova, Ollama) and implementing enterprise-grade features including dry-run execution, real-time monitoring, dependency resolution, and conflict detection.
 
 ## High-Level System Architecture
 
@@ -60,7 +60,7 @@ GET  /ws                           # WebSocket connection
 The Agent Layer is the core intelligence component, consisting of several specialized subsystems:
 
 #### StateAware Agent
-- **Multi-AI Provider Support**: Configurable integration with OpenAI, Google Gemini, and Anthropic
+- **Multi-AI Provider Support**: Configurable integration with OpenAI, Google Gemini, Anthropic Claude, AWS Bedrock Nova, and Ollama
 - **MCP Process Management**: Manages communication with MCP server processes
 - **Resource Analysis Integration**: Incorporates pattern matching, field resolution, and value type inference
 - **Thread-Safe Operations**: Concurrent access protection for resource mappings and capabilities

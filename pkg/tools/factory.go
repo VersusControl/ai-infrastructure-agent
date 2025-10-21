@@ -129,6 +129,8 @@ func (f *ToolFactoryImpl) CreateTool(toolType string, actionType string, depende
 		return NewCreateLaunchTemplateTool(deps.AWSClient, actionType, f.logger), nil
 	case "create-auto-scaling-group":
 		return NewCreateAutoScalingGroupTool(deps.AWSClient, actionType, f.logger), nil
+	case "update-auto-scaling-group":
+		return NewUpdateAutoScalingGroupTool(deps.AWSClient, actionType, f.logger), nil
 	case "list-auto-scaling-groups":
 		return NewListAutoScalingGroupsTool(deps.AWSClient, actionType, f.logger), nil
 	case "list-launch-templates":
@@ -195,6 +197,8 @@ func (f *ToolFactoryImpl) CreateTool(toolType string, actionType string, depende
 		return NewSaveStateTool(deps, actionType, f.logger), nil
 	case "add-resource-to-state":
 		return NewAddResourceToStateTool(deps, actionType, f.logger), nil
+	case "update-resource-to-state":
+		return NewUpdateResourceToStateTool(deps, actionType, f.logger), nil
 	case "plan-infrastructure-deployment":
 		return NewPlanDeploymentTool(deps, actionType, f.logger), nil
 
@@ -257,6 +261,7 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"stop-ec2-instance",
 			"start-db-instance",
 			"stop-db-instance",
+			"update-auto-scaling-group",
 		},
 		"deletion": {
 			"terminate-ec2-instance",
@@ -278,6 +283,7 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"detect-infrastructure-conflicts",
 			"plan-infrastructure-deployment",
 			"add-resource-to-state",
+			"update-resource-to-state",
 			"save-state",
 		},
 	}

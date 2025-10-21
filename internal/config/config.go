@@ -31,11 +31,12 @@ type MCPConfig struct {
 
 // AgentConfig contains configuration for the AI agent
 type AgentConfig struct {
-	Provider             string  `mapstructure:"provider"` // openai, gemini, anthropic
+	Provider             string  `mapstructure:"provider"` // openai, gemini, anthropic, bedrock, ollama
 	OpenAIAPIKey         string  `mapstructure:"openai_api_key"`
 	GeminiAPIKey         string  `mapstructure:"gemini_api_key"`
 	AnthropicAPIKey      string  `mapstructure:"anthropic_api_key"`
-	Model                string  `mapstructure:"model"`
+	OllamaServerURL      string  `mapstructure:"ollama_server_url"` // Optional: Ollama server URL (default: http://localhost:11434)
+	Model                string  `mapstructure:"model"`             // Required for all providers
 	MaxTokens            int     `mapstructure:"max_tokens"`
 	Temperature          float64 `mapstructure:"temperature"`
 	DryRun               bool    `mapstructure:"dry_run"`
@@ -106,6 +107,9 @@ func Load() (*Config, error) {
 	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
 		config.Agent.AnthropicAPIKey = apiKey
 	}
+	if ollamaURL := os.Getenv("OLLAMA_SERVER_URL"); ollamaURL != "" {
+		config.Agent.OllamaServerURL = ollamaURL
+	}
 	if awsRegion := os.Getenv("AWS_REGION"); awsRegion != "" {
 		config.AWS.Region = awsRegion
 	}
@@ -131,6 +135,7 @@ func setDefaults() {
 	viper.SetDefault("agent.auto_resolve_conflicts", false)
 	viper.SetDefault("agent.enable_debug", false)
 	viper.SetDefault("agent.step_delay_ms", 500)
+	viper.SetDefault("agent.ollama_server_url", "http://localhost:11434")
 
 	// Logging defaults
 	viper.SetDefault("logging.level", "info")

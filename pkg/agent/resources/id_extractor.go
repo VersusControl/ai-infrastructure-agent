@@ -70,7 +70,7 @@ func (e *IDExtractor) ExtractResourceID(toolName string, resourceType string, pa
 		dataSource = result // Created resources return IDs in result
 	case "modification":
 		patterns = e.modificationPatterns
-		dataSource = parameters // Modified resources have IDs in parameters
+		dataSource = result // Modified resources now return IDs in result (like creation tools)
 	case "association":
 		patterns = e.associationPatterns
 		dataSource = result // Association operations return new association IDs in result

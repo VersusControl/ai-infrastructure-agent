@@ -123,7 +123,7 @@ mcp:
   version: "1.0.0"
 
 agent:
-  provider: "openai"          # openai, gemini, anthropic, bedrock
+  provider: "openai"          # openai, gemini, anthropic, bedrock, ollama
   model: "gpt-4o-mini"
   max_tokens: 4000
   temperature: 0.1

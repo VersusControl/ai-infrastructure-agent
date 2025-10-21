@@ -1,0 +1,50 @@
+# Development configuration for AWS MCP Server with Anthropic Claude
+server:
+  port: 3000
+  host: "localhost"
+
+aws:
+  region: "us-west-2"
+
+mcp:
+  server_name: "aws-infrastructure-server"
+  version: "1.0.0"
+
+agent:
+  provider: "anthropic"       # openai, gemini, anthropic, bedrock
+  # Available Claude 4 models (latest generation):
+  # - claude-sonnet-4-5-20250929  (Recommended: Best balance for agents and coding)
+  # - claude-haiku-4-5-20251001   (Fastest with near-frontier intelligence)
+  # - claude-opus-4-1-20250805    (Exceptional for specialized reasoning tasks)
+  # 
+  # Model aliases (auto-update to latest version):
+  # - claude-sonnet-4-5           (alias for claude-sonnet-4-5-20250929)
+  # - claude-haiku-4-5            (alias for claude-haiku-4-5-20251001)
+  # - claude-opus-4-1             (alias for claude-opus-4-1-20250805)
+  #
+  # Note: Use specific versions (with dates) in production for consistent behavior
+  model: "claude-sonnet-4-5-20250929"
+  max_tokens: 4000
+  temperature: 0.1
+  dry_run: true
+  auto_resolve_conflicts: false
+  # Note: Set API key via environment variable:
+  # ANTHROPIC_API_KEY=your_api_key_here
+  # Get your API key from: https://console.anthropic.com/settings/keys
+
+logging:
+  level: "debug"
+  format: "text"
+  output: "stdout"
+
+state:
+  file_path: "./states/infrastructure-state.json"
+  backup_enabled: true
+  backup_dir: "./backups"
+
+web:
+  port: 8080
+  host: "localhost"
+  template_dir: "web/templates"
+  static_dir: "web/static"
+  enable_websockets: true

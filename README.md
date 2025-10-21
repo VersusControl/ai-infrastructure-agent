@@ -27,7 +27,7 @@ AI Infrastructure Agent is an intelligent system that allows you to manage AWS i
 ### Key Features
 
 - **Natural Language Interface** - Describe what you want, not how to build it
-- **Multi-AI Provider Support** - Choose between OpenAI, Google Gemini, Anthropic, or AWS Bedrock Nova
+- **Multi-AI Provider Support** - Choose between OpenAI, Google Gemini, Anthropic, AWS Bedrock Nova, or Ollama (local LLM)
 - **Web Dashboard** - Visual interface for infrastructure management, built-in conflict detection and dry-run mode
 - **Terraform-like state** - Maintains accurate infrastructure state
 - **Current Resource Support** - VPC, EC2, SG, Autoscaling Group, ALB. Check the roadmap here: [Core Platform Development](https://github.com/orgs/VersusControl/projects/19)
@@ -114,7 +114,7 @@ Choose your preferred AI provider in `config.yaml`:
 
 ```yaml
 agent:
-  provider: "openai"          # Options: openai, gemini, anthropic, bedrock
+  provider: "openai"          # Options: openai, gemini, anthropic, bedrock, ollama
   model: "gpt-4"             # Model to use
   max_tokens: 4000
   temperature: 0.1
@@ -127,7 +127,9 @@ agent:
 **Detailed Setup Guides:**
 - **OpenAI**: [OpenAI API Key Setup Guide](https://ai-agent.devopsvn.tech/docs.html#/api-key-setup/openai-api-setup)
 - **Google Gemini**: [Gemini API Key Setup Guide](https://ai-agent.devopsvn.tech/docs.html#/api-key-setup/gemini-api-setup)
+- **Anthropic Claude**: [Anthropic API Key Setup Guide](https://ai-agent.devopsvn.tech/docs.html#/api-key-setup/anthropic-api-setup)
 - **AWS Bedrock Nova**: [AWS Bedrock Nova Configuration Guide](https://ai-agent.devopsvn.tech/docs.html#/api-key-setup/aws-bedrock-nova-setup)
+- **Ollama (Local LLM)**: [Ollama Setup Guide](https://ai-agent.devopsvn.tech/docs.html#/api-key-setup/ollama-setup)
 
 ```bash
 # For OpenAI
@@ -135,6 +137,12 @@ export OPENAI_API_KEY="your-openai-api-key"
 
 # For Google Gemini
 export GEMINI_API_KEY="your-gemini-api-key"
+
+# For Anthropic Claude
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+
+# For Ollama (optional - defaults to http://localhost:11434)
+export OLLAMA_SERVER_URL="http://localhost:11434"
 
 # For AWS Bedrock Nova - use AWS credentials (no API key needed)
 # Configure AWS credentials using: aws configure, environment variables, or IAM roles
