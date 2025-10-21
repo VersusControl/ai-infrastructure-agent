@@ -314,10 +314,17 @@ func (e *DefaultPlanRecoveryEngine) ValidateRecoveryStrategy(
 	e.agent.capabilityMutex.RLock()
 	defer e.agent.capabilityMutex.RUnlock()
 
+	// Valid recovery actions
+	validRecoveryActions := map[string]bool{
+		"create": true,
+		"query":  true,
+		"modify": true,
+	}
+
 	for _, step := range strategy.ExecutionPlan {
 		// Validate step action
-		if step.Action != "create" && step.Action != "query" {
-			return fmt.Errorf("invalid step action: %s (must be create or query)", step.Action)
+		if !validRecoveryActions[step.Action] {
+			return fmt.Errorf("invalid step action: %s (must be create, query, or modify)", step.Action)
 		}
 
 		if step.MCPTool == "" {

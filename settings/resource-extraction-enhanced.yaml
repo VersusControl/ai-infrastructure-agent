@@ -101,39 +101,40 @@ resource_id_extraction:
         priority: 10
         
   modification_tools:
-    # Tools that modify existing resources receive IDs in parameters
+    # Tools that modify existing resources now return IDs in response (like creation tools)
+    # Modification tools (start/stop/modify) return the resource ID in the response for consistency
     patterns:
-      # VPC modification
+      # VPC modification - returns vpcId in response
       - field_paths: ["vpcId"]
         resource_types: ["vpc"]
         priority: 1
         
-      # Instance modification (parameters may have single ID or array)
-      - field_paths: ["instanceId", "instanceIds[0]"]
+      # Instance modification (start/stop) - returns instanceId in response
+      - field_paths: ["instanceId"]
         resource_types: ["ec2_instance"]
         priority: 1
         
-      # Security Group modification
-      - field_paths: ["groupId", "securityGroupId"]
+      # Security Group modification - returns groupId in response
+      - field_paths: ["securityGroupId"]
         resource_types: ["security_group"]
         priority: 1
         
-      # Load Balancer modification
+      # Load Balancer modification - returns loadBalancerArn in response
       - field_paths: ["loadBalancerArn"]
         resource_types: ["load_balancer"]
         priority: 1
         
-      # Target Group modification
+      # Target Group modification - returns targetGroupArn in response
       - field_paths: ["targetGroupArn"]
         resource_types: ["target_group"]
         priority: 1
         
-      # Auto Scaling Group modification
+      # Auto Scaling Group modification - returns autoScalingGroupName in response
       - field_paths: ["autoScalingGroupName"]
         resource_types: ["auto_scaling_group"]
         priority: 1
         
-      # RDS Instance modification (start/stop)
+      # RDS Instance modification (start/stop) - returns dbInstanceIdentifier in response
       - field_paths: ["dbInstanceIdentifier", "dbInstanceId"]
         resource_types: ["rds_instance"]
         priority: 1

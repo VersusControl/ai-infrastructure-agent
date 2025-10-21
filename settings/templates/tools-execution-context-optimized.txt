@@ -13,6 +13,49 @@
 Use "query" action to discover existing AWS resources dynamically.
 These steps MUST be placed FIRST in your execution plan.
 
+═══════════════════════════════════════════════════════════════════
+🔄 MODIFY ACTION PATTERNS
+═══════════════════════════════════════════════════════════════════
+
+Use "modify" action for operations that UPDATE existing resources or CREATE them
+if they don't exist (upsert operations).
+
+MODIFY ACTION USE CASES:
+├─ State Changes: start-ec2-instance, stop-ec2-instance, start-db-instance, stop-db-instance
+├─ Capacity Updates: update-auto-scaling-group (change desired capacity)
+└─ Future: modify-ec2-instance, modify-security-group-rule (upsert operations)
+
+Example - Update ASG Capacity:
+{
+  "id": "step-scale-asg",
+  "name": "Scale auto scaling group",
+  "description": "Update ASG desired capacity to 5 instances",
+  "action": "modify",
+  "resourceId": "web-servers-asg",
+  "mcpTool": "update-auto-scaling-group",
+  "toolParameters": {
+    "asgName": "web-servers-asg",
+    "desiredCapacity": 5
+  },
+  "dependsOn": ["step-create-asg"],
+  "status": "pending"
+}
+
+Example - Start EC2 Instance:
+{
+  "id": "step-start-instance",
+  "name": "Start web server instance",
+  "description": "Change instance state to running",
+  "action": "modify",
+  "resourceId": "web-server-1",
+  "mcpTool": "start-ec2-instance",
+  "toolParameters": {
+    "instanceId": "{{step-create-instance.instanceId}}"
+  },
+  "dependsOn": ["step-create-instance"],
+  "status": "pending"
+}
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎓 TOOL PATTERN REFERENCE FOR NEW RESOURCES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

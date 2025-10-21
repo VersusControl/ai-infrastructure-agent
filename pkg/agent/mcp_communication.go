@@ -943,7 +943,7 @@ func (a *StateAwareAgent) AddResourceToState(resourceState *types.ResourceState)
 	a.Logger.WithField("resource_id", resourceState.ID).Info("Adding resource to state via MCP server")
 
 	// Call the MCP tool to add the resource to state
-	result, err := a.callMCPTool("add-resource-to-state", map[string]interface{}{
+	_, err := a.callMCPTool("add-resource-to-state", map[string]interface{}{
 		"resource_id":   resourceState.ID,
 		"resource_name": resourceState.Name,
 		"description":   resourceState.Description,
@@ -956,6 +956,48 @@ func (a *StateAwareAgent) AddResourceToState(resourceState *types.ResourceState)
 		return fmt.Errorf("failed to add resource to state via MCP: %w", err)
 	}
 
-	a.Logger.WithField("result", result).Debug("Resource added to state via MCP server")
 	return nil
+}
+
+// UpdateResourceInState calls the MCP server to update a resource in state
+func (a *StateAwareAgent) UpdateResourceInState(resourceID string, updates map[string]interface{}, status string) error {
+	a.Logger.WithFields(map[string]interface{}{
+		"resource_id": resourceID,
+		"status":      status,
+	}).Info("Updating resource in state via MCP server")
+
+	// Call the MCP tool to update the resource in state
+	_, err := a.callMCPTool("update-resource-to-state", map[string]interface{}{
+		"resource_id": resourceID,
+		"updates":     updates,
+		"status":      status,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update resource in state via MCP: %w", err)
+	}
+
+	return nil
+}
+
+// GetResourceFromState retrieves a resource from the current state
+func (a *StateAwareAgent) GetResourceFromState(resourceID string) (*types.ResourceState, error) {
+	a.Logger.WithField("resource_id", resourceID).Debug("Getting resource from state")
+
+	// Get current state without live scan (use cached state for performance)
+	currentState, _, _, err := a.AnalyzeInfrastructureState(context.Background(), false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current state: %w", err)
+	}
+
+	// Find resource in state
+	if resource, exists := currentState.Resources[resourceID]; exists {
+		a.Logger.WithFields(map[string]interface{}{
+			"resource_id":   resourceID,
+			"resource_type": resource.Type,
+			"status":        resource.Status,
+		}).Debug("Resource found in state")
+		return resource, nil
+	}
+
+	return nil, fmt.Errorf("resource %s not found in state", resourceID)
 }

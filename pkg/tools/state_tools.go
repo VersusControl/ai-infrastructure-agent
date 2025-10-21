@@ -1032,22 +1032,10 @@ func (t *SaveStateTool) Execute(ctx context.Context, args map[string]interface{}
 
 	// Save state using the state manager
 	if err := t.deps.StateManager.SaveState(ctx); err != nil {
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{
-					Text: fmt.Sprintf(`{"success": false, "error": "failed to save state: %v"}`, err),
-				},
-			},
-		}, nil
+		return t.CreateErrorResponse(fmt.Sprintf("failed to save state: %v", err))
 	}
 
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: `{"success": true, "message": "Infrastructure state saved successfully"}`,
-			},
-		},
-	}, nil
+	return t.CreateSuccessResponse("Infrastructure state saved successfully", map[string]interface{}{})
 }
 
 // AddResourceToStateTool adds a resource to the managed infrastructure state
@@ -1225,22 +1213,147 @@ func (t *AddResourceToStateTool) Execute(ctx context.Context, args map[string]in
 
 	// Add to state manager
 	if err := t.deps.StateManager.AddResource(ctx, resourceState); err != nil {
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{
-					Text: fmt.Sprintf(`{"success": false, "error": "failed to add resource to state: %v"}`, err),
-				},
-			},
-		}, nil
+		return t.CreateErrorResponse(fmt.Sprintf("failed to add resource to state: %v", err))
 	}
 
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			&mcp.TextContent{
-				Text: fmt.Sprintf(`{"success": true, "message": "Resource %s added to managed state", "resource_id": "%s"}`, resourceID, resourceID),
+	return t.CreateSuccessResponse(
+		fmt.Sprintf("Resource %s added to managed state", resourceID),
+		map[string]interface{}{
+			"resource_id": resourceID,
+		},
+	)
+}
+
+// UpdateResourceToStateTool updates an existing resource in the managed infrastructure state
+type UpdateResourceToStateTool struct {
+	*BaseTool
+	deps *ToolDependencies
+}
+
+// NewUpdateResourceToStateTool creates a new update resource tool
+func NewUpdateResourceToStateTool(deps *ToolDependencies, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"resource_id": map[string]interface{}{
+				"type":        "string",
+				"description": "Resource ID to update",
+			},
+			"updates": map[string]interface{}{
+				"type":        "object",
+				"description": "Properties to update (merged with existing properties)",
+			},
+			"status": map[string]interface{}{
+				"type":        "string",
+				"description": "New resource status",
+				"default":     "modified",
 			},
 		},
-	}, nil
+		"required": []string{"resource_id", "updates"},
+	}
+
+	baseTool := NewBaseTool(
+		"update-resource-to-state",
+		"Update an existing resource in the managed infrastructure state",
+		"state",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	baseTool.AddExample(
+		"Update EC2 instance state",
+		map[string]interface{}{
+			"resource_id": "i-1234567890abcdef0",
+			"updates": map[string]interface{}{
+				"state":         "running",
+				"public_ip":     "54.123.45.67",
+				"last_modified": "2025-10-20T10:30:00Z",
+			},
+			"status": "modified",
+		},
+		"Resource i-1234567890abcdef0 updated in managed state successfully",
+	)
+
+	return &UpdateResourceToStateTool{
+		BaseTool: baseTool,
+		deps:     deps,
+	}
+}
+
+// ValidateArguments validates the tool arguments
+func (t *UpdateResourceToStateTool) ValidateArguments(args map[string]interface{}) error {
+	// Required fields
+	if val, exists := args["resource_id"]; !exists {
+		return fmt.Errorf("resource_id is required")
+	} else if str, ok := val.(string); !ok || str == "" {
+		return fmt.Errorf("resource_id must be a non-empty string")
+	}
+
+	if val, exists := args["updates"]; !exists {
+		return fmt.Errorf("updates is required")
+	} else if _, ok := val.(map[string]interface{}); !ok {
+		return fmt.Errorf("updates must be an object")
+	}
+
+	// Optional status field
+	if status, exists := args["status"]; exists {
+		if _, ok := status.(string); !ok {
+			return fmt.Errorf("status must be a string")
+		}
+	}
+
+	return nil
+}
+
+// Execute performs resource update in state
+func (t *UpdateResourceToStateTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
+	// Load state
+	if err := t.deps.StateManager.LoadState(ctx); err != nil {
+		t.GetLogger().WithError(err).Warn("Failed to load state from file, continuing with current state")
+	}
+
+	resourceID := args["resource_id"].(string)
+	updates := args["updates"].(map[string]interface{})
+
+	status := "modified"
+	if val, ok := args["status"].(string); ok {
+		status = val
+	}
+
+	t.GetLogger().WithFields(map[string]interface{}{
+		"resource_id":   resourceID,
+		"updates_count": len(updates),
+		"status":        status,
+	}).Info("Updating resource in managed state")
+
+	// Get existing resource to ensure it exists and we can update it
+	resource, exists := t.deps.StateManager.GetResource(resourceID)
+	if !exists {
+		return t.CreateErrorResponse(fmt.Sprintf("resource %s not found in state", resourceID))
+	}
+
+	// Update properties ONLY - preserves dependencies, name, description, type, etc.
+	for key, value := range updates {
+		resource.Properties[key] = value
+	}
+
+	// Update status
+	resource.Status = status
+	resource.UpdatedAt = time.Now()
+
+	// Save state
+	if err := t.deps.StateManager.SaveState(ctx); err != nil {
+		return t.CreateErrorResponse(fmt.Sprintf("failed to save state: %v", err))
+	}
+
+	return t.CreateSuccessResponse(
+		fmt.Sprintf("Resource %s updated in managed state", resourceID),
+		map[string]interface{}{
+			"resource_id": resourceID,
+			"status":      status,
+		},
+	)
 }
 
 // PlanDeploymentTool generates deployment plan with dependency ordering

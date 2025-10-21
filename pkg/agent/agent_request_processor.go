@@ -241,8 +241,8 @@ func (a *StateAwareAgent) validateDecision(decision *types.AgentDecision, contex
 	planValidActions := map[string]bool{
 		"create": true,
 		"query":  true,
+		"modify": true,
 		// "validate": true,
-		// "update":   true,
 		// "delete":   true,
 	}
 
