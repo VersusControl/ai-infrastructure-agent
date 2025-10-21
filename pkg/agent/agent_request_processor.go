@@ -93,7 +93,7 @@ func (a *StateAwareAgent) gatherDecisionContext(ctx context.Context, request str
 	}
 
 	// Analyze resource correlation for better decision making
-	resourceCorrelation := a.analyzeResourceCorrelation(currentState, discoveredResources)
+	// resourceCorrelation := a.analyzeResourceCorrelation(currentState, discoveredResources)
 
 	return &DecisionContext{
 		Request:             request,
@@ -102,7 +102,7 @@ func (a *StateAwareAgent) gatherDecisionContext(ctx context.Context, request str
 		Conflicts:           conflicts,
 		DependencyGraph:     nil, // Will be handled by MCP server
 		DeploymentOrder:     deploymentOrder,
-		ResourceCorrelation: resourceCorrelation,
+		ResourceCorrelation: nil,
 	}, nil
 }
 
@@ -375,14 +375,14 @@ func (a *StateAwareAgent) buildDecisionWithPlanPrompt(request string, context *D
 	}
 
 	// Show resource correlations if any
-	if len(context.ResourceCorrelation) > 0 {
-		prompt.WriteString("🔗 RESOURCE CORRELATIONS:\n")
-		for managedID, correlation := range context.ResourceCorrelation {
-			prompt.WriteString(fmt.Sprintf("- State file resource '%s' correlates with AWS resource '%s' (confidence: %.2f)\n",
-				managedID, correlation.DiscoveredResource.ID, correlation.MatchConfidence))
-		}
-		prompt.WriteString("\n")
-	}
+	// if len(context.ResourceCorrelation) > 0 {
+	// 	prompt.WriteString("🔗 RESOURCE CORRELATIONS:\n")
+	// 	for managedID, correlation := range context.ResourceCorrelation {
+	// 		prompt.WriteString(fmt.Sprintf("- State file resource '%s' correlates with AWS resource '%s' (confidence: %.2f)\n",
+	// 			managedID, correlation.DiscoveredResource.ID, correlation.MatchConfidence))
+	// 	}
+	// 	prompt.WriteString("\n")
+	// }
 
 	// Show any conflicts
 	if len(context.Conflicts) > 0 {
