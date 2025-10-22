@@ -13,18 +13,17 @@ import (
 // DependencyResolverInterface defines dependency resolution and parameter management functionality
 //
 // Available Functions:
-//   - resolveDependencyReference()      : Resolve references like {{step-1.resourceId}}
-//   - resolveDefaultValue()                 : Provide intelligent default values
-//   - addMissingRequiredParameters()    : Add defaults for missing required parameters
-//   - validateNativeMCPArguments()      : Validate arguments against tool schema
+//   - resolveDependencyReference()        : Resolve references like {{step-1.resourceId}}
+//   - resolveFromInfrastructureState()    : Resolve values from infrastructure state
+//   - validateNativeMCPArguments()        : Validate arguments against tool schema
 //
 // This file handles dependency resolution between plan steps, parameter
-// validation, and intelligent default value provisioning for infrastructure operations.
+// validation, and state-based value resolution for infrastructure operations.
 //
 // Usage Example:
-//   1. resolvedValue := agent.resolveDependencyReference("{{step-1.resourceId}}")
-//   2. defaultValue := agent.resolveDefaultValue("create-ec2-instance", "instanceType", params)
-//   3. // Use resolved values in infrastructure operations
+//   1. resolvedValue, err := agent.resolveDependencyReference("{{step-1.resourceId}}")
+//   2. value, err := agent.resolveFromInfrastructureState(stepID, field, ref, idx)
+//   3. err := agent.validateNativeMCPArguments(toolName, arguments, toolInfo)
 
 // ========== Dependency Resolution and Parameter Management Functions ==========
 

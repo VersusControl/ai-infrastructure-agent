@@ -7,6 +7,25 @@ import (
 	"github.com/versus-control/ai-infrastructure-agent/pkg/types"
 )
 
+// ========== Interface defines ==========
+
+// StateManagementInterface defines state tracking and management functionality
+//
+// Available Functions:
+//   - addStateFromMCPResult()    : Add new resources to state from MCP operation results
+//   - updateStateFromMCPResult() : Update existing resources in state from MCP operation results
+//   - persistCurrentState()      : Save current state to disk
+//
+// This file manages infrastructure state tracking throughout the agent lifecycle.
+// It handles state updates from MCP operations and maintains resource state consistency.
+//
+// Usage Example:
+//   1. err := agent.addStateFromMCPResult(planStep, mcpResult)
+//   2. err := agent.updateStateFromMCPResult(planStep, mcpResult)
+//   3. err := agent.persistCurrentState()
+
+// ========== State Management Functions ==========
+
 // addStateFromMCPResult updates the state manager with results from MCP operations
 func (a *StateAwareAgent) addStateFromMCPResult(planStep *types.ExecutionPlanStep, result map[string]interface{}) error {
 	a.Logger.WithFields(map[string]interface{}{

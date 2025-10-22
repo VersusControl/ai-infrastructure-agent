@@ -4,15 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/tmc/langchaingo/llms"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/types"
-	"github.com/versus-control/ai-infrastructure-agent/pkg/utilities"
 )
 
 // ========== Interface defines ==========
@@ -520,46 +517,4 @@ func (a *StateAwareAgent) parseAIResponseWithPlan(decisionID, request, response 
 		ExecutionPlan: executionPlan,
 		Timestamp:     time.Now(),
 	}, nil
-}
-
-// loadTemplate loads a template file from the filesystem
-func (a *StateAwareAgent) loadTemplate(templatePath string) (string, error) {
-	// Try to read from the given path first
-	data, err := os.ReadFile(templatePath)
-	if err != nil {
-		// If file not found then try to find project root and read from there
-		if os.IsNotExist(err) {
-			// Get current working directory
-			cwd, _ := os.Getwd()
-
-			// Try to find project root by looking for go.mod
-			projectRoot := utilities.FindProjectRoot(cwd)
-			if projectRoot != "" {
-				absolutePath := filepath.Join(projectRoot, templatePath)
-				data, err = os.ReadFile(absolutePath)
-				if err == nil {
-					return string(data), nil
-				}
-			}
-		}
-
-		return "", fmt.Errorf("failed to read template file %s: %w", templatePath, err)
-	}
-
-	return string(data), nil
-}
-
-// loadTemplateWithPlaceholders loads a template and processes placeholders
-func (a *StateAwareAgent) loadTemplateWithPlaceholders(templatePath string, placeholders map[string]string) (string, error) {
-	content, err := a.loadTemplate(templatePath)
-	if err != nil {
-		return "", err
-	}
-
-	// Replace placeholders
-	for placeholder, value := range placeholders {
-		content = strings.ReplaceAll(content, "{{"+placeholder+"}}", value)
-	}
-
-	return content, nil
 }

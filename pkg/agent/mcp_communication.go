@@ -21,31 +21,32 @@ import (
 // MCPCommunicationInterface defines MCP (Model Context Protocol) communication functionality
 //
 // Available Functions:
-//   - startMCPProcess()                 : Start the MCP server subprocess for tool execution
-//   - stopMCPProcess()                  : Stop the MCP server process
-//   - initializeMCP()                   : Initialize MCP connection and handshake
-//   - ensureMCPCapabilities()           : Ensure MCP capabilities are discovered and available
-//   - sendMCPRequest()                  : Send JSON-RPC request to MCP server
-//   - sendMCPNotification()             : Send notification to MCP server
-//   - discoverMCPCapabilities()         : Discover available tools and resources from MCP server
-//   - logDiscoveredCapabilities()       : Log all discovered tools and resources for debugging
-//   - discoverMCPTools()                : Discover available tools from the MCP server
-//   - discoverMCPResources()            : Discover available resources from the MCP server
-//   - callMCPTool()                     : Call a tool via the MCP server
-//   - getStringFromMap()                : Helper function to safely extract string from map
-//
-//   - AnalyzeInfrastructureState()      : Call MCP server to analyze infrastructure state
-//   - DetectInfrastructureConflicts()   : Call MCP server to detect conflicts
-//   - PlanInfrastructureDeployment()    : Call MCP server to plan deployment
-//   - VisualizeDependencyGraph()        : Call MCP server to visualize dependency graph
-//   - ExportInfrastructureState()       : Call MCP server to export infrastructure state
-//   - ExportInfrastructureStateWithOptions() : Export state with full control options
-//   - AddResourceToState()              : Add resource to state via MCP server
+//   - startMCPProcess()                            : Start the MCP server subprocess for tool execution
+//   - stopMCPProcess()                             : Stop the MCP server process
+//   - initializeMCP()                              : Initialize MCP connection and handshake
+//   - ensureMCPCapabilities()                      : Ensure MCP capabilities are discovered and available
+//   - setupMockMCPCapabilities()                   : Setup mock capabilities for testing
+//   - sendMCPRequest()                             : Send JSON-RPC request to MCP server
+//   - sendMCPNotification()                        : Send notification to MCP server
+//   - discoverMCPCapabilities()                    : Discover available tools and resources from MCP server
+//   - logDiscoveredCapabilities()                  : Log all discovered tools and resources for debugging
+//   - discoverMCPTools()                           : Discover available tools from the MCP server
+//   - discoverMCPResources()                       : Discover available resources from the MCP server
+//   - callMCPTool()                                : Call a tool via the MCP server
+//   - AnalyzeInfrastructureState()                 : Analyze infrastructure state via MCP
+//   - DetectInfrastructureConflicts()              : Detect infrastructure conflicts via MCP
+//   - PlanInfrastructureDeployment()               : Plan infrastructure deployment via MCP
+//   - VisualizeDependencyGraph()                   : Visualize dependency graph via MCP
+//   - ExportInfrastructureState()                  : Export infrastructure state via MCP
+//   - ExportInfrastructureStateWithOptions()       : Export state with full control options
+//   - AddResourceToState()                         : Add resource to state via MCP server
+//   - UpdateResourceInState()                      : Update resource in state via MCP server
+//   - GetResourceFromState()                       : Get resource from state via MCP server
 //
 // Usage Example:
 //   1. agent.startMCPProcess()
-//   2. state, resources, conflicts := agent.AnalyzeInfrastructureState(ctx, true)
-//   3. deploymentOrder := agent.PlanInfrastructureDeployment(ctx, nil, false)
+//   2. state, resources, conflicts, err := agent.AnalyzeInfrastructureState(ctx, true)
+//   3. order, levels, err := agent.PlanInfrastructureDeployment(ctx, nil, false)
 
 // ========== MCP Process Management ==========
 
