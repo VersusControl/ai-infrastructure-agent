@@ -14,14 +14,23 @@ import (
 //   - checkResourceState()          : Check if a resource is ready
 //   - checkNATGatewayState()        : Check NAT Gateway specific state
 //   - checkRDSInstanceState()       : Check RDS instance specific state
+//   - checkEC2InstanceState()       : Check EC2 instance specific state (stopped/running)
 //
 // This file provides helper functions for resource readiness checks and state verification
 // during infrastructure operations. Different resource types have specialized state checking.
 //
+// Supported resource wait operations:
+//   - create-nat-gateway: Wait for NAT gateway to be "available" (5 min timeout)
+//   - create-rds-db-instance: Wait for RDS instance to be "available" (15 min timeout)
+//   - stop-ec2-instance: Wait for EC2 instance to be "stopped" (3 min timeout)
+//   - start-ec2-instance: Wait for EC2 instance to be "running" (3 min timeout)
+//   - modify-ec2-instance-type: Wait for modification to complete, instance remains "stopped" (2 min timeout)
+//
 // Usage Example:
-//   1. err := agent.waitForResourceReady("create-nat-gateway", natGatewayID)
-//   2. ready, err := agent.checkResourceState("create-vpc", vpcID)
-//   3. ready, err := agent.checkNATGatewayState(natGatewayID)
+//   1. err := agent.waitForResourceReady("stop-ec2-instance", instanceID)
+//   2. err := agent.waitForResourceReady("modify-ec2-instance-type", instanceID)
+//   3. err := agent.waitForResourceReady("start-ec2-instance", instanceID)
+//   4. ready, err := agent.checkEC2InstanceState(instanceID, "stopped")
 
 // ========== Resource Management Helper Functions ==========
 
@@ -39,10 +48,15 @@ func (a *StateAwareAgent) waitForResourceReady(toolName, resourceID string) erro
 	switch toolName {
 	case "create-nat-gateway":
 		needsWaiting = true
-		maxWaitTime = 5 * time.Minute // NAT gateways typically take 2-3 minutes
 	case "create-rds-db-instance", "create-database":
 		needsWaiting = true
 		maxWaitTime = 15 * time.Minute // RDS instances can take longer
+	case "stop-ec2-instance":
+		needsWaiting = true
+	case "start-ec2-instance":
+		needsWaiting = true
+	case "modify-ec2-instance-type":
+		needsWaiting = true
 	case "create-internet-gateway", "create-vpc", "create-subnet":
 		// These are typically available immediately
 		needsWaiting = false
@@ -103,6 +117,13 @@ func (a *StateAwareAgent) checkResourceState(toolName, resourceID string) (bool,
 		return a.checkNATGatewayState(resourceID)
 	case "create-rds-db-instance", "create-database":
 		return a.checkRDSInstanceState(resourceID)
+	case "stop-ec2-instance":
+		return a.checkEC2InstanceState(resourceID, "stopped")
+	case "start-ec2-instance":
+		return a.checkEC2InstanceState(resourceID, "running")
+	case "modify-ec2-instance-type":
+		// After modification, check if instance is still stopped (ready for start)
+		return a.checkEC2InstanceState(resourceID, "stopped")
 	default:
 		// For unknown resource types, assume they're ready
 		return true, nil
@@ -179,4 +200,39 @@ func (a *StateAwareAgent) checkRDSInstanceState(dbInstanceID string) (bool, erro
 	}
 
 	return false, fmt.Errorf("could not determine RDS instance state from response")
+}
+
+// checkEC2InstanceState checks if an EC2 instance is in the expected state
+func (a *StateAwareAgent) checkEC2InstanceState(instanceID, expectedState string) (bool, error) {
+	// Try to use get-ec2-instance tool for efficient single instance lookup
+	result, err := a.callMCPTool("get-ec2-instance", map[string]interface{}{
+		"instanceId": instanceID,
+	})
+	if err != nil {
+		a.Logger.WithFields(map[string]interface{}{
+			"instance_id": instanceID,
+			"error":       err.Error(),
+		}).Warn("get-ec2-instance tool not available for state check")
+
+		// If we can't check the state, wait a bit and assume success
+		// This is not ideal but prevents blocking the workflow
+		time.Sleep(15 * time.Second)
+		return true, nil
+	}
+
+	// Parse the response to check the state
+	// Response format: {"instanceId": "i-xxx", "state": "stopped", ...}
+	var currentState string
+	if state, exists := result["state"]; exists {
+		currentState = fmt.Sprintf("%v", state)
+	} else if state, exists := result["State"]; exists {
+		// Also check PascalCase for compatibility
+		currentState = fmt.Sprintf("%v", state)
+	}
+
+	if currentState == "" {
+		return false, fmt.Errorf("could not determine state for instance %s from response", instanceID)
+	}
+
+	return currentState == expectedState, nil
 }

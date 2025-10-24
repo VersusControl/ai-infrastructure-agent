@@ -57,10 +57,14 @@ func (f *ToolFactoryImpl) CreateTool(toolType string, actionType string, depende
 		return NewCreateEC2InstanceTool(deps.AWSClient, actionType, f.logger), nil
 	case "list-ec2-instances":
 		return NewListEC2InstancesTool(deps.AWSClient, actionType, f.logger), nil
+	case "get-ec2-instance":
+		return NewGetEC2InstanceTool(deps.AWSClient, actionType, f.logger), nil
 	case "start-ec2-instance":
 		return NewStartEC2InstanceTool(deps.AWSClient, actionType, f.logger), nil
 	case "stop-ec2-instance":
 		return NewStopEC2InstanceTool(deps.AWSClient, actionType, f.logger), nil
+	case "modify-ec2-instance-type":
+		return NewModifyEC2InstanceTypeTool(deps.AWSClient, actionType, f.logger), nil
 	case "terminate-ec2-instance":
 		return NewTerminateEC2InstanceTool(deps.AWSClient, actionType, f.logger), nil
 	case "create-ami-from-instance":
@@ -235,6 +239,7 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 		},
 		"query": {
 			"list-ec2-instances",
+			"get-ec2-instance",
 			"list-amis",
 			"list-key-pairs",
 			"get-key-pair",
@@ -259,6 +264,7 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 		"modification": {
 			"start-ec2-instance",
 			"stop-ec2-instance",
+			"modify-ec2-instance-type",
 			"start-db-instance",
 			"stop-db-instance",
 			"update-auto-scaling-group",

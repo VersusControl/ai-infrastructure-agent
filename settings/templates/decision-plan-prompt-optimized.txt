@@ -68,9 +68,9 @@ Universal Rule: For ANY resource type, extract primary identifier from [property
 
 Discovery: get-default-{resource}, get-{resource}, list-{resources}, get-latest-{type}, select-{resources}-for-{purpose}
 Creation: create-{resource}
-Modification: start-{resource}, stop-{resource}, update-{resource}
+Modification: start-{resource}, stop-{resource}, update-{resource}, modify-{resource}-{attribute}
 
-Examples: get-default-vpc, get-subnet, list-subnets, get-latest-ubuntu-ami, list-subnets-for-alb, create-ec2-instance, start-ec2-instance, update-auto-scaling-group
+Examples: get-default-vpc, get-subnet, list-subnets, get-latest-ubuntu-ami, list-subnets-for-alb, create-ec2-instance, start-ec2-instance, stop-ec2-instance, modify-ec2-instance-type, update-auto-scaling-group
 
 ═══════════════════════════════════════════════════════════════════
 🧠 DEPENDENCY ANALYSIS
