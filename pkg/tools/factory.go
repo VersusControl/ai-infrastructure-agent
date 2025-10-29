@@ -185,6 +185,8 @@ func (f *ToolFactoryImpl) CreateTool(toolType string, actionType string, depende
 		return NewListDBInstancesTool(deps.AWSClient, actionType, f.logger), nil
 	case "list-db-snapshots":
 		return NewListDBSnapshotsTool(deps.AWSClient, actionType, f.logger), nil
+	case "describe-db-instance":
+		return NewDescribeDBInstanceTool(deps.AWSClient, actionType, f.logger), nil
 
 	// State Management Tools
 	case "analyze-infrastructure-state":
@@ -260,6 +262,7 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"get-availability-zones",
 			"list-db-instances",
 			"list-db-snapshots",
+			"describe-db-instance",
 		},
 		"modification": {
 			"start-ec2-instance",

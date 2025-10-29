@@ -206,6 +206,13 @@ Please deploy this complete infrastructure stack and provide me with the key res
 	return prompt
 }
 
+// Comprehensive RDS Infrastructure
+func comprehensiveRDSPrompt() string {
+	prompt := `Create an RDS MySQL 8.0 database in a single AZ deployment, incorporating a dedicated security group that allows inbound MySQL traffic, while utilizing the db.t3.medium instance class paired with 100GB GP3 storage, and enabling both encryption at rest and Performance Insights.`
+
+	return prompt
+}
+
 // Comprehensive Serverless Infrastructure
 func comprehensiveServerlessPrompt() string {
 	prompt := `Deploy a complete serverless application infrastructure on AWS with the following specifications:

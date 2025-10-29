@@ -48,7 +48,7 @@ func (a *StateAwareAgent) waitForResourceReady(toolName, resourceID string) erro
 	switch toolName {
 	case "create-nat-gateway":
 		needsWaiting = true
-	case "create-rds-db-instance", "create-database":
+	case "create-db-instance":
 		needsWaiting = true
 		maxWaitTime = 15 * time.Minute // RDS instances can take longer
 	case "stop-ec2-instance":
@@ -115,7 +115,7 @@ func (a *StateAwareAgent) checkResourceState(toolName, resourceID string) (bool,
 	switch toolName {
 	case "create-nat-gateway":
 		return a.checkNATGatewayState(resourceID)
-	case "create-rds-db-instance", "create-database":
+	case "create-db-instance":
 		return a.checkRDSInstanceState(resourceID)
 	case "stop-ec2-instance":
 		return a.checkEC2InstanceState(resourceID, "stopped")
@@ -153,11 +153,6 @@ func (a *StateAwareAgent) checkNATGatewayState(natGatewayID string) (bool, error
 	if natGateways, ok := result["natGateways"].([]interface{}); ok && len(natGateways) > 0 {
 		if natGateway, ok := natGateways[0].(map[string]interface{}); ok {
 			if state, ok := natGateway["state"].(string); ok {
-				a.Logger.WithFields(map[string]interface{}{
-					"nat_gateway_id": natGatewayID,
-					"state":          state,
-				}).Debug("NAT gateway state check")
-
 				return state == "available", nil
 			}
 		}
@@ -169,7 +164,7 @@ func (a *StateAwareAgent) checkNATGatewayState(natGatewayID string) (bool, error
 // checkRDSInstanceState checks if an RDS instance is available
 func (a *StateAwareAgent) checkRDSInstanceState(dbInstanceID string) (bool, error) {
 	// Try to use MCP tool to describe the RDS instance if available
-	result, err := a.callMCPTool("describe-db-instances", map[string]interface{}{
+	result, err := a.callMCPTool("describe-db-instance", map[string]interface{}{
 		"dbInstanceIdentifier": dbInstanceID,
 	})
 	if err != nil {
@@ -177,7 +172,7 @@ func (a *StateAwareAgent) checkRDSInstanceState(dbInstanceID string) (bool, erro
 		a.Logger.WithFields(map[string]interface{}{
 			"db_instance_id": dbInstanceID,
 			"error":          err.Error(),
-		}).Warn("describe-db-instances tool not available, using time-based wait")
+		}).Warn("describe-db-instance tool not available, using time-based wait")
 
 		// RDS instances typically take 5-10 minutes to become available
 		// We'll wait a fixed amount of time and then assume it's ready
@@ -185,18 +180,10 @@ func (a *StateAwareAgent) checkRDSInstanceState(dbInstanceID string) (bool, erro
 		return true, nil
 	}
 
-	// Parse the response to check the state
-	if dbInstances, ok := result["dbInstances"].([]interface{}); ok && len(dbInstances) > 0 {
-		if dbInstance, ok := dbInstances[0].(map[string]interface{}); ok {
-			if status, ok := dbInstance["dbInstanceStatus"].(string); ok {
-				a.Logger.WithFields(map[string]interface{}{
-					"db_instance_id": dbInstanceID,
-					"status":         status,
-				}).Debug("RDS instance state check")
-
-				return status == "available", nil
-			}
-		}
+	// Parse the response - the tool returns a single object: { "dbInstance": AWSResource, "state": "available", ... }
+	// First try the direct state field
+	if state, ok := result["state"].(string); ok {
+		return state == "available", nil
 	}
 
 	return false, fmt.Errorf("could not determine RDS instance state from response")

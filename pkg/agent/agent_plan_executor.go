@@ -75,14 +75,19 @@ func (a *StateAwareAgent) ExecutePlanWithReActRecovery(
 	// Get recovery configuration
 	config := DefaultPlanRecoveryConfig(coordinator)
 
+	// Track the current plan to execute - starts with original, gets updated by recovery strategies
+	var currentPlanToExecute []*types.ExecutionPlanStep = decision.ExecutionPlan
+
 	// Attempt execution with recovery (up to MaxRecoveryAttempts)
 	for attemptNumber := 1; attemptNumber <= config.MaxRecoveryAttempts; attemptNumber++ {
 
-		// Execute the plan
-		planToExecute := decision.ExecutionPlan
+		// Execute the plan - use currentPlanToExecute which preserves recovery adjustments
+		planToExecute := currentPlanToExecute
 		if attemptNumber > 1 {
-			// For retry attempts, planToExecute will be set by recovery strategy execution
-			a.Logger.Info("This is a recovery attempt - plan should have been adjusted by previous recovery")
+			a.Logger.WithFields(map[string]interface{}{
+				"attempt_number": attemptNumber,
+				"plan_steps":     len(planToExecute),
+			}).Info("This is a recovery attempt - using plan from previous recovery strategy")
 		}
 
 		// Try to execute all steps
@@ -338,6 +343,24 @@ func (a *StateAwareAgent) ExecutePlanWithReActRecovery(
 			if coordinator != nil {
 				coordinator.NotifyRecoveryFailed(execution.ID, err.Error())
 			}
+
+			// CRITICAL: Update currentPlanToExecute with the recovery strategy's plan
+			// This preserves completed step statuses for the next recovery attempt
+			currentPlanToExecute = recoveryStrategy.ExecutionPlan
+			a.Logger.WithFields(map[string]interface{}{
+				"execution_id":   execution.ID,
+				"attempt_number": attemptNumber,
+				"plan_steps":     len(currentPlanToExecute),
+				"completed_steps": func() int {
+					count := 0
+					for _, step := range currentPlanToExecute {
+						if step.Status == "completed" {
+							count++
+						}
+					}
+					return count
+				}(),
+			}).Info("Recovery failed but preserving recovery plan with completed steps for next attempt")
 
 			// Continue to next recovery attempt
 			continue

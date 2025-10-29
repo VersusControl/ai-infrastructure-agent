@@ -26,7 +26,7 @@ func NewCreateDBSubnetGroupTool(awsClient *aws.Client, actionType string, logger
 				"type":        "string",
 				"description": "The name for the DB subnet group",
 			},
-			"description": map[string]interface{}{
+			"dbSubnetGroupDescription": map[string]interface{}{
 				"type":        "string",
 				"description": "The description for the DB subnet group",
 			},
@@ -38,7 +38,7 @@ func NewCreateDBSubnetGroupTool(awsClient *aws.Client, actionType string, logger
 				"description": "List of subnet IDs",
 			},
 		},
-		"required": []string{"dbSubnetGroupName", "description", "subnetIds"},
+		"required": []string{"dbSubnetGroupName", "dbSubnetGroupDescription", "subnetIds"},
 	}
 
 	baseTool := NewBaseTool(
@@ -62,9 +62,9 @@ func (t *CreateDBSubnetGroupTool) Execute(ctx context.Context, arguments map[str
 		return t.CreateErrorResponse("dbSubnetGroupName is required")
 	}
 
-	description, ok := arguments["description"].(string)
-	if !ok || description == "" {
-		return t.CreateErrorResponse("description is required")
+	dbSubnetGroupDescription, ok := arguments["dbSubnetGroupDescription"].(string)
+	if !ok || dbSubnetGroupDescription == "" {
+		return t.CreateErrorResponse("dbSubnetGroupDescription is required")
 	}
 
 	// Use the RDS specialized adapter to create DB subnet group
@@ -75,10 +75,10 @@ func (t *CreateDBSubnetGroupTool) Execute(ctx context.Context, arguments map[str
 
 	message := fmt.Sprintf("DB subnet group %s created successfully", dbSubnetGroupName)
 	data := map[string]interface{}{
-		"dbSubnetGroupName": dbSubnetGroupName,
-		"description":       description,
-		"result":            result,
-		"subnetGroupId":     result.ID,
+		"dbSubnetGroupName":        dbSubnetGroupName,
+		"dbSubnetGroupDescription": dbSubnetGroupDescription,
+		"result":                   result,
+		"subnetGroupId":            result.ID,
 	}
 
 	return t.CreateSuccessResponse(message, data)
@@ -586,6 +586,78 @@ func (t *ListDBSnapshotsTool) Execute(ctx context.Context, arguments map[string]
 		"dbSnapshots":          dbSnapshots,
 		"dbInstanceIdentifier": dbInstanceIdentifier,
 		"count":                count,
+	}
+
+	return t.CreateSuccessResponse(message, data)
+}
+
+// DescribeDBInstanceTool implements MCPTool for describing a single DB instance
+type DescribeDBInstanceTool struct {
+	*BaseTool
+	adapter interfaces.AWSResourceAdapter
+}
+
+// NewDescribeDBInstanceTool creates a new DB instance description tool
+func NewDescribeDBInstanceTool(awsClient *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"dbInstanceIdentifier": map[string]interface{}{
+				"type":        "string",
+				"description": "The DB instance identifier to describe",
+			},
+		},
+		"required": []string{"dbInstanceIdentifier"},
+	}
+
+	baseTool := NewBaseTool(
+		"describe-db-instance",
+		"Describe a specific RDS DB instance and get its current status",
+		"database",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	baseTool.AddExample(
+		"Describe a DB instance",
+		map[string]interface{}{
+			"dbInstanceIdentifier": "my-database",
+		},
+		"Retrieved DB instance details with status 'available'",
+	)
+
+	adapter := adapters.NewRDSAdapter(awsClient, logger)
+
+	return &DescribeDBInstanceTool{
+		BaseTool: baseTool,
+		adapter:  adapter,
+	}
+}
+
+func (t *DescribeDBInstanceTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	dbInstanceIdentifier, ok := arguments["dbInstanceIdentifier"].(string)
+	if !ok || dbInstanceIdentifier == "" {
+		return t.CreateErrorResponse("dbInstanceIdentifier is required")
+	}
+
+	t.logger.Info("Describing DB Instance", "dbInstanceIdentifier", dbInstanceIdentifier)
+
+	// Get the DB instance using the adapter
+	dbInstance, err := t.adapter.Get(ctx, dbInstanceIdentifier)
+	if err != nil {
+		t.logger.Error("Failed to describe DB Instance", "error", err)
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to describe DB instance: %v", err))
+	}
+
+	message := fmt.Sprintf("Successfully retrieved DB instance %s with status '%s'", dbInstanceIdentifier, dbInstance.State)
+	data := map[string]interface{}{
+		"dbInstanceIdentifier": dbInstanceIdentifier,
+		"dbInstance":           dbInstance,
+		"state":                dbInstance.State,
+		"id":                   dbInstance.ID,
+		"type":                 dbInstance.Type,
+		"region":               dbInstance.Region,
 	}
 
 	return t.CreateSuccessResponse(message, data)
