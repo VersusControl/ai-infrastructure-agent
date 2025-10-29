@@ -228,6 +228,79 @@ func (t *ListEC2InstancesTool) Execute(ctx context.Context, arguments map[string
 	return t.CreateSuccessResponse(message, data)
 }
 
+// GetEC2InstanceTool implements MCPTool for getting a specific EC2 instance
+type GetEC2InstanceTool struct {
+	*BaseTool
+	adapter interfaces.AWSResourceAdapter
+}
+
+// NewGetEC2InstanceTool creates a tool for getting a specific EC2 instance by ID
+func NewGetEC2InstanceTool(awsClient *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"instanceId": map[string]interface{}{
+				"type":        "string",
+				"description": "The ID of the EC2 instance to retrieve (e.g., i-1234567890abcdef0)",
+			},
+		},
+		"required": []interface{}{"instanceId"},
+	}
+
+	baseTool := NewBaseTool(
+		"get-ec2-instance",
+		"Get details of a specific EC2 instance by its instance ID",
+		"ec2",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	// Add example
+	baseTool.AddExample(
+		"Get details of a specific EC2 instance",
+		map[string]interface{}{
+			"instanceId": "i-1234567890abcdef0",
+		},
+		"Successfully retrieved instance details for i-1234567890abcdef0",
+	)
+
+	adapter := adapters.NewEC2Adapter(awsClient, logger)
+
+	return &GetEC2InstanceTool{
+		BaseTool: baseTool,
+		adapter:  adapter,
+	}
+}
+
+// Execute retrieves a specific EC2 instance
+func (t *GetEC2InstanceTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	// Extract instance ID
+	instanceID, ok := arguments["instanceId"].(string)
+	if !ok || instanceID == "" {
+		return t.CreateErrorResponse("instanceId is required and must be a string")
+	}
+
+	// Get the instance using adapter
+	instance, err := t.adapter.Get(ctx, instanceID)
+	if err != nil {
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to get EC2 instance: %s", err.Error()))
+	}
+
+	// Format response
+	message := fmt.Sprintf("Successfully retrieved instance %s (state: %s)", instanceID, instance.State)
+	data := map[string]interface{}{
+		"instanceId": instance.ID,
+		"state":      instance.State,
+		"type":       instance.Type,
+		"details":    instance.Details,
+		"tags":       instance.Tags,
+		"region":     instance.Region,
+	}
+
+	return t.CreateSuccessResponse(message, data)
+}
+
 // StartEC2InstanceTool implements specialized operation for starting instances
 type StartEC2InstanceTool struct {
 	*BaseTool
@@ -353,6 +426,87 @@ func (t *StopEC2InstanceTool) Execute(ctx context.Context, arguments map[string]
 	data := map[string]interface{}{
 		"instanceId": instanceID,
 		"state":      resource.State,
+	}
+
+	return t.CreateSuccessResponse(message, data)
+}
+
+// ModifyEC2InstanceTypeTool implements operation for modifying instance type
+type ModifyEC2InstanceTypeTool struct {
+	*BaseTool
+	specializedAdapter interfaces.SpecializedOperations
+}
+
+// NewModifyEC2InstanceTypeTool creates a tool for modifying EC2 instance type
+func NewModifyEC2InstanceTypeTool(awsClient *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"instanceId": map[string]interface{}{
+				"type":        "string",
+				"description": "The ID of the instance to modify (must be in stopped state)",
+			},
+			"instanceType": map[string]interface{}{
+				"type":        "string",
+				"description": "The new instance type (e.g., t3.small, t3.medium, t3.large)",
+			},
+		},
+		"required": []interface{}{"instanceId", "instanceType"},
+	}
+
+	baseTool := NewBaseTool(
+		"modify-ec2-instance-type",
+		"Modify the instance type of a stopped EC2 instance. The instance must be stopped before modification.",
+		"ec2",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	baseTool.AddExample(
+		"Change instance type from t3.micro to t3.small",
+		map[string]interface{}{
+			"instanceId":   "i-1234567890abcdef0",
+			"instanceType": "t3.small",
+		},
+		"Successfully modified instance i-1234567890abcdef0 to type t3.small",
+	)
+
+	specializedAdapter := adapters.NewEC2SpecializedAdapter(awsClient, logger)
+
+	return &ModifyEC2InstanceTypeTool{
+		BaseTool:           baseTool,
+		specializedAdapter: specializedAdapter,
+	}
+}
+
+// Execute modifies an EC2 instance type
+func (t *ModifyEC2InstanceTypeTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	instanceID, ok := arguments["instanceId"].(string)
+	if !ok || instanceID == "" {
+		return t.CreateErrorResponse("instanceId is required")
+	}
+
+	instanceType, ok := arguments["instanceType"].(string)
+	if !ok || instanceType == "" {
+		return t.CreateErrorResponse("instanceType is required")
+	}
+
+	params := map[string]interface{}{
+		"instanceId":   instanceID,
+		"instanceType": instanceType,
+	}
+
+	resource, err := t.specializedAdapter.ExecuteSpecialOperation(ctx, "modify-instance-type", params)
+	if err != nil {
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to modify instance type: %s", err.Error()))
+	}
+
+	message := fmt.Sprintf("Successfully modified instance %s to type %s", instanceID, instanceType)
+	data := map[string]interface{}{
+		"instanceId":   instanceID,
+		"instanceType": instanceType,
+		"state":        resource.State,
 	}
 
 	return t.CreateSuccessResponse(message, data)

@@ -9,6 +9,25 @@ import (
 	"github.com/tmc/langchaingo/llms"
 )
 
+// ========== Interface defines ==========
+
+// PlanRecoveryEngineInterface defines plan-level ReAct recovery functionality
+//
+// Available Functions:
+//   - AnalyzePlanFailure()          : Analyze plan failure and generate recovery strategies
+//   - GenerateRecoveryPrompt()      : Generate comprehensive recovery prompt for AI
+//   - ValidateRecoveryStrategy()    : Validate AI recovery strategy for completeness
+//
+// This file implements the ReAct (Reasoning + Acting) recovery engine for plan-level
+// failure recovery. It analyzes failures, generates recovery strategies, and adjusts
+// execution plans based on AI reasoning.
+//
+// Usage Example:
+//   1. engine := NewPlanRecoveryEngine(agent)
+//   2. analysis, err := engine.AnalyzePlanFailure(ctx, failureContext)
+//   3. prompt := engine.GenerateRecoveryPrompt(failureContext)
+//   4. valid, err := engine.ValidateRecoveryStrategy(analysis, failureContext)
+
 // ========== Plan-Level Recovery Engine Implementation ==========
 
 // DefaultPlanRecoveryEngine implements the PlanRecoveryEngine interface

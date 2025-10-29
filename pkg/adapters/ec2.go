@@ -173,6 +173,24 @@ func (e *EC2SpecializedAdapter) ExecuteSpecialOperation(ctx context.Context, ope
 		}
 		return e.client.GetEC2Instance(ctx, instanceID)
 
+	case "modify-instance-type":
+		modifyParams, ok := params.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("modify parameters required for modify-instance-type operation")
+		}
+		instanceID, _ := modifyParams["instanceId"].(string)
+		instanceType, _ := modifyParams["instanceType"].(string)
+
+		if instanceID == "" || instanceType == "" {
+			return nil, fmt.Errorf("instanceId and instanceType are required for instance type modification")
+		}
+
+		err := e.client.ModifyEC2InstanceType(ctx, instanceID, instanceType)
+		if err != nil {
+			return nil, err
+		}
+		return e.client.GetEC2Instance(ctx, instanceID)
+
 	case "create-ami":
 		amiParams, ok := params.(map[string]interface{})
 		if !ok {

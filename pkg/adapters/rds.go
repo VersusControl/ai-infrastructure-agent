@@ -289,15 +289,15 @@ func (r *RDSSpecializedAdapter) ExecuteSpecialOperation(ctx context.Context, ope
 		}
 
 		// Extract parameters with type checking
-		var name, description string
+		var dbSubnetGroupName, dbSubnetGroupDescription string
 		var subnetIds []string
 		var tags map[string]string = make(map[string]string)
 
 		if val, ok := subnetParams["dbSubnetGroupName"].(string); ok {
-			name = val
+			dbSubnetGroupName = val
 		}
-		if val, ok := subnetParams["description"].(string); ok {
-			description = val
+		if val, ok := subnetParams["dbSubnetGroupDescription"].(string); ok {
+			dbSubnetGroupDescription = val
 		}
 		if val, ok := subnetParams["subnetIds"].([]interface{}); ok {
 			for _, id := range val {
@@ -315,8 +315,8 @@ func (r *RDSSpecializedAdapter) ExecuteSpecialOperation(ctx context.Context, ope
 		}
 
 		sgParams := aws.CreateDBSubnetGroupParams{
-			DBSubnetGroupName:        name,
-			DBSubnetGroupDescription: description,
+			DBSubnetGroupName:        dbSubnetGroupName,
+			DBSubnetGroupDescription: dbSubnetGroupDescription,
 			SubnetIDs:                subnetIds,
 			Tags:                     tags,
 		}

@@ -7,6 +7,21 @@ import (
 	"github.com/versus-control/ai-infrastructure-agent/pkg/types"
 )
 
+// ========== Interface defines ==========
+
+// ReActPlanHelpersInterface defines ReAct plan recovery helper functionality
+//
+// Available Functions:
+//   - parsePlanRecoveryAnalysis()             : Parse AI response into structured recovery analysis
+//   - convertCompletedStepsToExecutionPlan()  : Convert completed step records to execution plan steps
+//
+// This file provides helper functions for ReAct (Reasoning + Acting) plan recovery.
+// It handles parsing AI recovery analysis and converting step information.
+//
+// Usage Example:
+//   1. analysis, err := engine.parsePlanRecoveryAnalysis(aiResponse, failureContext)
+//   2. planSteps := engine.convertCompletedStepsToExecutionPlan(completedSteps)
+
 // ========== Private Helper Methods ==========
 
 // parsePlanRecoveryAnalysis parses the AI response into structured analysis

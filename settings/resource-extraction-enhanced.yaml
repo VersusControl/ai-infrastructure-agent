@@ -109,7 +109,7 @@ resource_id_extraction:
         resource_types: ["vpc"]
         priority: 1
         
-      # Instance modification (start/stop) - returns instanceId in response
+      # Instance modification (start/stop/modify-instance-type) - returns instanceId in response
       - field_paths: ["instanceId"]
         resource_types: ["ec2_instance"]
         priority: 1
@@ -187,6 +187,11 @@ resource_id_extraction:
       # For get-subnet - returns single subnet
       - field_paths: ["subnetId"]
         resource_types: ["subnet"]
+        priority: 1
+
+      # For get-ec2-instance - returns single EC2 instance
+      - field_paths: ["instanceId"]
+        resource_types: ["ec2_instance"]
         priority: 1
 
       # For get-vpc - returns single VPC

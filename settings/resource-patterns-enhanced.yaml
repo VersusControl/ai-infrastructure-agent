@@ -155,8 +155,10 @@ tool_resource_patterns:
   ec2_instance:
     - '^create-ec2-instance$'
     - '^list-ec2-instances$'
+    - '^get-ec2-instance$'
     - '^start-ec2-instance$'
     - '^stop-ec2-instance$'
+    - '^modify-ec2-instance-type$'
     - '^terminate-ec2-instance$'
     
   load_balancer:

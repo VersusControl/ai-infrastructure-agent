@@ -18,29 +18,40 @@ import (
 )
 
 // ========== Interface defines ==========
-// Type definitions for agent components and shared data structures
-// Core structures: Agent, ToolCall, ResponseData, ToolRegistry
-// Communication: MCPRequest/Response, stream processing
-// Execution: Command processing, state management
 
 // AgentTypesInterface defines all data structures and types used by the AI agent system
 //
 // Available Types:
-//   - StateAwareAgent             : Main agent struct with LLM, config, and MCP capabilities
-//   - MCPProcess                  : Running MCP server process representation
-//   - MCPToolInfo                 : Information about available MCP tool capabilities
-//   - MCPResourceInfo             : Information about available MCP resources
-//   - DecisionContext             : Context data for agent decision-making process
+//   - MCPProcess                      : Running MCP server process representation
+//   - StateAwareAgent                 : Main agent struct with LLM, config, and MCP capabilities
+//   - MCPToolInfo                     : Information about available MCP tool capabilities
+//   - MCPResourceInfo                 : Information about available MCP resources
+//   - DecisionContext                 : Context data for agent decision-making process
+//   - ResourceMatch                   : Matched resource from correlation analysis
+//   - PlanRecoveryCoordinator         : Interface for coordinating recovery between steps
+//   - PlanFailureContext              : Context information about plan execution failures
+//   - CompletedStepInfo               : Information about successfully completed steps
+//   - RecoveryAttemptHistory          : History of recovery attempts for a failure
+//   - PlanRecoveryStrategy            : Strategy for recovering from plan failures
+//   - RollbackStepInfo                : Information about rollback steps
+//   - AIPlanRecoveryAnalysis          : AI-generated analysis of plan failure and recovery
+//   - PlanRecoveryResult              : Result of plan recovery attempt
+//   - PlanRecoveryEngine              : Interface for plan-level recovery engine
+//   - PlanRecoveryAwareAgent          : Interface for agent with recovery capabilities
+//   - PlanRecoveryConfig              : Configuration for recovery behavior
+//   - AIResponse                      : Generic AI response structure
 //
 // Key Features:
-//   - MCP Server Integration      : Direct communication with Model Context Protocol servers
-//   - Multi-LLM Support          : OpenAI, Google AI, and other LLM providers
-//   - Resource Management        : Track mappings between plan steps and actual AWS resource IDs
-//   - Thread-Safe Operations     : Mutex protection for concurrent access
+//   - MCP Server Integration          : Direct communication with Model Context Protocol servers
+//   - Multi-LLM Support              : OpenAI, Google AI, Anthropic, AWS Bedrock, Ollama
+//   - Resource Management            : Track mappings between plan steps and AWS resource IDs
+//   - ReAct Plan Recovery            : AI-powered recovery from execution failures
+//   - Thread-Safe Operations         : Mutex protection for concurrent access
 //
 // Usage Example:
-//   agent := &StateAwareAgent{...}  // Main agent instance
-//   context := &DecisionContext{...} // For decision making
+//   agent := &StateAwareAgent{...}      // Main agent instance
+//   context := &DecisionContext{...}    // For decision making
+//   engine := NewPlanRecoveryEngine()   // For failure recovery
 
 // ========== Agent Type Definitions ==========
 

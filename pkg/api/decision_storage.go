@@ -16,11 +16,6 @@ func (ws *WebServer) storeDecisionWithDryRun(decision *types.AgentDecision, dryR
 		Decision: decision,
 		DryRun:   dryRun,
 	}
-
-	ws.aiAgent.Logger.WithFields(map[string]interface{}{
-		"decision_id": decision.ID,
-		"dry_run":     dryRun,
-	}).Debug("Stored decision for execution")
 }
 
 // getStoredDecisionWithDryRun retrieves a stored decision with its dry run flag
