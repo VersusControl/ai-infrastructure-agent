@@ -63,7 +63,7 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 	// Support multiple reference formats: {{step-1.resourceId}}, {{step-1}}, {{step-1.targetGroupArn}}, {{step-1.resourceId.0}}, {{step-1.resourceId.[0]}}, etc.
 	var stepID string
 	var requestedField string
-	var arrayIndex int = -1
+	var lenReference int = -1
 
 	if len(parts) == 3 {
 		// Format: {{step-1.resourceId.0}} or {{step-1.resourceId.[0]}} - array indexing
@@ -76,13 +76,13 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 			// Format: {{step-1.resourceId.[0]}}
 			indexStr := strings.TrimPrefix(strings.TrimSuffix(indexPart, "]"), "[")
 			if idx, err := strconv.Atoi(indexStr); err == nil {
-				arrayIndex = idx
+				lenReference = idx
 			} else {
 				return "", fmt.Errorf("invalid array index in reference: %s (expected numeric index)", reference)
 			}
 		} else if idx, err := strconv.Atoi(indexPart); err == nil {
 			// Format: {{step-1.resourceId.0}}
-			arrayIndex = idx
+			lenReference = idx
 		} else {
 			return "", fmt.Errorf("invalid array index in reference: %s (expected numeric index)", reference)
 		}
@@ -99,8 +99,8 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 	a.mappingsMutex.RLock()
 
 	// Handle array indexing - check for specific indexed mapping first
-	if arrayIndex >= 0 {
-		indexedKey := fmt.Sprintf("%s.%d", stepID, arrayIndex)
+	if lenReference >= 0 {
+		indexedKey := fmt.Sprintf("%s.%d", stepID, lenReference)
 		if indexedValue, indexedExists := a.resourceMappings[indexedKey]; indexedExists {
 			a.mappingsMutex.RUnlock()
 
@@ -115,12 +115,12 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 			a.mappingsMutex.RUnlock()
 
 			// If this is an array field (concatenated) and we have an index, split it
-			if arrayIndex >= 0 && strings.Contains(fieldValue, "_") {
+			if lenReference >= 0 && strings.Contains(fieldValue, "_") {
 				parts := strings.Split(fieldValue, "_")
-				if arrayIndex < len(parts) {
-					return parts[arrayIndex], nil
+				if lenReference < len(parts) {
+					return parts[lenReference], nil
 				}
-				return "", fmt.Errorf("array index %d out of bounds for field %s (length: %d)", arrayIndex, requestedField, len(parts))
+				return "", fmt.Errorf("array index %d out of bounds for field %s (length: %d)", lenReference, requestedField, len(parts))
 			}
 
 			return fieldValue, nil
@@ -143,7 +143,7 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 	}
 
 	// Resolve from infrastructure state (handles both missing mappings and specific field requests)
-	resolvedID, err := a.resolveFromInfrastructureState(stepID, requestedField, reference, arrayIndex)
+	resolvedID, err := a.resolveFromInfrastructureState(stepID, lenReference)
 	if err != nil {
 		return "", fmt.Errorf("failed to resolve dependency %s for step %s: %w", reference, stepID, err)
 	}
@@ -152,8 +152,7 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 }
 
 // resolveFromInfrastructureState attempts to resolve a dependency reference by parsing the infrastructure state
-func (a *StateAwareAgent) resolveFromInfrastructureState(stepID, requestedField, reference string, arrayIndex int) (string, error) {
-	// Parse the state and look for the step ID
+func (a *StateAwareAgent) resolveFromInfrastructureState(stepID string, lenReference int) (string, error) {
 	stateJSON, err := a.ExportInfrastructureState(context.Background(), false) // Only managed state
 	if err != nil {
 		return "", fmt.Errorf("failed to export infrastructure state: %w", err)
@@ -185,135 +184,44 @@ func (a *StateAwareAgent) resolveFromInfrastructureState(stepID, requestedField,
 		return "", fmt.Errorf("properties not found in resource")
 	}
 
-	mcpResponse, ok := properties["mcp_response"].(map[string]interface{})
+	unified, ok := properties["unified"].(map[string]interface{})
 	if !ok {
-		return "", fmt.Errorf("mcp_response not found in properties")
+		return "", fmt.Errorf("unified not found in properties")
 	}
 
-	// Handle array indexing for the requested field
-	if arrayIndex >= 0 {
-		// First, check if we have a concatenated string value for this field
-		if concatenatedValue, ok := mcpResponse[requestedField].(string); ok && concatenatedValue != "" {
-			// Check if it looks like a concatenated array (contains _)
-			if strings.Contains(concatenatedValue, "_") {
-				// Split by _ delimiter to get array elements
-				parts := strings.Split(concatenatedValue, "_")
+	// Handle array indexing
+	if lenReference >= 0 {
+		// Check if this is an array resource with ResourceIds
+		if depType, ok := unified["dependencyReferenceType"].(string); ok && depType == "array" {
+			if resourceIds, ok := unified["resourceIds"].([]interface{}); ok {
+				if lenReference < len(resourceIds) {
+					if id, ok := resourceIds[lenReference].(string); ok && id != "" {
+						// Cache it for future use
+						indexedKey := fmt.Sprintf("%s.%d", stepID, lenReference)
+						a.mappingsMutex.Lock()
+						a.resourceMappings[indexedKey] = id
+						a.mappingsMutex.Unlock()
 
-				if arrayIndex < len(parts) {
-					id := parts[arrayIndex]
-
-					// Cache it for future use
-					indexedKey := fmt.Sprintf("%s.%d", stepID, arrayIndex)
-					a.mappingsMutex.Lock()
-					a.resourceMappings[indexedKey] = id
-					a.mappingsMutex.Unlock()
-
-					a.Logger.WithFields(map[string]interface{}{
-						"reference":       reference,
-						"step_id":         stepID,
-						"resource_id":     id,
-						"source":          "state_concatenated_array",
-						"requested_field": requestedField,
-						"array_index":     arrayIndex,
-						"total_elements":  len(parts),
-					}).Info("Resolved indexed dependency from concatenated array")
-
-					return id, nil
-				} else {
-					return "", fmt.Errorf("array index %d out of bounds for concatenated field %s (length: %d)", arrayIndex, requestedField, len(parts))
+						return id, nil
+					}
 				}
+				return "", fmt.Errorf("array index %d out of bounds for ResourceIds (length: %d)", lenReference, len(resourceIds))
 			}
 		}
-
-		// Fallback: try to find the field as an original array (for backward compatibility)
-		if arrayField, ok := mcpResponse[requestedField+"_array"].([]interface{}); ok {
-			if arrayIndex < len(arrayField) {
-				if id, ok := arrayField[arrayIndex].(string); ok && id != "" {
-					// Cache it for future use
-					indexedKey := fmt.Sprintf("%s.%d", stepID, arrayIndex)
-					a.mappingsMutex.Lock()
-					a.resourceMappings[indexedKey] = id
-					a.mappingsMutex.Unlock()
-
-					a.Logger.WithFields(map[string]interface{}{
-						"reference":       reference,
-						"step_id":         stepID,
-						"resource_id":     id,
-						"source":          "state_original_array",
-						"requested_field": requestedField,
-						"array_index":     arrayIndex,
-					}).Info("Resolved array field dependency from original array (backward compatibility)")
-
-					return id, nil
-				}
-			} else {
-				return "", fmt.Errorf("array index %d out of bounds for field %s (length: %d)", arrayIndex, requestedField, len(arrayField))
-			}
-		}
-
-		return "", fmt.Errorf("array field %s[%d] not found or invalid in mcp_response", requestedField, arrayIndex)
+		return "", fmt.Errorf("resource is not an array type or ResourceIds not found")
 	}
 
-	// Try to find the field directly in the MCP response
-	if fieldValue, exists := mcpResponse[requestedField]; exists {
-		// Handle string field
-		if id, ok := fieldValue.(string); ok && id != "" {
-			// Cache it for future use
-			a.mappingsMutex.Lock()
-			a.resourceMappings[stepID] = id
-			a.mappingsMutex.Unlock()
+	// For non-indexed requests, always use resourceId
+	if resourceId, ok := unified["resourceId"].(string); ok && resourceId != "" {
+		// Cache it for future use
+		a.mappingsMutex.Lock()
+		a.resourceMappings[stepID] = resourceId
+		a.mappingsMutex.Unlock()
 
-			a.Logger.WithFields(map[string]interface{}{
-				"reference":       reference,
-				"step_id":         stepID,
-				"resource_id":     id,
-				"source":          "state_direct_field",
-				"requested_field": requestedField,
-			}).Info("Resolved field dependency directly from state")
-
-			return id, nil
-		}
-
-		// Handle array field - serialize to JSON for use in other tools
-		if arrayValue, ok := fieldValue.([]interface{}); ok && len(arrayValue) > 0 {
-			jsonBytes, err := json.Marshal(arrayValue)
-			if err == nil {
-				jsonStr := string(jsonBytes)
-
-				// Cache it for future use
-				a.mappingsMutex.Lock()
-				a.resourceMappings[stepID] = jsonStr
-				a.mappingsMutex.Unlock()
-
-				a.Logger.WithFields(map[string]interface{}{
-					"reference":       reference,
-					"step_id":         stepID,
-					"resource_id":     jsonStr,
-					"source":          "state_array_field",
-					"requested_field": requestedField,
-					"array_length":    len(arrayValue),
-				}).Info("Resolved array field dependency from state")
-
-				return jsonStr, nil
-			}
-		}
+		return resourceId, nil
 	}
 
-	// Use configuration-driven field resolver with resource type detection
-	fieldsToTry := a.fieldResolver.GetFieldsForRequestWithContext(requestedField, mcpResponse)
-
-	for _, field := range fieldsToTry {
-		if id, ok := mcpResponse[field].(string); ok && id != "" {
-			// Cache it for future use
-			a.mappingsMutex.Lock()
-			a.resourceMappings[stepID] = id
-			a.mappingsMutex.Unlock()
-
-			return id, nil
-		}
-	}
-
-	return "", fmt.Errorf("field %s not found in mcp_response for step %s", requestedField, stepID)
+	return "", fmt.Errorf("resourceId not found in unified for step %s", stepID)
 }
 
 // validateNativeMCPArguments validates arguments against the tool's schema

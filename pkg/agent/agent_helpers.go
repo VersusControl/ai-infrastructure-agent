@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/versus-control/ai-infrastructure-agent/pkg/types"
 )
@@ -91,4 +92,108 @@ func (a *StateAwareAgent) extractResourceIDFromResponse(result map[string]interf
 	}
 
 	return extractedID, nil
+}
+
+// extractUnifiedResourceInfo creates a unified resource information structure from MCP response
+// This provides standardized resource information regardless of the tool or resource type
+func (a *StateAwareAgent) extractUnifiedResourceInfo(
+	planStep *types.ExecutionPlanStep,
+	mcpResponse map[string]interface{},
+) *types.UnifiedResourceInfo {
+	if mcpResponse == nil {
+		return nil
+	}
+
+	unified := &types.UnifiedResourceInfo{}
+
+	// 1. Extract Resource Type
+	resourceType := a.extractResourceTypeFromStep(planStep)
+
+	if resourceType == "" {
+		return nil
+	}
+
+	unified.ResourceType = resourceType
+
+	// 2. Extract Resource Id
+	resourceID, err := a.idExtractor.ExtractResourceID(planStep.MCPTool, resourceType, planStep.ToolParameters, mcpResponse)
+	if err != nil {
+		a.Logger.WithFields(map[string]interface{}{
+			"tool_name":     planStep.MCPTool,
+			"resource_type": resourceType,
+			"error":         err.Error(),
+		}).Warn("Failed to extract resource ID for unified info")
+
+		return nil
+	}
+
+	unified.ResourceId = resourceID
+
+	// If resourceId contains "arn:", assign it to ResourceArn
+	if strings.HasPrefix(resourceID, "arn:") {
+		unified.ResourceArn = resourceID
+	}
+
+	// 3. Extract Resource Name
+	unified.ResourceName = a.extractResourceName(mcpResponse)
+
+	// 4. Determine Dependency Reference Type and extract IDs
+	a.extractDependencyInfo(unified, mcpResponse, unified.ResourceId)
+
+	return unified
+}
+
+// extractResourceName extracts a human-readable name from the response
+func (a *StateAwareAgent) extractResourceName(mcpResponse map[string]interface{}) string {
+	// Try common name fields in priority order
+
+	if name, ok := mcpResponse["name"].(string); ok && name != "" {
+		return name
+	}
+
+	// Try to extract from Tags["Name"]
+	if tags, ok := mcpResponse["tags"].(map[string]interface{}); ok {
+		if name, ok := tags["Name"].(string); ok && name != "" {
+			return name
+		}
+	}
+
+	// Try nested resource.tags
+	if resource, ok := mcpResponse["resource"].(map[string]interface{}); ok {
+		if tags, ok := resource["tags"].(map[string]interface{}); ok {
+			if name, ok := tags["Name"].(string); ok && name != "" {
+				return name
+			}
+		}
+	}
+
+	// Return empty string if no name found
+	return ""
+}
+
+// extractDependencyInfo determines how the resource should be referenced and extracts relevant IDs/ARN
+func (a *StateAwareAgent) extractDependencyInfo(unified *types.UnifiedResourceInfo, mcpResponse map[string]interface{}, resourceID string) {
+	// Check if this is an array resource by looking for fields ending with "_array"
+	for field, value := range mcpResponse {
+		if strings.HasSuffix(field, "_array") {
+			if arrayValue, ok := value.([]interface{}); ok && len(arrayValue) > 0 {
+				stringArray := make([]string, 0, len(arrayValue))
+				for _, item := range arrayValue {
+					if str, ok := item.(string); ok {
+						stringArray = append(stringArray, str)
+					} else {
+						// Convert non-string items to string
+						stringArray = append(stringArray, fmt.Sprintf("%v", item))
+					}
+				}
+				unified.ResourceIds = stringArray
+				unified.DependencyReferenceType = "array"
+
+				return
+			}
+		}
+	}
+
+	// Default to single resource reference
+	unified.DependencyReferenceType = "single"
 }

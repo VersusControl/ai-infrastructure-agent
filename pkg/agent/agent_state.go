@@ -36,9 +36,13 @@ func (a *StateAwareAgent) addStateFromMCPResult(planStep *types.ExecutionPlanSte
 	}).Info("Starting state update from MCP result")
 
 	// Note: result is already processed (arrays concatenated) from executeNativeMCPTool
+	// Extract unified resource information
+	unifiedInfo := a.extractUnifiedResourceInfo(planStep, result)
+
 	// Create a simple properties map from MCP result
 	resultData := map[string]interface{}{
 		"mcp_response": result,
+		"unified":      unifiedInfo,
 		"status":       "created_via_mcp",
 	}
 
@@ -140,9 +144,13 @@ func (a *StateAwareAgent) updateStateFromMCPResult(planStep *types.ExecutionPlan
 	existingResource, err := a.GetResourceFromState(resourceID)
 
 	if err == nil && existingResource != nil {
+		// Extract unified resource information
+		unifiedInfo := a.extractUnifiedResourceInfo(planStep, result)
+
 		// Build properties from MCP result
 		resultData := map[string]interface{}{
 			"mcp_response": result,
+			"unified":      unifiedInfo,
 			"status":       "modified_via_mcp",
 		}
 
@@ -171,6 +179,9 @@ func (a *StateAwareAgent) updateStateFromMCPResult(planStep *types.ExecutionPlan
 
 	// Also handle step reference
 	if planStep.ID != planStep.ResourceID {
+		// Extract unified info for step reference too
+		unifiedInfo := a.extractUnifiedResourceInfo(planStep, result)
+
 		stepResourceState := &types.ResourceState{
 			ID:          planStep.ID,
 			Name:        planStep.Name,
@@ -179,6 +190,7 @@ func (a *StateAwareAgent) updateStateFromMCPResult(planStep *types.ExecutionPlan
 			Status:      "created",
 			Properties: map[string]interface{}{
 				"mcp_response": result,
+				"unified":      unifiedInfo,
 				"status":       "modified_via_mcp",
 			},
 			Dependencies: planStep.DependsOn,
