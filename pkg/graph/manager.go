@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/versus-control/ai-infrastructure-agent/internal/logging"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/types"
@@ -35,8 +34,26 @@ func (m *Manager) BuildGraph(ctx context.Context, resources []*types.ResourceSta
 	m.graph.Nodes = make(map[string]*types.DependencyNode)
 	m.graph.Edges = make(map[string][]string)
 
-	// Add all resources as nodes first
+	// Build step reference to resource ID mapping
+	stepToResourceID := make(map[string]string)
 	for _, resource := range resources {
+		if resource.Type == "step_reference" {
+			// Extract actual resource ID from unified field
+			if unified, ok := resource.Properties["unified"].(map[string]interface{}); ok {
+				if resourceID, ok := unified["resourceId"].(string); ok && resourceID != "" {
+					stepToResourceID[resource.ID] = resourceID
+				}
+			}
+		}
+	}
+
+	// Add all non-step-reference resources as nodes
+	for _, resource := range resources {
+		// Skip step references - they are not actual infrastructure resources
+		if resource.Type == "step_reference" {
+			continue
+		}
+
 		node := &types.DependencyNode{
 			ID:           resource.ID,
 			ResourceType: resource.Type,
@@ -56,28 +73,38 @@ func (m *Manager) BuildGraph(ctx context.Context, resources []*types.ResourceSta
 		m.graph.Nodes[resource.ID] = node
 	}
 
-	// Build edges based on dependencies
+	// Build edges based on dependencies from state file
 	for _, resource := range resources {
+		// Skip step references - they don't represent actual resources
+		if resource.Type == "step_reference" {
+			continue
+		}
+
 		for _, depID := range resource.Dependencies {
+			// Resolve step reference to actual resource ID if needed
+			actualDepID := depID
+			if resolvedID, isStepRef := stepToResourceID[depID]; isStepRef {
+				actualDepID = resolvedID
+			}
+
 			// Verify dependency exists in the graph
-			if _, exists := m.graph.Nodes[depID]; exists {
-				m.addEdge(resource.ID, depID)
+			if _, exists := m.graph.Nodes[actualDepID]; exists {
+				m.addEdge(resource.ID, actualDepID)
 			} else {
 				m.logger.WithFields(map[string]interface{}{
 					"resource_id":   resource.ID,
-					"dependency_id": depID,
-				}).Warn("Dependency not found in graph, skipping")
+					"dependency_id": actualDepID,
+					"original_ref":  depID,
+				}).Warn("Dependency not found in graph after resolution, skipping")
 			}
 		}
 	}
 
-	// Detect and build implicit dependencies
-	m.detectImplicitDependencies()
-
 	m.logger.WithFields(map[string]interface{}{
-		"nodes": len(m.graph.Nodes),
-		"edges": m.getTotalEdges(),
-	}).Info("Dependency graph built successfully")
+		"nodes":         len(m.graph.Nodes),
+		"edges":         m.getTotalEdges(),
+		"step_mappings": len(stepToResourceID),
+	}).Info("Dependency graph built successfully from state file")
 
 	return nil
 }
@@ -96,116 +123,6 @@ func (m *Manager) addEdge(fromID, toID string) {
 	}
 
 	m.graph.Edges[fromID] = append(m.graph.Edges[fromID], toID)
-}
-
-// detectImplicitDependencies detects implicit dependencies based on resource properties
-func (m *Manager) detectImplicitDependencies() {
-	m.logger.Debug("Detecting implicit dependencies")
-
-	for nodeID, node := range m.graph.Nodes {
-		switch node.ResourceType {
-		case "ec2_instance":
-			m.detectEC2Dependencies(nodeID, node)
-		case "security_group":
-			m.detectSecurityGroupDependencies(nodeID, node)
-		case "load_balancer":
-			m.detectLoadBalancerDependencies(nodeID, node)
-		case "auto_scaling_group":
-			m.detectASGDependencies(nodeID, node)
-		}
-	}
-}
-
-// detectEC2Dependencies detects dependencies for EC2 instances
-func (m *Manager) detectEC2Dependencies(instanceID string, node *types.DependencyNode) {
-	// VPC dependency
-	if vpcID, exists := node.Properties["vpc_id"]; exists && vpcID != "" {
-		m.addEdge(instanceID, vpcID)
-	}
-
-	// Subnet dependency
-	if subnetID, exists := node.Properties["subnet_id"]; exists && subnetID != "" {
-		m.addEdge(instanceID, subnetID)
-	}
-
-	// Security group dependencies
-	if sgList, exists := node.Properties["security_groups"]; exists {
-		securityGroups := strings.Split(sgList, ",")
-		for _, sg := range securityGroups {
-			sg = strings.TrimSpace(sg)
-			if sg != "" && m.graph.Nodes[sg] != nil {
-				m.addEdge(instanceID, sg)
-			}
-		}
-	}
-}
-
-// detectSecurityGroupDependencies detects dependencies for security groups
-func (m *Manager) detectSecurityGroupDependencies(sgID string, node *types.DependencyNode) {
-	// VPC dependency
-	if vpcID, exists := node.Properties["vpc_id"]; exists && vpcID != "" {
-		m.addEdge(sgID, vpcID)
-	}
-}
-
-// detectLoadBalancerDependencies detects dependencies for load balancers
-func (m *Manager) detectLoadBalancerDependencies(lbID string, node *types.DependencyNode) {
-	// VPC dependency
-	if vpcID, exists := node.Properties["vpc_id"]; exists && vpcID != "" {
-		m.addEdge(lbID, vpcID)
-	}
-
-	// Subnet dependencies
-	if subnets, exists := node.Properties["subnets"]; exists {
-		subnetList := strings.Split(subnets, ",")
-		for _, subnet := range subnetList {
-			subnet = strings.TrimSpace(subnet)
-			if subnet != "" && m.graph.Nodes[subnet] != nil {
-				m.addEdge(lbID, subnet)
-			}
-		}
-	}
-
-	// Security group dependencies
-	if sgList, exists := node.Properties["security_groups"]; exists {
-		securityGroups := strings.Split(sgList, ",")
-		for _, sg := range securityGroups {
-			sg = strings.TrimSpace(sg)
-			if sg != "" && m.graph.Nodes[sg] != nil {
-				m.addEdge(lbID, sg)
-			}
-		}
-	}
-}
-
-// detectASGDependencies detects dependencies for auto scaling groups
-func (m *Manager) detectASGDependencies(asgID string, node *types.DependencyNode) {
-	// Launch template dependency
-	if ltID, exists := node.Properties["launch_template_id"]; exists && ltID != "" {
-		m.addEdge(asgID, ltID)
-	}
-
-	// Subnet dependencies (VPC zone identifier)
-	if vpcZones, exists := node.Properties["vpc_zone_identifier"]; exists {
-		subnetList := strings.Split(vpcZones, ",")
-		for _, subnet := range subnetList {
-			subnet = strings.TrimSpace(subnet)
-			if subnet != "" && m.graph.Nodes[subnet] != nil {
-				m.addEdge(asgID, subnet)
-			}
-		}
-	}
-
-	// Target group dependencies
-	if tgList, exists := node.Properties["target_group_arns"]; exists {
-		targetGroups := strings.Split(tgList, ",")
-		for _, tg := range targetGroups {
-			tg = strings.TrimSpace(tg)
-			if tg != "" && m.graph.Nodes[tg] != nil {
-				m.addEdge(asgID, tg)
-			}
-		}
-	}
 }
 
 // GetDeploymentOrder returns resources in deployment order (topological sort)

@@ -867,71 +867,29 @@
         }
         
         .provider-card {
-            background: #f5f5f5;
+            background: transparent;
             border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 12px;
             padding: 32px;
             text-align: center;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .provider-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            height: 50px;
-            background-image: url('images/pattern.879b8d77.svg');
-            background-repeat: repeat-x;
-            background-size: auto 50px;
-            pointer-events: none;
-            opacity: 0.3;
-            z-index: 0;
-        }
-        
-        .provider-card::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            height: 50px;
-            background-image: url('images/pattern.879b8d77.svg');
-            background-repeat: repeat-x;
-            background-size: auto 50px;
-            pointer-events: none;
-            opacity: 0.3;
-            transform: rotate(180deg);
-            z-index: 0;
         }
         
         .provider-card:hover {
-            background: #ebebeb;
+            background: rgba(0, 0, 0, 0.02);
             border-color: rgba(0, 0, 0, 0.2);
-        }
-        
-        .provider-card > * {
-            position: relative;
-            z-index: 1;
         }
         
         .provider-icon {
             width: 48px;
             height: 48px;
             margin: 0 auto 20px;
-            position: relative;
-            z-index: 1;
         }
         
         .provider-name {
             font-size: 16px;
             font-weight: 600;
             color: rgba(0, 0, 0, 0.9);
-            position: relative;
-            z-index: 1;
         }
         
         /* Demo sections */
@@ -973,6 +931,33 @@
             line-height: 1.6;
             color: rgba(0, 0, 0, 0.6);
             margin-bottom: 32px;
+        }
+        
+        /* Video section */
+        .video-section {
+            max-width: 1200px;
+            margin: 120px auto 80px;
+            padding: 0 24px;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            border-radius: 12px;
         }
         
         /* Footer */
@@ -1095,6 +1080,10 @@
             
             .demo-section {
                 margin: 40px auto;
+            }
+            
+            .video-section {
+                margin: 60px auto 40px;
             }
             
             .screenshot-container {
@@ -1638,6 +1627,23 @@
                 </div>
             </div>
             </div> <!-- Close features-content -->
+        </section>
+
+        <!-- Live Demo Section -->
+        <section class="video-section">
+            <div class="section-header">
+                <h2 class="section-title">Live Demo</h2>
+                <p class="section-description">Watch the AI Infrastructure Agent in action as it manages AWS resources through natural language</p>
+            </div>
+            
+            <div class="video-container">
+                <iframe 
+                    src="https://www.youtube.com/embed/41tupPs-BEU" 
+                    title="AI Infrastructure Agent Live Demo" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowfullscreen>
+                </iframe>
+            </div>
         </section>
 
         <!-- Footer -->
