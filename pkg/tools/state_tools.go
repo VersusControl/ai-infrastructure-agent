@@ -690,42 +690,10 @@ func (t *VisualizeDependencyGraphTool) Execute(ctx context.Context, args map[str
 		// Get all resources from state
 		state := t.deps.StateManager.GetState()
 		if state != nil && state.Resources != nil {
-			// Build mapping from step_reference IDs to actual resource IDs
-			stepToResourceMap := make(map[string]string)
-
+			// Convert map to slice - BuildGraph will handle step reference resolution
+			stateResources = make([]*types.ResourceState, 0, len(state.Resources))
 			for _, res := range state.Resources {
-				if res.Type == "step_reference" {
-					// Extract actual resource ID from step_reference using helper
-					actualResourceID, err := ExtractResourceIDFromStepReference(res)
-					if err != nil {
-						return nil, fmt.Errorf("failed to extract resource ID from step reference %s: %w", res.ID, err)
-					}
-					if actualResourceID != "" {
-						stepToResourceMap[res.ID] = actualResourceID
-					}
-				}
-			}
-
-			// Collect resources and resolve dependencies
-			for _, res := range state.Resources {
-				// Filter out step_reference type resources
-				if res.Type != "step_reference" {
-					// Resolve dependencies from step IDs to actual resource IDs
-					resolvedDeps := make([]string, 0, len(res.Dependencies))
-					for _, depID := range res.Dependencies {
-						if actualID, exists := stepToResourceMap[depID]; exists {
-							resolvedDeps = append(resolvedDeps, actualID)
-						} else {
-							// Keep original dependency if no mapping found
-							resolvedDeps = append(resolvedDeps, depID)
-						}
-					}
-
-					// Create a copy with resolved dependencies
-					resolvedResource := *res
-					resolvedResource.Dependencies = resolvedDeps
-					stateResources = append(stateResources, &resolvedResource)
-				}
+				stateResources = append(stateResources, res)
 			}
 		}
 	}
@@ -738,66 +706,56 @@ func (t *VisualizeDependencyGraphTool) Execute(ctx context.Context, args map[str
 	analyzer := t.deps.GraphAnalyzer
 	visualization := analyzer.GenerateMermaidDiagram()
 
-	// Build structured graph data (nodes and edges)
+	// Build structured graph data (nodes and edges) from the built graph
+	graph := t.deps.GraphManager.GetGraph()
+
 	nodes := make([]map[string]interface{}, 0)
 	edges := make([]map[string]interface{}, 0)
-	nodeMap := make(map[string]bool)
 	resourceTypeCounts := make(map[string]int)
 	dependentCounts := make(map[string]int)
 
-	// First pass: create nodes
-	for _, resource := range stateResources {
-		if resource.ID == "" {
-			continue
-		}
-
-		nodeMap[resource.ID] = true
-		resourceTypeCounts[resource.Type]++
+	// Create nodes from graph nodes (these are only real resources, no step references)
+	for nodeID, graphNode := range graph.Nodes {
+		resourceTypeCounts[graphNode.ResourceType]++
 
 		node := map[string]interface{}{
-			"id":     resource.ID,
-			"type":   resource.Type,
-			"status": resource.Status,
+			"id":     nodeID,
+			"type":   graphNode.ResourceType,
+			"status": graphNode.Status,
 		}
 
-		// Add name if available
-		if resource.Name != "" {
-			node["name"] = resource.Name
-		} else if name, ok := resource.Properties["name"]; ok {
-			if nameStr, ok := name.(string); ok && nameStr != "" {
-				node["name"] = nameStr
+		// Find the original resource to get name
+		for _, resource := range stateResources {
+			if resource.ID == nodeID {
+				if resource.Name != "" {
+					node["name"] = resource.Name
+				} else if name, ok := resource.Properties["name"]; ok {
+					if nameStr, ok := name.(string); ok && nameStr != "" {
+						node["name"] = nameStr
+					}
+				}
+
+				// Add tags if available
+				if len(resource.Tags) > 0 {
+					node["tags"] = resource.Tags
+				} else if tags, ok := resource.Properties["tags"]; ok {
+					node["tags"] = tags
+				}
+				break
 			}
-		}
-
-		// Add tags if available
-		if len(resource.Tags) > 0 {
-			node["tags"] = resource.Tags
-		} else if tags, ok := resource.Properties["tags"]; ok {
-			node["tags"] = tags
 		}
 
 		nodes = append(nodes, node)
 	}
 
-	// Second pass: create edges and count dependents
-	for _, resource := range stateResources {
-		if resource.ID == "" {
-			continue
-		}
-
-		for _, depID := range resource.Dependencies {
-			if depID == "" {
-				continue
-			}
-
-			// Only create edge if both nodes exist
-			if nodeMap[resource.ID] && nodeMap[depID] {
-				edges = append(edges, map[string]interface{}{
-					"source": resource.ID,
-					"target": depID,
-				})
-				dependentCounts[depID]++
-			}
+	// Create edges from graph edges (these are resolved dependencies)
+	for sourceID, targets := range graph.Edges {
+		for _, targetID := range targets {
+			edges = append(edges, map[string]interface{}{
+				"source": sourceID,
+				"target": targetID,
+			})
+			dependentCounts[targetID]++
 		}
 	}
 
