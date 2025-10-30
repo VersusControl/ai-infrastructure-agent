@@ -110,6 +110,27 @@ func (c *Client) StopEC2Instance(ctx context.Context, instanceID string) error {
 	return nil
 }
 
+// ModifyEC2InstanceType modifies the instance type of a stopped EC2 instance
+func (c *Client) ModifyEC2InstanceType(ctx context.Context, instanceID string, instanceType string) error {
+	input := &ec2.ModifyInstanceAttributeInput{
+		InstanceId: aws.String(instanceID),
+		InstanceType: &ec2types.AttributeValue{
+			Value: aws.String(instanceType),
+		},
+	}
+
+	_, err := c.ec2.ModifyInstanceAttribute(ctx, input)
+	if err != nil {
+		return fmt.Errorf("failed to modify instance type for %s to %s: %w", instanceID, instanceType, err)
+	}
+
+	c.logger.WithFields(logrus.Fields{
+		"instanceId":   instanceID,
+		"instanceType": instanceType,
+	}).Info("EC2 instance type modification completed")
+	return nil
+}
+
 // TerminateEC2Instance terminates an EC2 instance
 func (c *Client) TerminateEC2Instance(ctx context.Context, instanceID string) error {
 	input := &ec2.TerminateInstancesInput{

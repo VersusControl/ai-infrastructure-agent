@@ -13,49 +13,6 @@
 Use "query" action to discover existing AWS resources dynamically.
 These steps MUST be placed FIRST in your execution plan.
 
-═══════════════════════════════════════════════════════════════════
-🔄 MODIFY ACTION PATTERNS
-═══════════════════════════════════════════════════════════════════
-
-Use "modify" action for operations that UPDATE existing resources or CREATE them
-if they don't exist (upsert operations).
-
-MODIFY ACTION USE CASES:
-├─ State Changes: start-ec2-instance, stop-ec2-instance, start-db-instance, stop-db-instance
-├─ Capacity Updates: update-auto-scaling-group (change desired capacity)
-└─ Future: modify-ec2-instance, modify-security-group-rule (upsert operations)
-
-Example - Update ASG Capacity:
-{
-  "id": "step-scale-asg",
-  "name": "Scale auto scaling group",
-  "description": "Update ASG desired capacity to 5 instances",
-  "action": "modify",
-  "resourceId": "web-servers-asg",
-  "mcpTool": "update-auto-scaling-group",
-  "toolParameters": {
-    "asgName": "web-servers-asg",
-    "desiredCapacity": 5
-  },
-  "dependsOn": ["step-create-asg"],
-  "status": "pending"
-}
-
-Example - Start EC2 Instance:
-{
-  "id": "step-start-instance",
-  "name": "Start web server instance",
-  "description": "Change instance state to running",
-  "action": "modify",
-  "resourceId": "web-server-1",
-  "mcpTool": "start-ec2-instance",
-  "toolParameters": {
-    "instanceId": "{{step-create-instance.instanceId}}"
-  },
-  "dependsOn": ["step-create-instance"],
-  "status": "pending"
-}
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎓 TOOL PATTERN REFERENCE FOR NEW RESOURCES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -100,249 +57,127 @@ Network (ALB, VPC, CloudFront):
   Requires: VPC, Subnets (2+ AZs for ALB)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 DOCUMENTED RESOURCE PATTERNS
+📋 RESOURCE DISCOVERY PATTERNS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Below are specific patterns for commonly used resources. For resources not listed,
-apply the general patterns above.
+Use these patterns to discover existing AWS resources. Adapt tool names based on
+available tools in the schemas above.
 
-PATTERN 1: VPC DISCOVERY
-Discover existing VPCs or get default VPC
+PATTERN: Default Resource Discovery
+Use when: Need standard/default resource provided by AWS
 
-METHOD A: Get default VPC (recommended):
+Tool Pattern: get-default-{resource}
+Example Tools: get-default-vpc, get-default-subnet
+Output: Returns primary resource ID field
+Dependencies: None (dependsOn: [])
+
+PATTERN: Specific Resource Discovery
+Use when: Need to find a specific resource by ID or identifier
+
+Tool Pattern: get-{resource}
+Example Tools: get-subnet, get-ec2-instance, get-key-pair
+Output: Returns resource details with ID field
+Dependencies: May require parent resource ID (e.g., vpcId for subnet)
+
+PATTERN: Multiple Resource Discovery
+Use when: Need to see all available resources or select from multiple
+
+Tool Pattern: list-{resources}
+Example Tools: list-vpcs, list-subnets, list-ec2-instances, list-security-groups
+Output: Returns array of resources with ID fields
+Dependencies: May require parent resource ID for filtering
+
+PATTERN: Filtered Resource Discovery
+Use when: Need resources that meet specific criteria
+
+Tool Pattern: list-{resources}-for-{purpose}
+Example Tools: list-subnets-for-alb (gets 2+ subnets in different AZs)
+Output: Returns filtered array of resources
+Dependencies: Usually requires parent resource ID
+
+PATTERN: Latest Version Discovery
+Use when: Need the most recent version of a resource
+
+Tool Pattern: get-latest-{type}
+Example Tools: get-latest-ubuntu-ami, get-latest-amazon-linux-ami
+Output: Returns latest version ID
+Dependencies: None
+
+USAGE GUIDELINES:
+- All discovery patterns use action: "query"
+- All discovery patterns have dependsOn: [] unless filtering by parent
+- Use tool schemas to find exact parameter names and output fields
+- Prefer get-default-* for standard resources (faster, simpler)
+- Use list-* when you need to choose from multiple options
+
+═══════════════════════════════════════════════════════════════════
+🏗️ RESOURCE CREATION PATTERNS
+═══════════════════════════════════════════════════════════════════
+
+PATTERN 1: EC2 INSTANCE
+Requires: AMI, VPC, Subnet, Security Group
+
+Discovery Phase (steps 1-4):
+- Discover VPC
+- Discover Subnet
+- Discover AMI
+- Discover Security Group
+
+PATTERN 2: APPLICATION LOAD BALANCER
+Requires: VPC, Subnets (2+ in different AZs), Security Group, Target Group
+
+Discovery Phase:
+- Discover VPC
+- Discover Subnets
+
+Creation Phase:
+1. Create Security Group (with HTTP rules)
+2. Create Target Group
+3. Create Load Balancer
+4. Create Listener
+
+═══════════════════════════════════════════════════════════════════
+🔄 MODIFY ACTION PATTERNS
+═══════════════════════════════════════════════════════════════════
+
+Use "modify" action to UPDATE existing resources.
+
+MODIFY ACTION USE CASES:
+├─ State Changes: start-ec2-instance, stop-ec2-instance, start-db-instance, stop-db-instance
+├─ Capacity Updates: update-auto-scaling-group (change desired capacity)
+├─ Instance Modifications: modify-ec2-instance-type (change instance size - requires stopped instance - need to start after modified)
+└─ Future: modify-security-group-rule (upsert operations)
+
+Update ASG Capacity:
 {
-  "id": "step-discover-vpc",
-  "name": "Get default VPC",
-  "description": "Find default VPC for resource placement",
-  "action": "query",
-  "resourceId": "vpc",
-  "mcpTool": "get-default-vpc",
-  "toolParameters": {},
-  "dependsOn": [],
-  "status": "pending"
-}
-
-METHOD B: List all VPCs:
-{
-  "id": "step-discover-vpc",
-  "name": "List VPCs",
-  "description": "Find all VPCs in region",
-  "action": "query",
-  "resourceId": "vpc",
-  "mcpTool": "list-vpcs",
-  "toolParameters": {},
-  "dependsOn": [],
-  "status": "pending"
-}
-
-Output: Returns vpcId field
-
-PATTERN 2: SUBNET DISCOVERY
-Discover single subnet within a VPC
-
-METHOD A: Get subnet in VPC:
-{
-  "id": "step-discover-subnet",
-  "name": "Get subnet",
-  "description": "Get subnet in VPC",
-  "action": "query",
-  "resourceId": "subnet",
-  "mcpTool": "get-subnet",
+  "id": "step-scale-asg",
+  "name": "Scale auto scaling group",
+  "description": "Update ASG desired capacity to 5 instances",
+  "action": "modify",
+  "resourceId": "web-servers-asg",
+  "mcpTool": "update-auto-scaling-group",
   "toolParameters": {
-    "vpcId": "{{step-discover-vpc.resourceId}}"
+    "asgName": "web-servers-asg",
+    "desiredCapacity": 5
   },
-  "dependsOn": ["step-discover-vpc"],
+  "dependsOn": ["step-create-asg"],
   "status": "pending"
 }
 
-Discover subnets within a VPC
-
-METHOD A: List subnets in VPC:
+Start EC2 Instance:
 {
-  "id": "step-discover-subnets",
-  "name": "List subnets",
-  "description": "Find all subnets in VPC",
-  "action": "query",
-  "resourceId": "subnets",
-  "mcpTool": "list-subnets",
+  "id": "step-start-instance",
+  "name": "Start web server instance",
+  "description": "Change instance state to running",
+  "action": "modify",
+  "resourceId": "web-server-1",
+  "mcpTool": "start-ec2-instance",
   "toolParameters": {
-    "vpcId": "{{step-discover-vpc.resourceId}}"
+    "instanceId": "{{step-create-instance.instanceId}}"
   },
-  "dependsOn": ["step-discover-vpc"],
+  "dependsOn": ["step-create-instance"],
   "status": "pending"
 }
-
-METHOD B: Select subnets for ALB (auto-selects 2+ subnets in different AZs):
-{
-  "id": "step-select-alb-subnets",
-  "name": "Select subnets for ALB",
-  "description": "Auto-select subnets for load balancer",
-  "action": "query",
-  "resourceId": "alb-subnets",
-  "mcpTool": "list-subnets-for-alb",
-  "toolParameters": {
-    "vpcId": "{{step-discover-vpc.resourceId}}",
-    "minAZs": 2,
-    "requireMultiAZ": true
-  },
-  "dependsOn": ["step-discover-vpc"],
-  "status": "pending"
-}
-
-Output: Returns subnetId field or array of subnet IDs
-Note: For single subnet needs, use list-subnets and select first result
-Note: For ALB deployments, always use list-subnets-for-alb to ensure multi-AZ compliance
-
-PATTERN 3: SECURITY GROUP DISCOVERY
-Discover security groups in a VPC
-
-METHOD A: List all security groups:
-{
-  "id": "step-discover-sg",
-  "name": "List security groups",
-  "description": "Find available security groups",
-  "action": "query",
-  "resourceId": "security-group",
-  "mcpTool": "list-security-groups",
-  "toolParameters": {},
-  "dependsOn": [],
-  "status": "pending"
-}
-
-Output: Returns securityGroupId field
-
-Common filters:
-- "vpc-id": "vpc-xxxxx" → Find SGs in VPC
-- "group-name": "web-sg" → Find by name
-- "tag:Environment": "production" → Find by tag
-
-PATTERN 4: AMI DISCOVERY
-Discover latest AMI for instance launch
-
-METHOD A: Get latest Ubuntu AMI:
-{
-  "id": "step-get-ubuntu-ami",
-  "name": "Get latest Ubuntu AMI",
-  "description": "Find latest Ubuntu image",
-  "action": "query",
-  "resourceId": "ubuntu-ami",
-  "mcpTool": "get-latest-ubuntu-ami",
-  "toolParameters": {
-    "architecture": "x86_64"
-  },
-  "dependsOn": [],
-  "status": "pending"
-}
-
-METHOD B: Get latest Amazon Linux AMI:
-{
-  "id": "step-get-amzn-ami",
-  "name": "Get latest Amazon Linux AMI",
-  "description": "Find latest Amazon Linux image",
-  "action": "query",
-  "resourceId": "amzn-ami",
-  "mcpTool": "get-latest-amazon-linux-ami",
-  "toolParameters": {},
-  "dependsOn": [],
-  "status": "pending"
-}
-
-METHOD C: Get latest Windows AMI:
-{
-  "id": "step-get-windows-ami",
-  "name": "Get latest Windows AMI",
-  "description": "Find latest Windows Server image",
-  "action": "query",
-  "resourceId": "windows-ami",
-  "mcpTool": "get-latest-windows-ami",
-  "toolParameters": {
-    "version": "2022"
-  },
-  "dependsOn": [],
-  "status": "pending"
-}
-
-Output: Returns amiId field
-Architecture options: "x86_64" (default) or "arm64"
-Windows versions: "2016", "2019", "2022"
-
-Common AMI patterns:
-- Ubuntu 22.04: "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
-- Amazon Linux 2: "amzn2-ami-hvm-*-x86_64-gp2"
-- Ubuntu 20.04: "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
-
-Always use:
-- "state": "available"
-- "sort": "creation-date"
-- "order": "desc"
-- "maxResults": 1
-
-PATTERN 5: INSTANCE DISCOVERY
-Discover existing EC2 instances
-
-{
-  "id": "step-list-instances",
-  "name": "List EC2 instances",
-  "description": "Find running EC2 instances",
-  "action": "query",
-  "resourceId": "instances",
-  "mcpTool": "list-ec2-instances",
-  "toolParameters": {},
-  "dependsOn": [],
-  "status": "pending"
-}
-
-Output: Returns instanceId field
-Lists all instances in the region with their status
-
-PATTERN 6: LOAD BALANCER DISCOVERY
-Discover existing load balancers
-
-METHOD A: List all load balancers:
-{
-  "id": "step-list-albs",
-  "name": "List load balancers",
-  "description": "Find existing ALBs",
-  "action": "query",
-  "resourceId": "albs",
-  "mcpTool": "list-load-balancers",
-  "toolParameters": {},
-  "dependsOn": [],
-  "status": "pending"
-}
-
-METHOD B: Get target groups:
-{
-  "id": "step-list-tg",
-  "name": "List target groups",
-  "description": "Find target groups",
-  "action": "query",
-  "resourceId": "target-groups",
-  "mcpTool": "list-target-groups",
-  "toolParameters": {},
-  "dependsOn": [],
-  "status": "pending"
-}
-
-Output: Returns loadBalancerArn and targetGroupArn fields
-
-PATTERN 7: RDS INSTANCE DISCOVERY
-Discover existing RDS instances
-
-{
-  "id": "step-list-databases",
-  "name": "List RDS instances",
-  "description": "Find existing databases",
-  "action": "query",
-  "resourceId": "databases",
-  "mcpTool": "list-db-instances",
-  "toolParameters": {},
-  "dependsOn": [],
-  "status": "pending"
-}
-
-Output: Returns dbInstanceIdentifier and endpoint fields
-Lists all RDS instances in the region
 
 ═══════════════════════════════════════════════════════════════════
 🎯 PARAMETER RESOLUTION PATTERNS
@@ -382,151 +217,6 @@ For resources that use ARNs (load balancers, target groups):
     "loadBalancerArn": "{{step-create-alb.loadBalancerArn}}",
     "targetGroupArn": "{{step-create-tg.targetGroupArn}}"
   }
-}
-
-NESTED OBJECT REFERENCE:
-For complex action parameters:
-
-{
-  "toolParameters": {
-    "defaultActions": [{
-      "type": "forward",
-      "targetGroupArn": "{{step-create-tg.targetGroupArn}}"
-    }]
-  }
-}
-
-═══════════════════════════════════════════════════════════════════
-🏗️ COMMON RESOURCE CREATION PATTERNS
-═══════════════════════════════════════════════════════════════════
-
-PATTERN 1: EC2 INSTANCE
-Requires: AMI, VPC, Subnet, Security Group
-
-Discovery Phase (steps 1-4):
-- Discover VPC
-- Discover Subnet
-- Discover AMI
-- Discover Security Group
-
-Creation Phase (step 5):
-{
-  "action": "create",
-  "mcpTool": "create-ec2-instance",
-  "toolParameters": {
-    "imageId": "{{step-discover-ami.imageId}}",
-    "instanceType": "t3.micro",
-    "subnetId": "{{step-discover-subnet.subnetId}}",
-    "securityGroupIds": ["{{step-discover-sg.securityGroupId}}"],
-    "name": "web-server"
-  },
-  "dependsOn": ["step-discover-ami", "step-discover-subnet", "step-discover-sg"]
-}
-
-PATTERN 2: SECURITY GROUP WITH RULES
-Create security group, then add rules
-
-Step 1 - Create Security Group:
-{
-  "action": "create",
-  "mcpTool": "create-security-group",
-  "toolParameters": {
-    "groupName": "web-sg",
-    "description": "Allow web traffic",
-    "vpcId": "{{step-discover-vpc.vpcId}}"
-  },
-  "dependsOn": ["step-discover-vpc"]
-}
-
-Step 2 - Add Ingress Rules:
-{
-  "action": "create",
-  "mcpTool": "authorize-security-group-ingress",
-  "toolParameters": {
-    "groupId": "{{step-create-sg.securityGroupId}}",
-    "ipPermissions": [{
-      "ipProtocol": "tcp",
-      "fromPort": 80,
-      "toPort": 80,
-      "ipRanges": [{"cidrIp": "0.0.0.0/0"}]
-    }]
-  },
-  "dependsOn": ["step-create-sg"]
-}
-
-PATTERN 3: APPLICATION LOAD BALANCER
-Requires: VPC, Subnets (2+ in different AZs), Security Group, Target Group
-
-Discovery Phase:
-- Discover VPC
-- Discover Subnets
-
-Creation Phase:
-1. Create Security Group (with HTTP rules)
-2. Create Target Group
-3. Create Load Balancer
-4. Create Listener
-
-Load Balancer Creation:
-{
-  "action": "create",
-  "mcpTool": "create-load-balancer",
-  "toolParameters": {
-    "name": "web-alb",
-    "type": "application",
-    "scheme": "internet-facing",
-    "subnetIds": [
-      "{{step-discover-subnet-1.subnetId}}",
-      "{{step-discover-subnet-2.subnetId}}"
-    ],
-    "securityGroupIds": ["{{step-create-sg.securityGroupId}}"]
-  },
-  "dependsOn": ["step-discover-subnet-1", "step-discover-subnet-2", "step-create-sg"]
-}
-
-PATTERN 4: RDS DATABASE
-Requires: VPC, Subnets (2+ in different AZs), DB Subnet Group, Security Group
-
-Discovery Phase:
-- Discover VPC
-- Discover Subnets
-
-Creation Phase:
-1. Create DB Subnet Group
-2. Create Security Group (with database port rules)
-3. Create RDS Instance
-
-DB Subnet Group Creation:
-{
-  "action": "create",
-  "mcpTool": "create-db-subnet-group",
-  "toolParameters": {
-    "dbSubnetGroupName": "db-subnet-group",
-    "dbSubnetGroupDescription": "Subnet group for RDS",
-    "subnetIds": [
-      "{{step-discover-subnet-1.subnetId}}",
-      "{{step-discover-subnet-2.subnetId}}"
-    ]
-  },
-  "dependsOn": ["step-discover-subnet-1", "step-discover-subnet-2"]
-}
-
-RDS Instance Creation:
-{
-  "action": "create",
-  "mcpTool": "create-db-instance",
-  "toolParameters": {
-    "dbInstanceIdentifier": "mysql-db",
-    "dbInstanceClass": "db.t3.micro",
-    "engine": "mysql",
-    "engineVersion": "8.0",
-    "masterUsername": "admin",
-    "masterUserPassword": "SecurePass123!",
-    "allocatedStorage": 20,
-    "dbSubnetGroupName": "{{step-create-db-subnet-group.dbSubnetGroupName}}",
-    "vpcSecurityGroupIds": ["{{step-create-db-sg.securityGroupId}}"]
-  },
-  "dependsOn": ["step-create-db-subnet-group", "step-create-db-sg"]
 }
 
 ═══════════════════════════════════════════════════════════════════
