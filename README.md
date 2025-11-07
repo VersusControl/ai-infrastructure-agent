@@ -394,15 +394,13 @@ agent:
 
 ## Roadmap
 
-### Current Version (v0.0.2 - PoC)
+### Current Version (v0.0.8 - PoC)
 - ✅ Basic natural language processing
 - ✅ Core AWS resource management
 - ✅ Web dashboard
 - ✅ MCP protocol support
-- ✅ ReAct-Style Agent
-
-### Upcoming Version (v0.0.3 - PoC)
-- 🔄 Better UX/UI
+- ✅ ReAct Agent
+- ✅ Better UX/UI
 
 ### Upcoming Features (v0.1.*)
 - 🔄 Cost optimization recommendations
