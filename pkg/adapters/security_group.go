@@ -187,19 +187,34 @@ func (s *SecurityGroupAdapter) ExecuteSpecialOperation(ctx context.Context, oper
 		fromPort, _ := ruleParams["fromPort"].(int)
 		toPort, _ := ruleParams["toPort"].(int)
 		cidrBlock, _ := ruleParams["cidrBlock"].(string)
+		sourceSecurityGroupId, _ := ruleParams["sourceSecurityGroupId"].(string)
 
-		if groupID == "" || protocol == "" || cidrBlock == "" {
-			return nil, fmt.Errorf("groupId, protocol, and cidrBlock are required for add ingress rule operation")
+		if groupID == "" || protocol == "" {
+			return nil, fmt.Errorf("groupId and protocol are required for add ingress rule operation")
+		}
+
+		if cidrBlock == "" && sourceSecurityGroupId == "" {
+			return nil, fmt.Errorf("either cidrBlock or sourceSecurityGroupId is required for add ingress rule operation")
+		}
+
+		if cidrBlock != "" && sourceSecurityGroupId != "" {
+			return nil, fmt.Errorf("cannot specify both cidrBlock and sourceSecurityGroupId - use one or the other")
 		}
 
 		// Create rule parameters
 		sgRuleParams := aws.SecurityGroupRuleParams{
-			GroupID:    groupID,
-			Type:       "ingress",
-			Protocol:   protocol,
-			FromPort:   int32(fromPort),
-			ToPort:     int32(toPort),
-			CidrBlocks: []string{cidrBlock},
+			GroupID:  groupID,
+			Type:     "ingress",
+			Protocol: protocol,
+			FromPort: int32(fromPort),
+			ToPort:   int32(toPort),
+		}
+
+		// Add either CIDR block or source security group
+		if cidrBlock != "" {
+			sgRuleParams.CidrBlocks = []string{cidrBlock}
+		} else {
+			sgRuleParams.SourceSG = sourceSecurityGroupId
 		}
 
 		err := s.client.AddSecurityGroupRule(ctx, sgRuleParams)
@@ -207,18 +222,26 @@ func (s *SecurityGroupAdapter) ExecuteSpecialOperation(ctx context.Context, oper
 			return nil, fmt.Errorf("failed to add ingress rule: %w", err)
 		}
 
+		// Prepare details for response
+		details := map[string]interface{}{
+			"direction": "ingress",
+			"protocol":  protocol,
+			"fromPort":  fromPort,
+			"toPort":    toPort,
+		}
+
+		if cidrBlock != "" {
+			details["cidrBlock"] = cidrBlock
+		} else {
+			details["sourceSecurityGroupId"] = sourceSecurityGroupId
+		}
+
 		// Return result resource
 		return &types.AWSResource{
-			ID:    groupID,
-			Type:  "security-group-rule",
-			State: "available",
-			Details: map[string]interface{}{
-				"direction": "ingress",
-				"protocol":  protocol,
-				"fromPort":  fromPort,
-				"toPort":    toPort,
-				"cidrBlock": cidrBlock,
-			},
+			ID:      groupID,
+			Type:    "security-group-rule",
+			State:   "available",
+			Details: details,
 		}, nil
 
 	case "add-egress-rule":
@@ -232,19 +255,34 @@ func (s *SecurityGroupAdapter) ExecuteSpecialOperation(ctx context.Context, oper
 		fromPort, _ := ruleParams["fromPort"].(int)
 		toPort, _ := ruleParams["toPort"].(int)
 		cidrBlock, _ := ruleParams["cidrBlock"].(string)
+		sourceSecurityGroupId, _ := ruleParams["sourceSecurityGroupId"].(string)
 
-		if groupID == "" || protocol == "" || cidrBlock == "" {
-			return nil, fmt.Errorf("groupId, protocol, and cidrBlock are required for add egress rule operation")
+		if groupID == "" || protocol == "" {
+			return nil, fmt.Errorf("groupId and protocol are required for add egress rule operation")
+		}
+
+		if cidrBlock == "" && sourceSecurityGroupId == "" {
+			return nil, fmt.Errorf("either cidrBlock or sourceSecurityGroupId is required for add egress rule operation")
+		}
+
+		if cidrBlock != "" && sourceSecurityGroupId != "" {
+			return nil, fmt.Errorf("cannot specify both cidrBlock and sourceSecurityGroupId - use one or the other")
 		}
 
 		// Create rule parameters
 		sgRuleParams := aws.SecurityGroupRuleParams{
-			GroupID:    groupID,
-			Type:       "egress",
-			Protocol:   protocol,
-			FromPort:   int32(fromPort),
-			ToPort:     int32(toPort),
-			CidrBlocks: []string{cidrBlock},
+			GroupID:  groupID,
+			Type:     "egress",
+			Protocol: protocol,
+			FromPort: int32(fromPort),
+			ToPort:   int32(toPort),
+		}
+
+		// Add either CIDR block or source security group
+		if cidrBlock != "" {
+			sgRuleParams.CidrBlocks = []string{cidrBlock}
+		} else {
+			sgRuleParams.SourceSG = sourceSecurityGroupId
 		}
 
 		err := s.client.AddSecurityGroupRule(ctx, sgRuleParams)
@@ -252,18 +290,26 @@ func (s *SecurityGroupAdapter) ExecuteSpecialOperation(ctx context.Context, oper
 			return nil, fmt.Errorf("failed to add egress rule: %w", err)
 		}
 
+		// Prepare details for response
+		details := map[string]interface{}{
+			"direction": "egress",
+			"protocol":  protocol,
+			"fromPort":  fromPort,
+			"toPort":    toPort,
+		}
+
+		if cidrBlock != "" {
+			details["cidrBlock"] = cidrBlock
+		} else {
+			details["sourceSecurityGroupId"] = sourceSecurityGroupId
+		}
+
 		// Return result resource
 		return &types.AWSResource{
-			ID:    groupID,
-			Type:  "security-group-rule",
-			State: "available",
-			Details: map[string]interface{}{
-				"direction": "egress",
-				"protocol":  protocol,
-				"fromPort":  fromPort,
-				"toPort":    toPort,
-				"cidrBlock": cidrBlock,
-			},
+			ID:      groupID,
+			Type:    "security-group-rule",
+			State:   "available",
+			Details: details,
 		}, nil
 
 	case "delete-security-group":

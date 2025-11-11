@@ -149,6 +149,7 @@ type CreateDBInstanceParams struct {
 	PreferredMaintenanceWindow string
 	MultiAZ                    bool
 	PubliclyAccessible         bool
+	PerformanceInsightsEnabled bool
 	Tags                       map[string]string
 }
 

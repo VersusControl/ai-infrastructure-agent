@@ -85,6 +85,9 @@ func (c *Client) CreateDBInstance(ctx context.Context, params CreateDBInstancePa
 	if params.PubliclyAccessible {
 		input.PubliclyAccessible = aws.Bool(params.PubliclyAccessible)
 	}
+	if params.PerformanceInsightsEnabled {
+		input.EnablePerformanceInsights = aws.Bool(params.PerformanceInsightsEnabled)
+	}
 
 	// Add tag specifications during creation if tags are provided
 	if len(params.Tags) > 0 {
