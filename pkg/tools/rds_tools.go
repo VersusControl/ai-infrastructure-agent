@@ -109,6 +109,10 @@ func NewCreateDBInstanceTool(awsClient *aws.Client, actionType string, logger *l
 				"description": "The database engine",
 				"default":     "mysql",
 			},
+			"engineVersion": map[string]interface{}{
+				"type":        "string",
+				"description": "The database engine version",
+			},
 			"masterUsername": map[string]interface{}{
 				"type":        "string",
 				"description": "The master username",
@@ -122,6 +126,16 @@ func NewCreateDBInstanceTool(awsClient *aws.Client, actionType string, logger *l
 				"description": "The allocated storage in GB",
 				"default":     20,
 			},
+			"storageType": map[string]interface{}{
+				"type":        "string",
+				"description": "The storage type (gp2, gp3, io1, io2, standard)",
+				"default":     "gp2",
+			},
+			"storageEncrypted": map[string]interface{}{
+				"type":        "boolean",
+				"description": "Whether storage is encrypted",
+				"default":     false,
+			},
 			"dbSubnetGroupName": map[string]interface{}{
 				"type":        "string",
 				"description": "The DB subnet group name",
@@ -132,6 +146,34 @@ func NewCreateDBInstanceTool(awsClient *aws.Client, actionType string, logger *l
 					"type": "string",
 				},
 				"description": "List of VPC security group IDs",
+			},
+			"backupRetentionPeriod": map[string]interface{}{
+				"type":        "integer",
+				"description": "Number of days to retain backups (0-35)",
+				"default":     1,
+			},
+			"preferredBackupWindow": map[string]interface{}{
+				"type":        "string",
+				"description": "Daily time range for backups (HH:MM-HH:MM UTC)",
+			},
+			"preferredMaintenanceWindow": map[string]interface{}{
+				"type":        "string",
+				"description": "Weekly time range for maintenance (ddd:hh24:mi-ddd:hh24:mi)",
+			},
+			"multiAz": map[string]interface{}{
+				"type":        "boolean",
+				"description": "Whether to deploy Multi-AZ",
+				"default":     false,
+			},
+			"publiclyAccessible": map[string]interface{}{
+				"type":        "boolean",
+				"description": "Whether the instance is publicly accessible",
+				"default":     false,
+			},
+			"performanceInsightsEnabled": map[string]interface{}{
+				"type":        "boolean",
+				"description": "Whether to enable Performance Insights",
+				"default":     false,
 			},
 		},
 		"required": []string{"dbInstanceIdentifier", "masterUsername", "masterUserPassword"},
