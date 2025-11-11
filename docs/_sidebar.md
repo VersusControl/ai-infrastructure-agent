@@ -16,7 +16,7 @@
   - [Working with EC2 Instance](/examples/working-with-ec2-instance.md)
   - [Working with Virtual Private Cloud (VPC)](/examples/working-with-vpc.md)
   - [Working with RDS Database](/examples/working-with-rds.md)
-  - [How to Use the AI Agent to Create a Loadbalancer]()
+  - [How to Deploy a Complete Three-Tier Web Application Infrastructure](/examples/working-with-three-layer-application.md)
 
 - **Tutorials**
   - [Tutorial](https://github.com/VersusControl/devops-ai-guidelines/blob/main/04-ai-agent-for-aws/00-toc.md)
