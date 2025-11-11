@@ -203,6 +203,7 @@ func (t *CreateLaunchTemplateTool) Execute(ctx context.Context, arguments map[st
 	message := fmt.Sprintf("Created launch template %s (%s)", template.ID, templateName)
 	data := map[string]interface{}{
 		"templateId":         template.ID,
+		"launchTemplateId":   template.ID,
 		"templateName":       templateName,
 		"launchTemplateName": templateName,
 		"imageId":            imageId,
@@ -232,23 +233,13 @@ func NewCreateAutoScalingGroupTool(awsClient *aws.Client, actionType string, log
 				"type":        "string",
 				"description": "The name for the auto scaling group",
 			},
-			"launchTemplate": map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"launchTemplateName": map[string]interface{}{
-						"type":        "string",
-						"description": "The launch template name",
-					},
-					"version": map[string]interface{}{
-						"type":        "string",
-						"description": "The launch template version ($Latest, $Default, or version number)",
-					},
-				},
-				"description": "Launch template configuration",
-			},
 			"launchTemplateName": map[string]interface{}{
 				"type":        "string",
-				"description": "The launch template name to use (legacy)",
+				"description": "The launch template name to use",
+			},
+			"launchTemplateVersion": map[string]interface{}{
+				"type":        "string",
+				"description": "The launch template version ($Latest, $Default, or version number)",
 			},
 			"minSize": map[string]interface{}{
 				"type":        "number",
@@ -276,8 +267,16 @@ func NewCreateAutoScalingGroupTool(awsClient *aws.Client, actionType string, log
 				},
 				"description": "List of target group ARNs",
 			},
+			"healthCheckType": map[string]interface{}{
+				"type":        "string",
+				"description": "Health check type (EC2 or ELB)",
+			},
+			"healthCheckGracePeriod": map[string]interface{}{
+				"type":        "number",
+				"description": "Health check grace period in seconds",
+			},
 		},
-		"required": []string{"minSize", "maxSize", "desiredCapacity"},
+		"required": []string{"autoScalingGroupName", "launchTemplateName", "minSize", "maxSize", "desiredCapacity"},
 	}
 
 	baseTool := NewBaseTool(
@@ -292,12 +291,14 @@ func NewCreateAutoScalingGroupTool(awsClient *aws.Client, actionType string, log
 	baseTool.AddExample(
 		"Create auto scaling group",
 		map[string]interface{}{
-			"asgName":            "web-server-asg",
-			"launchTemplateName": "web-server-template",
-			"minSize":            1,
-			"maxSize":            5,
-			"desiredCapacity":    2,
-			"subnetIds":          []string{"subnet-12345678", "subnet-87654321"},
+			"autoScalingGroupName":  "web-server-asg",
+			"launchTemplateName":    "web-server-template",
+			"launchTemplateVersion": "$Latest",
+			"minSize":               1,
+			"maxSize":               5,
+			"desiredCapacity":       2,
+			"vpcZoneIdentifier":     []string{"subnet-12345678", "subnet-87654321"},
+			"healthCheckType":       "EC2",
 		},
 		"Created auto scaling group web-server-asg",
 	)
@@ -312,36 +313,20 @@ func NewCreateAutoScalingGroupTool(awsClient *aws.Client, actionType string, log
 }
 
 func (t *CreateAutoScalingGroupTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	// Support both autoScalingGroupName and legacy asgName
+	// Get required parameters
 	asgName, ok := arguments["autoScalingGroupName"].(string)
 	if !ok || asgName == "" {
-		return t.CreateErrorResponse("autoScalingGroupName or asgName is required")
+		return t.CreateErrorResponse("autoScalingGroupName is required")
 	}
 
-	// Handle launch template configuration
-	var launchTemplateName, launchTemplateVersion string
-
-	// Check for new launchTemplate object format
-	if ltConfig, ok := arguments["launchTemplate"].(map[string]interface{}); ok {
-		if name, exists := ltConfig["launchTemplateName"].(string); exists {
-			launchTemplateName = name
-		}
-		if version, exists := ltConfig["version"].(string); exists {
-			launchTemplateVersion = version
-		}
-	} else {
-		// Fallback to legacy launchTemplateName
-		if legacyName, exists := arguments["launchTemplateName"].(string); exists && legacyName != "" {
-			launchTemplateName = legacyName
-			launchTemplateVersion = "$Latest" // Default version
-		}
+	launchTemplateName, ok := arguments["launchTemplateName"].(string)
+	if !ok || launchTemplateName == "" {
+		return t.CreateErrorResponse("launchTemplateName is required")
 	}
 
-	if launchTemplateName == "" {
-		return t.CreateErrorResponse("launchTemplate configuration is required")
-	}
-
-	if launchTemplateVersion == "" {
+	// Get launch template version, default to $Latest
+	launchTemplateVersion, ok := arguments["launchTemplateVersion"].(string)
+	if !ok || launchTemplateVersion == "" {
 		launchTemplateVersion = "$Latest"
 	}
 
@@ -360,6 +345,14 @@ func (t *CreateAutoScalingGroupTool) Execute(ctx context.Context, arguments map[
 		return t.CreateErrorResponse("desiredCapacity is required")
 	}
 
+	// Handle optional parameters
+	healthCheckType, _ := arguments["healthCheckType"].(string)
+	if healthCheckType == "" {
+		healthCheckType = "EC2" // Default
+	}
+
+	healthCheckGracePeriod, _ := arguments["healthCheckGracePeriod"].(float64)
+
 	// Handle subnet IDs
 	var subnetIds []string
 	if vpcZoneIds, ok := arguments["vpcZoneIdentifier"].([]interface{}); ok {
@@ -368,16 +361,10 @@ func (t *CreateAutoScalingGroupTool) Execute(ctx context.Context, arguments map[
 				subnetIds = append(subnetIds, id)
 			}
 		}
-	} else if sIds, ok := arguments["subnetIds"].([]interface{}); ok {
-		for _, sId := range sIds {
-			if id, ok := sId.(string); ok {
-				subnetIds = append(subnetIds, id)
-			}
-		}
 	}
 
 	if len(subnetIds) == 0 {
-		return t.CreateErrorResponse("vpcZoneIdentifier or subnetIds is required and must not be empty")
+		return t.CreateErrorResponse("vpcZoneIdentifier is required and must not be empty")
 	}
 
 	// Handle target group ARNs
@@ -392,16 +379,17 @@ func (t *CreateAutoScalingGroupTool) Execute(ctx context.Context, arguments map[
 
 	// Create auto scaling group parameters
 	params := aws.CreateAutoScalingGroupParams{
-		AutoScalingGroupName:  asgName,
-		LaunchTemplateName:    launchTemplateName,
-		LaunchTemplateVersion: launchTemplateVersion,
-		MinSize:               int32(minSize),
-		MaxSize:               int32(maxSize),
-		DesiredCapacity:       int32(desiredCapacity),
-		VPCZoneIdentifiers:    subnetIds,
-		TargetGroupARNs:       targetGroupARNs,
-		HealthCheckType:       "EC2", // Default
-		Tags:                  map[string]string{},
+		AutoScalingGroupName:   asgName,
+		LaunchTemplateName:     launchTemplateName,
+		LaunchTemplateVersion:  launchTemplateVersion,
+		MinSize:                int32(minSize),
+		MaxSize:                int32(maxSize),
+		DesiredCapacity:        int32(desiredCapacity),
+		VPCZoneIdentifiers:     subnetIds,
+		TargetGroupARNs:        targetGroupARNs,
+		HealthCheckType:        healthCheckType,
+		HealthCheckGracePeriod: int32(healthCheckGracePeriod),
+		Tags:                   map[string]string{},
 	}
 
 	// Use the adapter to create the auto scaling group
@@ -412,17 +400,18 @@ func (t *CreateAutoScalingGroupTool) Execute(ctx context.Context, arguments map[
 
 	message := fmt.Sprintf("Created auto scaling group %s with launch template %s", asg.ID, launchTemplateName)
 	data := map[string]interface{}{
-		"asgId":                 asg.ID,
-		"autoScalingGroupName":  asgName,
-		"launchTemplateName":    launchTemplateName,
-		"launchTemplateVersion": launchTemplateVersion,
-		"minSize":               int32(minSize),
-		"maxSize":               int32(maxSize),
-		"desiredCapacity":       int32(desiredCapacity),
-		"vpcZoneIdentifier":     subnetIds,
-		"subnetIds":             subnetIds,
-		"targetGroupARNs":       targetGroupARNs,
-		"resource":              asg,
+		"asgId":                  asg.ID,
+		"autoScalingGroupName":   asgName,
+		"launchTemplateName":     launchTemplateName,
+		"launchTemplateVersion":  launchTemplateVersion,
+		"minSize":                int32(minSize),
+		"maxSize":                int32(maxSize),
+		"desiredCapacity":        int32(desiredCapacity),
+		"vpcZoneIdentifier":      subnetIds,
+		"targetGroupARNs":        targetGroupARNs,
+		"healthCheckType":        healthCheckType,
+		"healthCheckGracePeriod": int32(healthCheckGracePeriod),
+		"resource":               asg,
 	}
 
 	return t.CreateSuccessResponse(message, data)

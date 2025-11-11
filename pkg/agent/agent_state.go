@@ -62,13 +62,6 @@ func (a *StateAwareAgent) addStateFromMCPResult(planStep *types.ExecutionPlanSte
 		UpdatedAt:    time.Now(),
 	}
 
-	a.Logger.WithFields(map[string]interface{}{
-		"step_id":           planStep.ID,
-		"resource_state_id": resourceState.ID,
-		"resource_type":     resourceState.Type,
-		"dependencies":      resourceState.Dependencies,
-	}).Info("Calling AddResourceToState for main AWS resource")
-
 	// Add to state manager via MCP server
 	if err := a.AddResourceToState(resourceState); err != nil {
 		a.Logger.WithError(err).WithFields(map[string]interface{}{

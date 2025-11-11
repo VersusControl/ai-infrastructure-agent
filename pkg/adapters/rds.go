@@ -221,9 +221,12 @@ func (r *RDSSpecializedAdapter) ExecuteSpecialOperation(ctx context.Context, ope
 		}
 
 		// Extract parameters with type checking
-		var dbIdentifier, dbClass, engine, username, password, subnetGroup string
+		var dbIdentifier, dbClass, engine, engineVersion, username, password, subnetGroup string
+		var storageType, preferredBackupWindow, preferredMaintenanceWindow string
 		var allocatedStorage int32 = 20
+		var backupRetentionPeriod int32 = 1
 		var securityGroupIds []string
+		var storageEncrypted, multiAZ, publiclyAccessible, performanceInsightsEnabled bool
 
 		if val, ok := createParams["dbInstanceIdentifier"].(string); ok {
 			dbIdentifier = val
@@ -234,6 +237,9 @@ func (r *RDSSpecializedAdapter) ExecuteSpecialOperation(ctx context.Context, ope
 		if val, ok := createParams["engine"].(string); ok {
 			engine = val
 		}
+		if val, ok := createParams["engineVersion"].(string); ok {
+			engineVersion = val
+		}
 		if val, ok := createParams["masterUsername"].(string); ok {
 			username = val
 		}
@@ -243,8 +249,32 @@ func (r *RDSSpecializedAdapter) ExecuteSpecialOperation(ctx context.Context, ope
 		if val, ok := createParams["allocatedStorage"].(float64); ok {
 			allocatedStorage = int32(val)
 		}
+		if val, ok := createParams["storageType"].(string); ok {
+			storageType = val
+		}
+		if val, ok := createParams["storageEncrypted"].(bool); ok {
+			storageEncrypted = val
+		}
 		if val, ok := createParams["dbSubnetGroupName"].(string); ok {
 			subnetGroup = val
+		}
+		if val, ok := createParams["backupRetentionPeriod"].(float64); ok {
+			backupRetentionPeriod = int32(val)
+		}
+		if val, ok := createParams["preferredBackupWindow"].(string); ok {
+			preferredBackupWindow = val
+		}
+		if val, ok := createParams["preferredMaintenanceWindow"].(string); ok {
+			preferredMaintenanceWindow = val
+		}
+		if val, ok := createParams["multiAz"].(bool); ok {
+			multiAZ = val
+		}
+		if val, ok := createParams["publiclyAccessible"].(bool); ok {
+			publiclyAccessible = val
+		}
+		if val, ok := createParams["performanceInsightsEnabled"].(bool); ok {
+			performanceInsightsEnabled = val
 		}
 		if val, ok := createParams["vpcSecurityGroupIds"].([]interface{}); ok {
 			for _, id := range val {
@@ -255,14 +285,24 @@ func (r *RDSSpecializedAdapter) ExecuteSpecialOperation(ctx context.Context, ope
 		}
 
 		dbParams := aws.CreateDBInstanceParams{
-			DBInstanceIdentifier: dbIdentifier,
-			DBInstanceClass:      dbClass,
-			Engine:               engine,
-			MasterUsername:       username,
-			MasterUserPassword:   password,
-			AllocatedStorage:     allocatedStorage,
-			DBSubnetGroupName:    subnetGroup,
-			VpcSecurityGroupIDs:  securityGroupIds,
+			DBInstanceIdentifier:       dbIdentifier,
+			DBInstanceClass:            dbClass,
+			Engine:                     engine,
+			EngineVersion:              engineVersion,
+			MasterUsername:             username,
+			MasterUserPassword:         password,
+			AllocatedStorage:           allocatedStorage,
+			StorageType:                storageType,
+			StorageEncrypted:           storageEncrypted,
+			DBSubnetGroupName:          subnetGroup,
+			VpcSecurityGroupIDs:        securityGroupIds,
+			BackupRetentionPeriod:      backupRetentionPeriod,
+			PreferredBackupWindow:      preferredBackupWindow,
+			PreferredMaintenanceWindow: preferredMaintenanceWindow,
+			MultiAZ:                    multiAZ,
+			PubliclyAccessible:         publiclyAccessible,
+			PerformanceInsightsEnabled: performanceInsightsEnabled,
+			Tags:                       make(map[string]string),
 		}
 
 		result, err := r.client.CreateDBInstance(ctx, dbParams)
