@@ -156,7 +156,7 @@ func comprehensiveEC2withALBPrompt() string {
 
 // Comprehensive Three-Tier Infrastructure
 func comprehensiveThreeLayerPrompt() string {
-	prompt := `I need to deploy a complete production-ready three-tier web application infrastructure on AWS with the following requirements:
+	prompt := `I need to deploy a complete production-ready three-tier web application infrastructure on AWS in the Region Singapore with the following requirements:
 
 Network Foundation (Phase 1):
 - Create a production VPC with a CIDR block of 10.0.0.0/16 across two availability zones.

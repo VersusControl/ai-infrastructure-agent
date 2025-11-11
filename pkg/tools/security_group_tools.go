@@ -197,10 +197,14 @@ func NewAddSecurityGroupIngressRuleTool(awsClient *aws.Client, actionType string
 			},
 			"cidrBlock": map[string]interface{}{
 				"type":        "string",
-				"description": "The CIDR block to allow",
+				"description": "The CIDR block to allow (use this OR sourceSecurityGroupId, not both)",
+			},
+			"sourceSecurityGroupId": map[string]interface{}{
+				"type":        "string",
+				"description": "Source security group ID to allow traffic from (use this OR cidrBlock, not both)",
 			},
 		},
-		"required": []string{"groupId", "protocol", "fromPort", "toPort", "cidrBlock"},
+		"required": []string{"groupId", "protocol", "fromPort", "toPort"},
 	}
 
 	baseTool := NewBaseTool(
@@ -213,7 +217,7 @@ func NewAddSecurityGroupIngressRuleTool(awsClient *aws.Client, actionType string
 	)
 
 	baseTool.AddExample(
-		"Add HTTP ingress rule",
+		"Add HTTP ingress rule from internet",
 		map[string]interface{}{
 			"groupId":   "sg-123456789",
 			"protocol":  "tcp",
@@ -222,6 +226,18 @@ func NewAddSecurityGroupIngressRuleTool(awsClient *aws.Client, actionType string
 			"cidrBlock": "0.0.0.0/0",
 		},
 		"Added ingress rule to security group sg-123456789: tcp 80-80 from 0.0.0.0/0",
+	)
+
+	baseTool.AddExample(
+		"Add ingress rule from another security group",
+		map[string]interface{}{
+			"groupId":               "sg-123456789",
+			"protocol":              "tcp",
+			"fromPort":              80,
+			"toPort":                80,
+			"sourceSecurityGroupId": "sg-987654321",
+		},
+		"Added ingress rule to security group sg-123456789: tcp 80-80 from security group sg-987654321",
 	)
 
 	// Create specialized adapter for Security Group operations
@@ -254,18 +270,39 @@ func (t *AddSecurityGroupIngressRuleTool) Execute(ctx context.Context, arguments
 		return t.CreateErrorResponse("toPort is required")
 	}
 
-	cidrBlock, ok := arguments["cidrBlock"].(string)
-	if !ok || cidrBlock == "" {
-		return t.CreateErrorResponse("cidrBlock is required")
+	// Check for CIDR block OR source security group (but not both)
+	cidrBlock, hasCidr := arguments["cidrBlock"].(string)
+	sourceSecurityGroupId, hasSG := arguments["sourceSecurityGroupId"].(string)
+
+	if !hasCidr && !hasSG {
+		return t.CreateErrorResponse("Either cidrBlock or sourceSecurityGroupId is required")
+	}
+
+	if hasCidr && hasSG {
+		return t.CreateErrorResponse("Cannot specify both cidrBlock and sourceSecurityGroupId - use one or the other")
+	}
+
+	if hasCidr && cidrBlock == "" {
+		return t.CreateErrorResponse("cidrBlock cannot be empty")
+	}
+
+	if hasSG && sourceSecurityGroupId == "" {
+		return t.CreateErrorResponse("sourceSecurityGroupId cannot be empty")
 	}
 
 	// Prepare parameters for the adapter
 	params := map[string]interface{}{
-		"groupId":   groupID,
-		"protocol":  protocol,
-		"fromPort":  int(fromPort),
-		"toPort":    int(toPort),
-		"cidrBlock": cidrBlock,
+		"groupId":  groupID,
+		"protocol": protocol,
+		"fromPort": int(fromPort),
+		"toPort":   int(toPort),
+	}
+
+	// Add either CIDR block or source security group
+	if hasCidr {
+		params["cidrBlock"] = cidrBlock
+	} else {
+		params["sourceSecurityGroupId"] = sourceSecurityGroupId
 	}
 
 	// Add ingress rule using the Security Group specialized adapter
@@ -275,17 +312,31 @@ func (t *AddSecurityGroupIngressRuleTool) Execute(ctx context.Context, arguments
 		return t.CreateErrorResponse(fmt.Sprintf("Failed to add ingress rule: %v", err))
 	}
 
-	message := fmt.Sprintf("Added ingress rule to security group %s: %s %d-%d from %s",
-		groupID, protocol, int(fromPort), int(toPort), cidrBlock)
+	// Create appropriate success message based on source type
+	var message string
+	var source string
 	data := map[string]interface{}{
 		"groupId":   groupID,
 		"protocol":  protocol,
 		"fromPort":  int(fromPort),
 		"toPort":    int(toPort),
-		"cidrBlock": cidrBlock,
 		"direction": "ingress",
 		"resource":  result,
 	}
+
+	if hasCidr {
+		message = fmt.Sprintf("Added ingress rule to security group %s: %s %d-%d from %s",
+			groupID, protocol, int(fromPort), int(toPort), cidrBlock)
+		source = cidrBlock
+		data["cidrBlock"] = cidrBlock
+	} else {
+		message = fmt.Sprintf("Added ingress rule to security group %s: %s %d-%d from security group %s",
+			groupID, protocol, int(fromPort), int(toPort), sourceSecurityGroupId)
+		source = sourceSecurityGroupId
+		data["sourceSecurityGroupId"] = sourceSecurityGroupId
+	}
+
+	data["source"] = source
 
 	return t.CreateSuccessResponse(message, data)
 }
@@ -319,10 +370,14 @@ func NewAddSecurityGroupEgressRuleTool(awsClient *aws.Client, actionType string,
 			},
 			"cidrBlock": map[string]interface{}{
 				"type":        "string",
-				"description": "The CIDR block to allow",
+				"description": "The CIDR block to allow (use this OR sourceSecurityGroupId, not both)",
+			},
+			"sourceSecurityGroupId": map[string]interface{}{
+				"type":        "string",
+				"description": "Source security group ID to allow traffic from (use this OR cidrBlock, not both)",
 			},
 		},
-		"required": []string{"groupId", "protocol", "fromPort", "toPort", "cidrBlock"},
+		"required": []string{"groupId", "protocol", "fromPort", "toPort"},
 	}
 
 	baseTool := NewBaseTool(
@@ -335,7 +390,7 @@ func NewAddSecurityGroupEgressRuleTool(awsClient *aws.Client, actionType string,
 	)
 
 	baseTool.AddExample(
-		"Add HTTPS egress rule",
+		"Add HTTPS egress rule to internet",
 		map[string]interface{}{
 			"groupId":   "sg-123456789",
 			"protocol":  "tcp",
@@ -344,6 +399,18 @@ func NewAddSecurityGroupEgressRuleTool(awsClient *aws.Client, actionType string,
 			"cidrBlock": "0.0.0.0/0",
 		},
 		"Added egress rule to security group sg-123456789: tcp 443-443 to 0.0.0.0/0",
+	)
+
+	baseTool.AddExample(
+		"Add egress rule to another security group",
+		map[string]interface{}{
+			"groupId":               "sg-123456789",
+			"protocol":              "tcp",
+			"fromPort":              3306,
+			"toPort":                3306,
+			"sourceSecurityGroupId": "sg-987654321",
+		},
+		"Added egress rule to security group sg-123456789: tcp 3306-3306 to security group sg-987654321",
 	)
 
 	// Create specialized adapter for Security Group operations
@@ -376,18 +443,39 @@ func (t *AddSecurityGroupEgressRuleTool) Execute(ctx context.Context, arguments 
 		return t.CreateErrorResponse("toPort is required")
 	}
 
-	cidrBlock, ok := arguments["cidrBlock"].(string)
-	if !ok || cidrBlock == "" {
-		return t.CreateErrorResponse("cidrBlock is required")
+	// Check for CIDR block OR source security group (but not both)
+	cidrBlock, hasCidr := arguments["cidrBlock"].(string)
+	sourceSecurityGroupId, hasSG := arguments["sourceSecurityGroupId"].(string)
+
+	if !hasCidr && !hasSG {
+		return t.CreateErrorResponse("Either cidrBlock or sourceSecurityGroupId is required")
+	}
+
+	if hasCidr && hasSG {
+		return t.CreateErrorResponse("Cannot specify both cidrBlock and sourceSecurityGroupId - use one or the other")
+	}
+
+	if hasCidr && cidrBlock == "" {
+		return t.CreateErrorResponse("cidrBlock cannot be empty")
+	}
+
+	if hasSG && sourceSecurityGroupId == "" {
+		return t.CreateErrorResponse("sourceSecurityGroupId cannot be empty")
 	}
 
 	// Prepare parameters for the adapter
 	params := map[string]interface{}{
-		"groupId":   groupID,
-		"protocol":  protocol,
-		"fromPort":  int(fromPort),
-		"toPort":    int(toPort),
-		"cidrBlock": cidrBlock,
+		"groupId":  groupID,
+		"protocol": protocol,
+		"fromPort": int(fromPort),
+		"toPort":   int(toPort),
+	}
+
+	// Add either CIDR block or source security group
+	if hasCidr {
+		params["cidrBlock"] = cidrBlock
+	} else {
+		params["sourceSecurityGroupId"] = sourceSecurityGroupId
 	}
 
 	// Add egress rule using the Security Group specialized adapter
@@ -397,17 +485,31 @@ func (t *AddSecurityGroupEgressRuleTool) Execute(ctx context.Context, arguments 
 		return t.CreateErrorResponse(fmt.Sprintf("Failed to add egress rule: %v", err))
 	}
 
-	message := fmt.Sprintf("Added egress rule to security group %s: %s %d-%d to %s",
-		groupID, protocol, int(fromPort), int(toPort), cidrBlock)
+	// Create appropriate success message based on source type
+	var message string
+	var destination string
 	data := map[string]interface{}{
 		"groupId":   groupID,
 		"protocol":  protocol,
 		"fromPort":  int(fromPort),
 		"toPort":    int(toPort),
-		"cidrBlock": cidrBlock,
 		"direction": "egress",
 		"resource":  result,
 	}
+
+	if hasCidr {
+		message = fmt.Sprintf("Added egress rule to security group %s: %s %d-%d to %s",
+			groupID, protocol, int(fromPort), int(toPort), cidrBlock)
+		destination = cidrBlock
+		data["cidrBlock"] = cidrBlock
+	} else {
+		message = fmt.Sprintf("Added egress rule to security group %s: %s %d-%d to security group %s",
+			groupID, protocol, int(fromPort), int(toPort), sourceSecurityGroupId)
+		destination = sourceSecurityGroupId
+		data["sourceSecurityGroupId"] = sourceSecurityGroupId
+	}
+
+	data["destination"] = destination
 
 	return t.CreateSuccessResponse(message, data)
 }
