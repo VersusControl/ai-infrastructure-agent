@@ -41,12 +41,12 @@ func NewCreatePrivateSubnetTool(awsClient *aws.Client, actionType string, logger
 				"description": "A name tag for the subnet",
 			},
 		},
-		"required": []string{"vpcId", "cidrBlock"},
+		"required": []string{"vpcId", "cidrBlock", "availabilityZone"},
 	}
 
 	baseTool := NewBaseTool(
 		"create-private-subnet",
-		"Create a new private subnet",
+		"Create a new private subnet in a specific availability zone",
 		"networking",
 		actionType,
 		inputSchema,
@@ -54,14 +54,14 @@ func NewCreatePrivateSubnetTool(awsClient *aws.Client, actionType string, logger
 	)
 
 	baseTool.AddExample(
-		"Create a private subnet",
+		"Create private subnet using dynamic availability zone discovery",
 		map[string]interface{}{
 			"vpcId":            "vpc-12345678",
 			"cidrBlock":        "10.0.1.0/24",
 			"availabilityZone": "us-east-1a",
 			"name":             "private-subnet-1",
 		},
-		"Created private subnet subnet-87654321 in VPC vpc-12345678",
+		"Created private subnet subnet-87654321 in availability zone. Use get-availability-zones tool first to discover zones dynamically.",
 	)
 
 	// Cast to SubnetAdapter for type safety
@@ -84,7 +84,11 @@ func (t *CreatePrivateSubnetTool) Execute(ctx context.Context, arguments map[str
 		return t.CreateErrorResponse("cidrBlock is required")
 	}
 
-	availabilityZone, _ := arguments["availabilityZone"].(string)
+	availabilityZone, ok := arguments["availabilityZone"].(string)
+	if !ok || availabilityZone == "" {
+		return t.CreateErrorResponse("availabilityZone is required. Use get-availability-zones tool to discover available zones dynamically, then reference with {{step-get-zones.availabilityZones.0}}")
+	}
+
 	name, _ := arguments["name"].(string)
 
 	// Create subnet parameters (private subnet doesn't map public IP)
@@ -145,12 +149,12 @@ func NewCreatePublicSubnetTool(awsClient *aws.Client, actionType string, logger 
 				"description": "A name tag for the subnet",
 			},
 		},
-		"required": []string{"vpcId", "cidrBlock"},
+		"required": []string{"vpcId", "cidrBlock", "availabilityZone"},
 	}
 
 	baseTool := NewBaseTool(
 		"create-public-subnet",
-		"Create a new public subnet",
+		"Create a new public subnet in a specific availability zone",
 		"networking",
 		actionType,
 		inputSchema,
@@ -158,14 +162,14 @@ func NewCreatePublicSubnetTool(awsClient *aws.Client, actionType string, logger 
 	)
 
 	baseTool.AddExample(
-		"Create a public subnet",
+		"Create public subnet using dynamic availability zone discovery",
 		map[string]interface{}{
 			"vpcId":            "vpc-12345678",
 			"cidrBlock":        "10.0.2.0/24",
 			"availabilityZone": "us-east-1a",
 			"name":             "public-subnet-1",
 		},
-		"Created public subnet subnet-87654321 in VPC vpc-12345678",
+		"Created public subnet subnet-12345678 in availability zone. Use get-availability-zones tool first to discover zones dynamically.",
 	)
 
 	// Cast to SubnetAdapter for type safety
@@ -188,7 +192,11 @@ func (t *CreatePublicSubnetTool) Execute(ctx context.Context, arguments map[stri
 		return t.CreateErrorResponse("cidrBlock is required")
 	}
 
-	availabilityZone, _ := arguments["availabilityZone"].(string)
+	availabilityZone, ok := arguments["availabilityZone"].(string)
+	if !ok || availabilityZone == "" {
+		return t.CreateErrorResponse("availabilityZone is required. Use get-availability-zones tool to discover available zones dynamically, then reference with {{step-get-zones.availabilityZones.0}}")
+	}
+
 	name, _ := arguments["name"].(string)
 
 	// Create subnet parameters (public subnet maps public IP)
