@@ -127,19 +127,23 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 		}
 	}
 
-	// Check for primary resource ID mapping
-	resourceID, exists := a.resourceMappings[stepID]
-	a.mappingsMutex.RUnlock()
+	// Check for primary resource ID mapping (only if requestedField is "resourceId" or default)
+	if requestedField == "resourceId" {
+		resourceID, exists := a.resourceMappings[stepID]
+		a.mappingsMutex.RUnlock()
 
-	// If mapping exists return it directly
-	if exists {
-		return resourceID, nil
+		// If mapping exists return it directly
+		if exists {
+			return resourceID, nil
+		}
+	} else {
+		a.mappingsMutex.RUnlock()
 	}
 
 	// For all other cases (no mapping exists OR specific field requested), resolve from infrastructure state
-	if a.testMode && !exists {
+	if a.testMode {
 		// In test mode, avoid accessing real state - rely only on stored mappings
-		return "", fmt.Errorf("dependency reference not found in test mode: %s (step ID: %s not found in resource mappings)", reference, stepID)
+		return "", fmt.Errorf("dependency reference not found in test mode: %s (step ID: %s, field: %s not found in resource mappings)", reference, stepID, requestedField)
 	}
 
 	// Resolve from infrastructure state (handles both missing mappings and specific field requests)

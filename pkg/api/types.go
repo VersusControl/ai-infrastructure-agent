@@ -43,3 +43,32 @@ type RecoveryMessage struct {
 	Approved    bool      `json:"approved,omitempty"`    // For plan-level recovery (approved/rejected)
 	Timestamp   time.Time `json:"timestamp"`
 }
+
+// DeletionPlanResource represents a resource in the deletion plan
+type DeletionPlanResource struct {
+	ID           string                 `json:"id"`
+	Name         string                 `json:"name"`
+	Type         string                 `json:"type"`
+	Region       string                 `json:"region,omitempty"`
+	Status       string                 `json:"status"`
+	Properties   map[string]interface{} `json:"properties"`
+	Dependencies []string               `json:"dependencies"` // Resources this depends on
+	Dependents   []string               `json:"dependents"`   // Resources that depend on this
+	CreatedAt    time.Time              `json:"createdAt"`
+}
+
+// DeletionPlan represents the deletion plan with ordered resources
+type DeletionPlan struct {
+	Resources      []DeletionPlanResource `json:"resources"`     // All resources in deletion order
+	DeletionOrder  []string               `json:"deletionOrder"` // Resource IDs in deletion order
+	TotalResources int                    `json:"totalResources"`
+	GeneratedAt    time.Time              `json:"generatedAt"`
+	Region         string                 `json:"region"`
+	Warnings       []string               `json:"warnings,omitempty"`
+}
+
+// DeletionPlanRequest represents a request for deletion plan (optional filters)
+type DeletionPlanRequest struct {
+	ResourceIDs  []string `json:"resourceIds,omitempty"`  // Specific resources to delete (optional)
+	ResourceType string   `json:"resourceType,omitempty"` // Filter by resource type (optional)
+}

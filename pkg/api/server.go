@@ -18,6 +18,7 @@ import (
 // WebServer handles HTTP requests for the AI agent UI
 type WebServer struct {
 	router *mux.Router
+	config *config.Config
 
 	upgrader websocket.Upgrader
 	aiAgent  *agent.StateAwareAgent
@@ -39,6 +40,7 @@ type WebServer struct {
 func NewWebServer(cfg *config.Config, awsClient *aws.Client, logger *logging.Logger) *WebServer {
 	ws := &WebServer{
 		router:               mux.NewRouter(),
+		config:               cfg,
 		connections:          make(map[string]*wsConnection),
 		decisions:            make(map[string]*StoredDecision),
 		planRecoveryRequests: make(map[string]*PlanRecoveryRequest),
@@ -159,6 +161,12 @@ func (ws *WebServer) setupRoutes() {
 	api.HandleFunc("/agent/process", ws.processRequestHandler).Methods("POST")
 	api.HandleFunc("/agent/execute-with-plan-recovery", ws.executeWithPlanRecoveryHandler).Methods("POST")
 	api.HandleFunc("/export", ws.exportStateHandler).Methods("GET")
+
+	// Deletion plan endpoint (safe - read-only, returns resource data for frontend script generation)
+	api.HandleFunc("/deletion-plan", ws.getDeletionPlanHandler).Methods("GET", "POST")
+
+	// Clean resource properties endpoint (clears properties to {} in state file)
+	api.HandleFunc("/resources/empty", ws.cleanResourcePropertiesHandler).Methods("POST")
 
 	// Handle OPTIONS requests for all API routes
 	api.HandleFunc("/{path:.*}", func(w http.ResponseWriter, r *http.Request) {
