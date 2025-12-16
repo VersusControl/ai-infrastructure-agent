@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 
@@ -20,6 +21,7 @@ type Client struct {
 	autoscaling *autoscaling.Client
 	elbv2       *elasticloadbalancingv2.Client
 	rds         *rds.Client
+	eks         *eks.Client
 	logger      *logging.Logger
 }
 

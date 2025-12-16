@@ -26,6 +26,10 @@ resource_identification:
     # Auto Scaling Group ARN patterns
     auto_scaling_group: ['^arn:aws:autoscaling:.*:autoScalingGroup:.*']
     
+    # EKS resource patterns
+    eks_cluster: ['^[a-zA-Z][a-zA-Z0-9_-]{0,99}$']  # EKS cluster names
+    eks_nodegroup: ['^[a-zA-Z][a-zA-Z0-9_-]{0,62}$']  # EKS node group names
+    
     # Other resources use description patterns because ID patterns can't reliably identify these
 
   # Description-based patterns for AI inference
@@ -121,6 +125,24 @@ resource_identification:
     db_subnet_group:
       - 'db subnet group'
       - 'database subnet group'
+      
+    eks_cluster:
+      - 'eks cluster'
+      - 'kubernetes cluster'
+      - 'container cluster'
+      - 'k8s cluster'
+      
+    eks_nodegroup:
+      - 'eks node group'
+      - 'kubernetes node group'
+      - 'worker nodes'
+      - 'compute nodes'
+      
+    kubernetes_manifest:
+      - 'kubernetes manifest'
+      - 'k8s manifest'
+      - 'deployment yaml'
+      - 'kubernetes deployment'
 
 # Tool-to-resource type mapping (REQUIRED - used by PatternMatcher)
 # Maps exact tool names to resource types for proper ID extraction
@@ -220,6 +242,18 @@ tool_resource_patterns:
     
   availability_zone:
     - '^get-availability-zones$'
+    
+  eks_cluster:
+    - '^create-eks-cluster$'
+    - '^list-eks-clusters$'
+    - '^describe-eks-cluster$'
+    - '^delete-eks-cluster$'
+    
+  eks_nodegroup:
+    - '^create-eks-nodegroup$'
+    
+  kubernetes_manifest:
+    - '^deploy-kubernetes-manifest$'
 
 # Resource hierarchy and relationships
 resource_relationships:
@@ -252,6 +286,10 @@ resource_relationships:
   launch_template:
     - ec2_instance # virtual relationship
     
+  eks_cluster:
+    - eks_nodegroup
+    - kubernetes_manifest
+    
   # Dependencies (what this resource typically needs)
   dependencies:
     subnet: [vpc]
@@ -267,6 +305,9 @@ resource_relationships:
     internet_gateway: [vpc]
     route_table: [vpc]
     listener: [load_balancer, target_group]
+    eks_cluster: [subnet, security_group]
+    eks_nodegroup: [eks_cluster, subnet]
+    kubernetes_manifest: [eks_cluster]
 
 # Tool Category Mapping
 tool_categories:
@@ -302,3 +343,8 @@ tool_categories:
     
   discovery:
     - availability_zone
+    
+  kubernetes:
+    - eks_cluster
+    - eks_nodegroup
+    - kubernetes_manifest
