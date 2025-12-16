@@ -17,11 +17,8 @@ import (
 // Helper function to create error results
 func createErrorResult(message string) *mcp.CallToolResult {
 	return &mcp.CallToolResult{
-		Content: []interface{}{
-			map[string]interface{}{
-				"type": "text",
-				"text": fmt.Sprintf("Error: %s", message),
-			},
+		Content: []mcp.Content{
+			mcp.NewTextContent(fmt.Sprintf("Error: %s", message)),
 		},
 		IsError: true,
 	}
@@ -87,9 +84,7 @@ func (t *CreateEKSClusterTool) Execute(ctx context.Context, args map[string]inte
 			}
 			if endpointConfigPublic, exists := vpcConfigMap["endpointConfigPublic"]; exists {
 				if publicAccess, ok := endpointConfigPublic.(bool); ok {
-					vpcConfig.EndpointConfigResponse = &types.VpcConfigResponse{
-						EndpointPublicAccess: &publicAccess,
-					}
+					vpcConfig.EndpointPublicAccess = &publicAccess
 				}
 			}
 		}
@@ -166,7 +161,7 @@ func (t *CreateEKSClusterTool) Execute(ctx context.Context, args map[string]inte
 	}
 
 	// Create the cluster
-	result, err := t.client.CreateEKSCluster(ctx, input)
+	_, err := t.client.CreateEKSCluster(ctx, input)
 	if err != nil {
 		t.logger.WithError(err).Error("Failed to create EKS cluster")
 		return createErrorResult(fmt.Sprintf("Failed to create EKS cluster: %v", err)), nil
@@ -174,14 +169,8 @@ func (t *CreateEKSClusterTool) Execute(ctx context.Context, args map[string]inte
 
 	// Return success result
 	return &mcp.CallToolResult{
-		Meta: map[string]interface{}{
-			"cluster_name": name,
-		},
-		Content: []interface{}{
-			map[string]interface{}{
-				"type": "text",
-				"text": fmt.Sprintf("EKS cluster '%s' creation initiated successfully", name),
-			},
+		Content: []mcp.Content{
+			mcp.NewTextContent(fmt.Sprintf("EKS cluster '%s' creation initiated successfully", name)),
 		},
 		IsError: false,
 	}, nil
@@ -421,33 +410,20 @@ func (t *ManageK8sResourceTool) Execute(ctx context.Context, args map[string]int
 	}
 
 	return &mcp.CallToolResult{
-		Meta: map[string]interface{}{
-			"cluster_name":  clusterName,
-			"action":        action,
-			"resource_type": resourceType,
-			"resource_name": resourceName,
-			"namespace":     namespace,
-		},
-		Content: []interface{}{
-			map[string]interface{}{
-				"type": "text",
-				"text": fmt.Sprintf("Kubernetes resource management prepared for %s %s/%s in cluster '%s'", action, resourceType, resourceName, clusterName),
-			},
-			map[string]interface{}{
-				"type": "resource",
-				"resource": map[string]interface{}{
-					"uri":      fmt.Sprintf("k8s://cluster/%s/resource/%s/%s", clusterName, resourceType, resourceName),
-					"mimeType": "application/json",
-					"text":     mustMarshalJSON(map[string]interface{}{
-						"clusterName":     clusterName,
-						"action":          action,
-						"resourceType":    resourceType,
-						"resourceName":    resourceName,
-						"namespace":       namespace,
-						"kubectlCommands": kubectlCommands,
-					}),
-				},
-			},
+		Content: []mcp.Content{
+			mcp.NewTextContent(fmt.Sprintf("Kubernetes resource management prepared for %s %s/%s in cluster '%s'", action, resourceType, resourceName, clusterName)),
+			mcp.NewResourceContent(
+				fmt.Sprintf("k8s://cluster/%s/resource/%s/%s", clusterName, resourceType, resourceName),
+				"application/json",
+				mustMarshalJSON(map[string]interface{}{
+					"clusterName":     clusterName,
+					"action":          action,
+					"resourceType":    resourceType,
+					"resourceName":    resourceName,
+					"namespace":       namespace,
+					"kubectlCommands": kubectlCommands,
+				}),
+			),
 		},
 		IsError: false,
 	}, nil
