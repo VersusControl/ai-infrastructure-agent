@@ -420,15 +420,7 @@ func (t *ManageK8sResourceTool) Execute(ctx context.Context, args map[string]int
 				Type: "resource",
 				Resource: &mcp.Resource{
 					URI:      fmt.Sprintf("k8s://cluster/%s/resource/%s/%s", clusterName, resourceType, resourceName),
-					MimeType: aws.String("application/json"),
-					Text:     aws.String(mustMarshalJSON(map[string]interface{}{
-						"clusterName":     clusterName,
-						"action":          action,
-						"resourceType":    resourceType,
-						"resourceName":    resourceName,
-						"namespace":       namespace,
-						"kubectlCommands": kubectlCommands,
-					})),
+					MIMEType: aws.String("application/json"),
 				},
 			},
 		},
@@ -576,13 +568,7 @@ func (t *ApplyYamlTool) Execute(ctx context.Context, args map[string]interface{}
 				Type: "resource",
 				Resource: &mcp.Resource{
 					URI:      fmt.Sprintf("k8s://cluster/%s/apply", clusterName),
-					MimeType: aws.String("application/json"),
-					Text:     aws.String(mustMarshalJSON(map[string]interface{}{
-						"clusterName":     clusterName,
-						"namespace":       namespace,
-						"yamlContent":     yamlContent,
-						"kubectlCommands": kubectlCommands,
-					})),
+					MIMEType: aws.String("application/json"),
 				},
 			},
 		},
@@ -714,12 +700,7 @@ func (t *GetK8sEventsTool) Execute(ctx context.Context, args map[string]interfac
 				Type: "resource",
 				Resource: &mcp.Resource{
 					URI:      fmt.Sprintf("k8s://cluster/%s/events", clusterName),
-					MimeType: aws.String("application/json"),
-					Text:     aws.String(mustMarshalJSON(map[string]interface{}{
-						"clusterName":     clusterName,
-						"namespace":       namespace,
-						"kubectlCommands": kubectlCommands,
-					})),
+					MIMEType: aws.String("application/json"),
 				},
 			},
 		},
@@ -873,15 +854,7 @@ func (t *GetPodLogsTool) Execute(ctx context.Context, args map[string]interface{
 				Type: "resource",
 				Resource: &mcp.Resource{
 					URI:      fmt.Sprintf("k8s://cluster/%s/pod/%s/logs", clusterName, podName),
-					MimeType: aws.String("application/json"),
-					Text:     aws.String(mustMarshalJSON(map[string]interface{}{
-						"clusterName":     clusterName,
-						"podName":         podName,
-						"namespace":       namespace,
-						"containerName":   containerName,
-						"tailLines":       tailLines,
-						"kubectlCommands": kubectlCommands,
-					})),
+					MIMEType: aws.String("application/json"),
 				},
 			},
 		},
