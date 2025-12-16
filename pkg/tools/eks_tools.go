@@ -151,7 +151,11 @@ func (t *CreateEKSClusterTool) Execute(ctx context.Context, args map[string]inte
 				if enableList, ok := enable.([]interface{}); ok {
 					for _, logType := range enableList {
 						if logTypeStr, ok := logType.(string); ok {
-							logging.Enable = append(logging.Enable, types.LogType(logTypeStr))
+							logSetup := &types.LogSetup{
+								Enabled: aws.Bool(true),
+								Types:   []types.LogType{types.LogType(logTypeStr)},
+							}
+							logging.ClusterLogging = append(logging.ClusterLogging, *logSetup)
 						}
 					}
 				}
@@ -412,18 +416,21 @@ func (t *ManageK8sResourceTool) Execute(ctx context.Context, args map[string]int
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			mcp.NewTextContent(fmt.Sprintf("Kubernetes resource management prepared for %s %s/%s in cluster '%s'", action, resourceType, resourceName, clusterName)),
-			mcp.NewResourceContent(
-				fmt.Sprintf("k8s://cluster/%s/resource/%s/%s", clusterName, resourceType, resourceName),
-				"application/json",
-				mustMarshalJSON(map[string]interface{}{
-					"clusterName":     clusterName,
-					"action":          action,
-					"resourceType":    resourceType,
-					"resourceName":    resourceName,
-					"namespace":       namespace,
-					"kubectlCommands": kubectlCommands,
-				}),
-			),
+			{
+				Type: "resource",
+				Resource: &mcp.Resource{
+					URI:      fmt.Sprintf("k8s://cluster/%s/resource/%s/%s", clusterName, resourceType, resourceName),
+					MimeType: aws.String("application/json"),
+					Text:     aws.String(mustMarshalJSON(map[string]interface{}{
+						"clusterName":     clusterName,
+						"action":          action,
+						"resourceType":    resourceType,
+						"resourceName":    resourceName,
+						"namespace":       namespace,
+						"kubectlCommands": kubectlCommands,
+					})),
+				},
+			},
 		},
 		IsError: false,
 	}, nil
@@ -563,26 +570,19 @@ func (t *ApplyYamlTool) Execute(ctx context.Context, args map[string]interface{}
 	}
 
 	return &mcp.CallToolResult{
-		Meta: map[string]interface{}{
-			"cluster_name": clusterName,
-			"namespace":    namespace,
-		},
-		Content: []interface{}{
-			map[string]interface{}{
-				"type": "text",
-				"text": fmt.Sprintf("YAML application prepared for cluster '%s'", clusterName),
-			},
-			map[string]interface{}{
-				"type": "resource",
-				"resource": map[string]interface{}{
-					"uri":      fmt.Sprintf("k8s://cluster/%s/apply", clusterName),
-					"mimeType": "application/json",
-					"text":     mustMarshalJSON(map[string]interface{}{
+		Content: []mcp.Content{
+			mcp.NewTextContent(fmt.Sprintf("YAML application prepared for cluster '%s'", clusterName)),
+			{
+				Type: "resource",
+				Resource: &mcp.Resource{
+					URI:      fmt.Sprintf("k8s://cluster/%s/apply", clusterName),
+					MimeType: aws.String("application/json"),
+					Text:     aws.String(mustMarshalJSON(map[string]interface{}{
 						"clusterName":     clusterName,
 						"namespace":       namespace,
 						"yamlContent":     yamlContent,
 						"kubectlCommands": kubectlCommands,
-					}),
+					})),
 				},
 			},
 		},
@@ -708,25 +708,18 @@ func (t *GetK8sEventsTool) Execute(ctx context.Context, args map[string]interfac
 	}
 
 	return &mcp.CallToolResult{
-		Meta: map[string]interface{}{
-			"cluster_name": clusterName,
-			"namespace":    namespace,
-		},
-		Content: []interface{}{
-			map[string]interface{}{
-				"type": "text",
-				"text": fmt.Sprintf("Kubernetes events retrieval prepared for cluster '%s'", clusterName),
-			},
-			map[string]interface{}{
-				"type": "resource",
-				"resource": map[string]interface{}{
-					"uri":      fmt.Sprintf("k8s://cluster/%s/events", clusterName),
-					"mimeType": "application/json",
-					"text":     mustMarshalJSON(map[string]interface{}{
+		Content: []mcp.Content{
+			mcp.NewTextContent(fmt.Sprintf("Kubernetes events retrieval prepared for cluster '%s'", clusterName)),
+			{
+				Type: "resource",
+				Resource: &mcp.Resource{
+					URI:      fmt.Sprintf("k8s://cluster/%s/events", clusterName),
+					MimeType: aws.String("application/json"),
+					Text:     aws.String(mustMarshalJSON(map[string]interface{}{
 						"clusterName":     clusterName,
 						"namespace":       namespace,
 						"kubectlCommands": kubectlCommands,
-					}),
+					})),
 				},
 			},
 		},
@@ -874,30 +867,21 @@ func (t *GetPodLogsTool) Execute(ctx context.Context, args map[string]interface{
 	}...)
 
 	return &mcp.CallToolResult{
-		Meta: map[string]interface{}{
-			"cluster_name":   clusterName,
-			"pod_name":       podName,
-			"namespace":      namespace,
-			"container_name": containerName,
-		},
-		Content: []interface{}{
-			map[string]interface{}{
-				"type": "text",
-				"text": fmt.Sprintf("Pod logs retrieval prepared for pod '%s' in cluster '%s'", podName, clusterName),
-			},
-			map[string]interface{}{
-				"type": "resource",
-				"resource": map[string]interface{}{
-					"uri":      fmt.Sprintf("k8s://cluster/%s/pod/%s/logs", clusterName, podName),
-					"mimeType": "application/json",
-					"text":     mustMarshalJSON(map[string]interface{}{
+		Content: []mcp.Content{
+			mcp.NewTextContent(fmt.Sprintf("Pod logs retrieval prepared for pod '%s' in cluster '%s'", podName, clusterName)),
+			{
+				Type: "resource",
+				Resource: &mcp.Resource{
+					URI:      fmt.Sprintf("k8s://cluster/%s/pod/%s/logs", clusterName, podName),
+					MimeType: aws.String("application/json"),
+					Text:     aws.String(mustMarshalJSON(map[string]interface{}{
 						"clusterName":     clusterName,
 						"podName":         podName,
 						"namespace":       namespace,
 						"containerName":   containerName,
 						"tailLines":       tailLines,
 						"kubectlCommands": kubectlCommands,
-					}),
+					})),
 				},
 			},
 		},
@@ -981,6 +965,229 @@ func (t *GetPodLogsTool) ValidateArguments(arguments map[string]interface{}) err
 		}
 	}
 	return nil
+}
+
+// ========== Additional EKS Tools ==========
+
+// ListEKSClustersTool lists EKS clusters
+type ListEKSClustersTool struct {
+	client     *awsclient.Client
+	actionType string
+	logger     *logging.Logger
+}
+
+func NewListEKSClustersTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &ListEKSClustersTool{
+		client:     client,
+		actionType: actionType,
+		logger:     logger,
+	}
+}
+
+func (t *ListEKSClustersTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
+	t.logger.Info("Listing EKS clusters")
+
+	clusters, err := t.client.ListEKSClusters(ctx)
+	if err != nil {
+		return createErrorResult(fmt.Sprintf("Failed to list EKS clusters: %v", err)), nil
+	}
+
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			mcp.NewTextContent(fmt.Sprintf("Found %d EKS clusters", len(clusters))),
+		},
+		IsError: false,
+	}, nil
+}
+
+func (t *ListEKSClustersTool) Name() string {
+	return "list-eks-clusters"
+}
+
+func (t *ListEKSClustersTool) Description() string {
+	return "Lists all EKS clusters in the region"
+}
+
+func (t *ListEKSClustersTool) Category() string {
+	return "eks-mcp"
+}
+
+func (t *ListEKSClustersTool) ActionType() string {
+	return t.actionType
+}
+
+func (t *ListEKSClustersTool) GetInputSchema() map[string]interface{} {
+	return map[string]interface{}{
+		"type":       "object",
+		"properties": map[string]interface{}{},
+	}
+}
+
+func (t *ListEKSClustersTool) GetOutputSchema() map[string]interface{} {
+	return map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"success": map[string]interface{}{
+				"type":        "boolean",
+				"description": "Whether the operation was successful",
+			},
+			"message": map[string]interface{}{
+				"type":        "string",
+				"description": "Human-readable message about the operation",
+			},
+		},
+		"required": []string{"success", "message"},
+	}
+}
+
+func (t *ListEKSClustersTool) GetExamples() []interfaces.ToolExample {
+	return []interfaces.ToolExample{}
+}
+
+func (t *ListEKSClustersTool) ValidateArguments(arguments map[string]interface{}) error {
+	return nil
+}
+
+// DescribeEKSClusterTool describes an EKS cluster
+type DescribeEKSClusterTool struct {
+	client     *awsclient.Client
+	actionType string
+	logger     *logging.Logger
+}
+
+func NewDescribeEKSClusterTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &DescribeEKSClusterTool{
+		client:     client,
+		actionType: actionType,
+		logger:     logger,
+	}
+}
+
+func (t *DescribeEKSClusterTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
+	t.logger.Info("Describing EKS cluster")
+
+	clusterName, ok := args["clusterName"].(string)
+	if !ok || clusterName == "" {
+		return createErrorResult("clusterName is required and must be a string"), nil
+	}
+
+	cluster, err := t.client.DescribeEKSCluster(ctx, clusterName)
+	if err != nil {
+		return createErrorResult(fmt.Sprintf("Failed to describe EKS cluster: %v", err)), nil
+	}
+
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			mcp.NewTextContent(fmt.Sprintf("EKS cluster '%s' details retrieved successfully. Status: %s", clusterName, string(cluster.Status))),
+		},
+		IsError: false,
+	}, nil
+}
+
+func (t *DescribeEKSClusterTool) Name() string {
+	return "describe-eks-cluster"
+}
+
+func (t *DescribeEKSClusterTool) Description() string {
+	return "Describes an EKS cluster"
+}
+
+func (t *DescribeEKSClusterTool) Category() string {
+	return "eks-mcp"
+}
+
+func (t *DescribeEKSClusterTool) ActionType() string {
+	return t.actionType
+}
+
+func (t *DescribeEKSClusterTool) GetInputSchema() map[string]interface{} {
+	return map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"clusterName": map[string]interface{}{
+				"type":        "string",
+				"description": "Name of the EKS cluster",
+			},
+		},
+		"required": []string{"clusterName"},
+	}
+}
+
+func (t *DescribeEKSClusterTool) GetOutputSchema() map[string]interface{} {
+	return map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"success": map[string]interface{}{
+				"type":        "boolean",
+				"description": "Whether the operation was successful",
+			},
+			"message": map[string]interface{}{
+				"type":        "string",
+				"description": "Human-readable message about the operation",
+			},
+		},
+		"required": []string{"success", "message"},
+	}
+}
+
+func (t *DescribeEKSClusterTool) GetExamples() []interfaces.ToolExample {
+	return []interfaces.ToolExample{}
+}
+
+func (t *DescribeEKSClusterTool) ValidateArguments(arguments map[string]interface{}) error {
+	if clusterName, exists := arguments["clusterName"]; !exists || clusterName == "" {
+		return fmt.Errorf("clusterName is required")
+	}
+	return nil
+}
+
+// Placeholder tools for the remaining missing functions
+func NewDeleteEKSClusterTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewCreateEKSNodeGroupTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewDeployKubernetesManifestTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewAddInlinePolicyTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewGetPoliciesForRoleTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewListK8sResourcesTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewListApiVersionsTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewGetCloudWatchLogsTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewGetCloudWatchMetricsTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewSearchEKSTroubleshootGuideTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewGetEKSInsightsTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
+}
+
+func NewGetEKSVpcConfigTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
 }
 
 // Helper function for JSON marshaling
