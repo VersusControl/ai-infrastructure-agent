@@ -195,7 +195,6 @@ func (a *EKSAdapter) normalizeCluster(output *eks.DescribeClusterOutput) (*types
 		ID:     *cluster.Name,
 		Type:   "eks-cluster",
 		Status: string(cluster.Status),
-		Region: a.client.GetRegion(),
 		Properties: map[string]interface{}{
 			"name":             *cluster.Name,
 			"version":          *cluster.Version,
@@ -204,6 +203,7 @@ func (a *EKSAdapter) normalizeCluster(output *eks.DescribeClusterOutput) (*types
 			"platform_version": *cluster.PlatformVersion,
 			"role_arn":         *cluster.RoleArn,
 			"created_at":       cluster.CreatedAt.String(),
+			"region":           a.client.GetRegion(),
 			"mcp_response":     a.ExtractMetadata(output),
 		},
 	}, nil
@@ -220,13 +220,13 @@ func (a *EKSAdapter) normalizeNodeGroup(output *eks.DescribeNodegroupOutput) (*t
 		ID:     fmt.Sprintf("%s/%s", *nodegroup.ClusterName, *nodegroup.NodegroupName),
 		Type:   "eks-nodegroup",
 		Status: string(nodegroup.Status),
-		Region: a.client.GetRegion(),
 		Properties: map[string]interface{}{
 			"name":         *nodegroup.NodegroupName,
 			"cluster_name": *nodegroup.ClusterName,
 			"status":       string(nodegroup.Status),
 			"node_role":    *nodegroup.NodeRole,
 			"created_at":   nodegroup.CreatedAt.String(),
+			"region":       a.client.GetRegion(),
 			"mcp_response": a.ExtractMetadata(output),
 		},
 	}, nil
@@ -243,13 +243,13 @@ func (a *EKSAdapter) normalizeAddon(output *eks.DescribeAddonOutput) (*types.Res
 		ID:     fmt.Sprintf("%s/%s", *addon.ClusterName, *addon.AddonName),
 		Type:   "eks-addon",
 		Status: string(addon.Status),
-		Region: a.client.GetRegion(),
 		Properties: map[string]interface{}{
 			"name":           *addon.AddonName,
 			"cluster_name":   *addon.ClusterName,
 			"status":         string(addon.Status),
 			"addon_version":  *addon.AddonVersion,
 			"created_at":     addon.CreatedAt.String(),
+			"region":         a.client.GetRegion(),
 			"mcp_response":   a.ExtractMetadata(output),
 		},
 	}, nil
@@ -266,13 +266,13 @@ func (a *EKSAdapter) normalizeFargateProfile(output *eks.DescribeFargateProfileO
 		ID:     fmt.Sprintf("%s/%s", *profile.ClusterName, *profile.FargateProfileName),
 		Type:   "eks-fargate-profile",
 		Status: string(profile.Status),
-		Region: a.client.GetRegion(),
 		Properties: map[string]interface{}{
 			"name":                     *profile.FargateProfileName,
 			"cluster_name":             *profile.ClusterName,
 			"status":                   string(profile.Status),
 			"pod_execution_role_arn":   *profile.PodExecutionRoleArn,
 			"created_at":               profile.CreatedAt.String(),
+			"region":                   a.client.GetRegion(),
 			"mcp_response":             a.ExtractMetadata(output),
 		},
 	}, nil
