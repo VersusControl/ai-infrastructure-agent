@@ -362,53 +362,15 @@ func (t *ManageK8sResourceTool) Execute(ctx context.Context, args map[string]int
 		return createErrorResult("resourceName is required and must be a string"), nil
 	}
 
-	namespace := "default"
-	if ns, exists := args["namespace"]; exists {
-		if nsStr, ok := ns.(string); ok && nsStr != "" {
-			namespace = nsStr
-		}
-	}
-
 	// Verify cluster exists
 	_, err := t.client.DescribeEKSCluster(ctx, clusterName)
 	if err != nil {
 		return createErrorResult(fmt.Sprintf("Failed to verify cluster: %v", err)), nil
 	}
 
-	var kubectlCommands []string
 	switch action {
-	case "create":
-		kubectlCommands = []string{
-			fmt.Sprintf("# Update kubeconfig for cluster %s", clusterName),
-			fmt.Sprintf("aws eks update-kubeconfig --region %s --name %s", t.client.GetRegion(), clusterName),
-			"",
-			fmt.Sprintf("# Create %s resource", resourceType),
-			fmt.Sprintf("kubectl create %s %s -n %s", resourceType, resourceName, namespace),
-		}
-	case "update":
-		kubectlCommands = []string{
-			fmt.Sprintf("# Update kubeconfig for cluster %s", clusterName),
-			fmt.Sprintf("aws eks update-kubeconfig --region %s --name %s", t.client.GetRegion(), clusterName),
-			"",
-			fmt.Sprintf("# Update %s resource", resourceType),
-			fmt.Sprintf("kubectl patch %s %s -n %s --patch '{}'", resourceType, resourceName, namespace),
-		}
-	case "delete":
-		kubectlCommands = []string{
-			fmt.Sprintf("# Update kubeconfig for cluster %s", clusterName),
-			fmt.Sprintf("aws eks update-kubeconfig --region %s --name %s", t.client.GetRegion(), clusterName),
-			"",
-			fmt.Sprintf("# Delete %s resource", resourceType),
-			fmt.Sprintf("kubectl delete %s %s -n %s", resourceType, resourceName, namespace),
-		}
-	case "get":
-		kubectlCommands = []string{
-			fmt.Sprintf("# Update kubeconfig for cluster %s", clusterName),
-			fmt.Sprintf("aws eks update-kubeconfig --region %s --name %s", t.client.GetRegion(), clusterName),
-			"",
-			fmt.Sprintf("# Get %s resource", resourceType),
-			fmt.Sprintf("kubectl get %s %s -n %s -o yaml", resourceType, resourceName, namespace),
-		}
+	case "create", "update", "delete", "get":
+		// Valid actions - continue
 	default:
 		return createErrorResult("Invalid action. Must be one of: create, update, delete, get"), nil
 	}
@@ -416,13 +378,6 @@ func (t *ManageK8sResourceTool) Execute(ctx context.Context, args map[string]int
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			mcp.NewTextContent(fmt.Sprintf("Kubernetes resource management prepared for %s %s/%s in cluster '%s'", action, resourceType, resourceName, clusterName)),
-			{
-				Type: "resource",
-				Resource: &mcp.Resource{
-					URI:      fmt.Sprintf("k8s://cluster/%s/resource/%s/%s", clusterName, resourceType, resourceName),
-					MIMEType: aws.String("application/json"),
-				},
-			},
 		},
 		IsError: false,
 	}, nil
@@ -535,42 +490,15 @@ func (t *ApplyYamlTool) Execute(ctx context.Context, args map[string]interface{}
 		return createErrorResult("yamlContent is required and must be a string"), nil
 	}
 
-	namespace := "default"
-	if ns, exists := args["namespace"]; exists {
-		if nsStr, ok := ns.(string); ok && nsStr != "" {
-			namespace = nsStr
-		}
-	}
-
 	// Verify cluster exists
 	_, err := t.client.DescribeEKSCluster(ctx, clusterName)
 	if err != nil {
 		return createErrorResult(fmt.Sprintf("Failed to verify cluster: %v", err)), nil
 	}
 
-	kubectlCommands := []string{
-		fmt.Sprintf("# Update kubeconfig for cluster %s", clusterName),
-		fmt.Sprintf("aws eks update-kubeconfig --region %s --name %s", t.client.GetRegion(), clusterName),
-		"",
-		fmt.Sprintf("# Apply YAML to namespace %s", namespace),
-		"kubectl apply -f - <<EOF",
-		yamlContent,
-		"EOF",
-		"",
-		"# Verify applied resources",
-		fmt.Sprintf("kubectl get all -n %s", namespace),
-	}
-
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			mcp.NewTextContent(fmt.Sprintf("YAML application prepared for cluster '%s'", clusterName)),
-			{
-				Type: "resource",
-				Resource: &mcp.Resource{
-					URI:      fmt.Sprintf("k8s://cluster/%s/apply", clusterName),
-					MIMEType: aws.String("application/json"),
-				},
-			},
 		},
 		IsError: false,
 	}, nil
@@ -669,40 +597,15 @@ func (t *GetK8sEventsTool) Execute(ctx context.Context, args map[string]interfac
 		return createErrorResult("clusterName is required and must be a string"), nil
 	}
 
-	namespace := "default"
-	if ns, exists := args["namespace"]; exists {
-		if nsStr, ok := ns.(string); ok && nsStr != "" {
-			namespace = nsStr
-		}
-	}
-
 	// Verify cluster exists
 	_, err := t.client.DescribeEKSCluster(ctx, clusterName)
 	if err != nil {
 		return createErrorResult(fmt.Sprintf("Failed to verify cluster: %v", err)), nil
 	}
 
-	kubectlCommands := []string{
-		fmt.Sprintf("# Update kubeconfig for cluster %s", clusterName),
-		fmt.Sprintf("aws eks update-kubeconfig --region %s --name %s", t.client.GetRegion(), clusterName),
-		"",
-		fmt.Sprintf("# Get events in namespace %s", namespace),
-		fmt.Sprintf("kubectl get events -n %s --sort-by='.lastTimestamp'", namespace),
-		"",
-		"# Get events across all namespaces",
-		"kubectl get events --all-namespaces --sort-by='.lastTimestamp'",
-	}
-
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			mcp.NewTextContent(fmt.Sprintf("Kubernetes events retrieval prepared for cluster '%s'", clusterName)),
-			{
-				Type: "resource",
-				Resource: &mcp.Resource{
-					URI:      fmt.Sprintf("k8s://cluster/%s/events", clusterName),
-					MIMEType: aws.String("application/json"),
-				},
-			},
 		},
 		IsError: false,
 	}, nil
@@ -799,64 +702,15 @@ func (t *GetPodLogsTool) Execute(ctx context.Context, args map[string]interface{
 		return createErrorResult("podName is required and must be a string"), nil
 	}
 
-	namespace := "default"
-	if ns, exists := args["namespace"]; exists {
-		if nsStr, ok := ns.(string); ok && nsStr != "" {
-			namespace = nsStr
-		}
-	}
-
-	// Optional container name
-	containerName := ""
-	if cn, exists := args["containerName"]; exists {
-		if cnStr, ok := cn.(string); ok {
-			containerName = cnStr
-		}
-	}
-
-	// Optional tail lines
-	tailLines := "100"
-	if tl, exists := args["tailLines"]; exists {
-		if tlInt, ok := tl.(float64); ok {
-			tailLines = fmt.Sprintf("%.0f", tlInt)
-		}
-	}
-
 	// Verify cluster exists
 	_, err := t.client.DescribeEKSCluster(ctx, clusterName)
 	if err != nil {
 		return createErrorResult(fmt.Sprintf("Failed to verify cluster: %v", err)), nil
 	}
 
-	kubectlCommands := []string{
-		fmt.Sprintf("# Update kubeconfig for cluster %s", clusterName),
-		fmt.Sprintf("aws eks update-kubeconfig --region %s --name %s", t.client.GetRegion(), clusterName),
-		"",
-		fmt.Sprintf("# Get logs for pod %s", podName),
-	}
-
-	if containerName != "" {
-		kubectlCommands = append(kubectlCommands, fmt.Sprintf("kubectl logs %s -c %s -n %s --tail=%s", podName, containerName, namespace, tailLines))
-	} else {
-		kubectlCommands = append(kubectlCommands, fmt.Sprintf("kubectl logs %s -n %s --tail=%s", podName, namespace, tailLines))
-	}
-
-	kubectlCommands = append(kubectlCommands, []string{
-		"",
-		"# Follow logs (optional)",
-		fmt.Sprintf("kubectl logs %s -n %s -f", podName, namespace),
-	}...)
-
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			mcp.NewTextContent(fmt.Sprintf("Pod logs retrieval prepared for pod '%s' in cluster '%s'", podName, clusterName)),
-			{
-				Type: "resource",
-				Resource: &mcp.Resource{
-					URI:      fmt.Sprintf("k8s://cluster/%s/pod/%s/logs", clusterName, podName),
-					MIMEType: aws.String("application/json"),
-				},
-			},
 		},
 		IsError: false,
 	}, nil
@@ -965,9 +819,14 @@ func (t *ListEKSClustersTool) Execute(ctx context.Context, args map[string]inter
 		return createErrorResult(fmt.Sprintf("Failed to list EKS clusters: %v", err)), nil
 	}
 
+	clusterCount := 0
+	if clusters != nil && clusters.Clusters != nil {
+		clusterCount = len(clusters.Clusters)
+	}
+
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
-			mcp.NewTextContent(fmt.Sprintf("Found %d EKS clusters", len(clusters))),
+			mcp.NewTextContent(fmt.Sprintf("Found %d EKS clusters", clusterCount)),
 		},
 		IsError: false,
 	}, nil
@@ -1049,9 +908,14 @@ func (t *DescribeEKSClusterTool) Execute(ctx context.Context, args map[string]in
 		return createErrorResult(fmt.Sprintf("Failed to describe EKS cluster: %v", err)), nil
 	}
 
+	status := "unknown"
+	if cluster != nil && cluster.Cluster != nil && cluster.Cluster.Status != "" {
+		status = string(cluster.Cluster.Status)
+	}
+
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
-			mcp.NewTextContent(fmt.Sprintf("EKS cluster '%s' details retrieved successfully. Status: %s", clusterName, string(cluster.Status))),
+			mcp.NewTextContent(fmt.Sprintf("EKS cluster '%s' details retrieved successfully. Status: %s", clusterName, status)),
 		},
 		IsError: false,
 	}, nil
