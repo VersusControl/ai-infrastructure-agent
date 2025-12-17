@@ -44,8 +44,9 @@ func (ws *WebServer) healthHandler(w http.ResponseWriter, r *http.Request) {
 
 // Start starts the web server
 func (ws *WebServer) Start(port int) error {
-	addr := fmt.Sprintf(":%d", port)
-	ws.aiAgent.Logger.WithField("port", port).Info("Starting web server")
+	host := ws.config.Web.Host
+	addr := fmt.Sprintf("%s:%d", host, port)
+	ws.aiAgent.Logger.WithField("host", host).WithField("port", port).Info("Starting web server")
 
 	return http.ListenAndServe(addr, ws.router)
 }

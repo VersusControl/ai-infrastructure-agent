@@ -40,6 +40,7 @@ func NewClient(region string, logger *logging.Logger) (*Client, error) {
 		autoscaling: autoscaling.NewFromConfig(cfg),
 		elbv2:       elasticloadbalancingv2.NewFromConfig(cfg),
 		rds:         rds.NewFromConfig(cfg),
+		eks:         eks.NewFromConfig(cfg),
 		logger:      logger,
 	}, nil
 }
