@@ -52,22 +52,14 @@ func main() {
 
 	// Start web server
 	webPort := cfg.GetWebPort()
-	webHost := cfg.Web.Host
 	logger.WithField("port", webPort).Info("Starting web server")
 	fmt.Printf("\n🚀 AI Infrastructure Agent Web UI\n")
 	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-	if webHost == "0.0.0.0" {
-		fmt.Printf("🌐 Open your browser and go to: http://<YOUR_VM_IP>:%d\n", webPort)
-		fmt.Printf("📊 Dashboard: http://<YOUR_VM_IP>:%d/dashboard\n", webPort)
-		fmt.Printf("🔗 API Base: http://<YOUR_VM_IP>:%d/api\n", webPort)
-		fmt.Printf("💡 Replace <YOUR_VM_IP> with your VM's actual IP address\n")
-	} else {
-		fmt.Printf("🌐 Open your browser and go to: http://%s:%d\n", webHost, webPort)
-		fmt.Printf("📊 Dashboard: http://%s:%d/dashboard\n", webHost, webPort)
-		fmt.Printf("🔗 API Base: http://%s:%d/api\n", webHost, webPort)
-	}
+	fmt.Printf("🌐 Open your browser and go to: http://localhost:%d\n", webPort)
+	fmt.Printf("📊 Dashboard: http://localhost:%d/dashboard\n", webPort)
+	fmt.Printf("🔗 API Base: http://localhost:%d/api\n", webPort)
 	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-	fmt.Printf("� Features:\n")
+	fmt.Printf("💡 Features:\n")
 	fmt.Printf("   • Natural language infrastructure requests\n")
 	fmt.Printf("   • Real-time infrastructure state monitoring\n")
 	fmt.Printf("   • Dependency graph visualization\n")
@@ -75,7 +67,7 @@ func main() {
 	fmt.Printf("   • Deployment planning with dependency ordering\n")
 	fmt.Printf("   • State export/import capabilities\n")
 	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
-	fmt.Printf("�🔑 Keyboard Shortcuts:\n")
+	fmt.Printf("🔑 Keyboard Shortcuts:\n")
 	fmt.Printf("   • Ctrl+Enter: Process AI agent request\n")
 	fmt.Printf("   • F5: Refresh current tab\n")
 	fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")

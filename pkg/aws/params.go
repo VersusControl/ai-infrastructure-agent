@@ -158,3 +158,35 @@ type CreateDBSnapshotParams struct {
 	DBSnapshotIdentifier string
 	Tags                 map[string]string
 }
+
+// EKS Parameters
+type CreateEKSClusterParams struct {
+	Name             string
+	RoleArn          string
+	SubnetIDs        []string
+	SecurityGroupIDs []string
+	Version          string
+	Tags             map[string]string
+}
+
+type CreateEKSNodeGroupParams struct {
+	ClusterName   string
+	NodeGroupName string
+	NodeRoleArn   string
+	SubnetIDs     []string
+	InstanceTypes []string
+	DiskSize      int32
+	MinSize       int32
+	MaxSize       int32
+	DesiredSize   int32
+	AmiType       string
+	Tags          map[string]string
+}
+
+// IAM Parameters
+type CreateIAMRoleParams struct {
+	RoleName                 string
+	AssumeRolePolicyDocument string
+	Description              string
+	Tags                     map[string]string
+}

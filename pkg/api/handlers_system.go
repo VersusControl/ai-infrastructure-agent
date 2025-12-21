@@ -19,7 +19,7 @@ func (ws *WebServer) webUiHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the file exists
 	if _, err := os.Stat(indexPath); os.IsNotExist(err) {
-		ws.aiAgent.Logger.WithError(err).Error("React build index.html not found")
+		ws.logger.WithError(err).Error("React build index.html not found")
 		http.Error(w, "React build not found. Please run 'npm run build' in the web directory.", http.StatusNotFound)
 		return
 	}
@@ -44,9 +44,8 @@ func (ws *WebServer) healthHandler(w http.ResponseWriter, r *http.Request) {
 
 // Start starts the web server
 func (ws *WebServer) Start(port int) error {
-	host := ws.config.Web.Host
-	addr := fmt.Sprintf("%s:%d", host, port)
-	ws.aiAgent.Logger.WithField("host", host).WithField("port", port).Info("Starting web server")
+	addr := fmt.Sprintf(":%d", port)
+	ws.logger.WithField("port", port).Info("Starting web server")
 
 	return http.ListenAndServe(addr, ws.router)
 }

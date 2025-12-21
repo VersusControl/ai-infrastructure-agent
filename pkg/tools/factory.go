@@ -194,6 +194,28 @@ func (f *ToolFactoryImpl) CreateTool(toolType string, actionType string, depende
 	case "export-infrastructure-state":
 		return NewExportStateTool(deps, deps.AWSClient, actionType, f.logger), nil
 
+	// EKS Tools
+	case "create-eks-cluster":
+		return NewCreateEKSClusterTool(deps.AWSClient, actionType, f.logger), nil
+	case "delete-eks-cluster":
+		return NewDeleteEKSClusterTool(deps.AWSClient, actionType, f.logger), nil
+	case "get-eks-cluster":
+		return NewGetEKSClusterTool(deps.AWSClient, actionType, f.logger), nil
+	case "list-eks-clusters":
+		return NewListEKSClustersTool(deps.AWSClient, actionType, f.logger), nil
+	case "create-eks-node-group":
+		return NewCreateEKSNodeGroupTool(deps.AWSClient, actionType, f.logger), nil
+	case "list-eks-node-groups":
+		return NewListEKSNodeGroupsTool(deps.AWSClient, actionType, f.logger), nil
+	case "apply-yaml":
+		return NewApplyKubernetesYAMLTool(deps.AWSClient, actionType, f.logger), nil
+
+	// IAM Tools
+	case "create-iam-role":
+		return NewCreateIAMRoleTool(deps.AWSClient, actionType, f.logger), nil
+	case "list-iam-roles":
+		return NewListIAMRolesTool(deps.AWSClient, actionType, f.logger), nil
+
 	// State-Aware Tools
 	case "visualize-dependency-graph":
 		return NewVisualizeDependencyGraphTool(deps, actionType, f.logger), nil
@@ -207,56 +229,6 @@ func (f *ToolFactoryImpl) CreateTool(toolType string, actionType string, depende
 		return NewUpdateResourceToStateTool(deps, actionType, f.logger), nil
 	case "plan-infrastructure-deployment":
 		return NewPlanDeploymentTool(deps, actionType, f.logger), nil
-
-	// EKS Tools
-	case "create-eks-cluster":
-		return NewCreateEKSClusterTool(deps.AWSClient, actionType, f.logger), nil
-	case "list-eks-clusters":
-		return NewListEKSClustersTool(deps.AWSClient, actionType, f.logger), nil
-	case "describe-eks-cluster":
-		return NewDescribeEKSClusterTool(deps.AWSClient, actionType, f.logger), nil
-	case "delete-eks-cluster":
-		return NewDeleteEKSClusterTool(deps.AWSClient, actionType, f.logger), nil
-	case "create-eks-nodegroup":
-		return NewCreateEKSNodeGroupTool(deps.AWSClient, actionType, f.logger), nil
-	case "deploy-kubernetes-manifest":
-		return NewDeployKubernetesManifestTool(deps.AWSClient, actionType, f.logger), nil
-
-	// IAM Policy Tools
-	case "add-inline-policy":
-		return NewAddInlinePolicyTool(deps.AWSClient, actionType, f.logger), nil
-	case "get-policies-for-role":
-		return NewGetPoliciesForRoleTool(deps.AWSClient, actionType, f.logger), nil
-
-	// Kubernetes Resource Management Tools
-	case "list-k8s-resources":
-		return NewListK8sResourcesTool(deps.AWSClient, actionType, f.logger), nil
-	case "list-api-versions":
-		return NewListApiVersionsTool(deps.AWSClient, actionType, f.logger), nil
-	case "manage-k8s-resource":
-		return NewManageK8sResourceTool(deps.AWSClient, actionType, f.logger), nil
-	case "apply-yaml":
-		return NewApplyYamlTool(deps.AWSClient, actionType, f.logger), nil
-
-	// Kubernetes Monitoring and Logging Tools
-	case "get-k8s-events":
-		return NewGetK8sEventsTool(deps.AWSClient, actionType, f.logger), nil
-	case "get-pod-logs":
-		return NewGetPodLogsTool(deps.AWSClient, actionType, f.logger), nil
-
-	// CloudWatch Integration Tools
-	case "get-cloudwatch-logs":
-		return NewGetCloudWatchLogsTool(deps.AWSClient, actionType, f.logger), nil
-	case "get-cloudwatch-metrics":
-		return NewGetCloudWatchMetricsTool(deps.AWSClient, actionType, f.logger), nil
-
-	// EKS Troubleshooting and Insights Tools
-	case "search-eks-troubleshoot-guide":
-		return NewSearchEKSTroubleshootGuideTool(deps.AWSClient, actionType, f.logger), nil
-	case "get-eks-insights":
-		return NewGetEKSInsightsTool(deps.AWSClient, actionType, f.logger), nil
-	case "get-eks-vpc-config":
-		return NewGetEKSVpcConfigTool(deps.AWSClient, actionType, f.logger), nil
 
 	default:
 		return nil, fmt.Errorf("unsupported tool type: %s", toolType)
@@ -289,7 +261,8 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"create-db-instance",
 			"create-db-snapshot",
 			"create-eks-cluster",
-			"create-eks-nodegroup",
+			"create-eks-node-group",
+			"create-iam-role",
 		},
 		"query": {
 			"list-ec2-instances",
@@ -316,17 +289,9 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"list-db-snapshots",
 			"describe-db-instance",
 			"list-eks-clusters",
-			"describe-eks-cluster",
-			"get-policies-for-role",
-			"list-k8s-resources",
-			"list-api-versions",
-			"get-k8s-events",
-			"get-pod-logs",
-			"get-cloudwatch-logs",
-			"get-cloudwatch-metrics",
-			"search-eks-troubleshoot-guide",
-			"get-eks-insights",
-			"get-eks-vpc-config",
+			"get-eks-cluster",
+			"list-eks-node-groups",
+			"list-iam-roles",
 		},
 		"modification": {
 			"start-ec2-instance",
@@ -335,6 +300,7 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"start-db-instance",
 			"stop-db-instance",
 			"update-auto-scaling-group",
+			"apply-yaml",
 		},
 		"deletion": {
 			"terminate-ec2-instance",
@@ -349,10 +315,6 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"add-security-group-egress-rule",
 			"register-targets",
 			"deregister-targets",
-			"deploy-kubernetes-manifest",
-			"add-inline-policy",
-			"manage-k8s-resource",
-			"apply-yaml",
 		},
 		"state": {
 			"analyze-infrastructure-state",
@@ -363,33 +325,6 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"add-resource-to-state",
 			"update-resource-to-state",
 			"save-state",
-		},
-		"eks-mcp": {
-			// Core EKS Management
-			"create-eks-cluster",
-			"list-eks-clusters",
-			"describe-eks-cluster",
-			"delete-eks-cluster",
-			"create-eks-nodegroup",
-			"get-eks-vpc-config",
-			// IAM Policy Management
-			"add-inline-policy",
-			"get-policies-for-role",
-			// Kubernetes Resource Management
-			"list-k8s-resources",
-			"list-api-versions",
-			"manage-k8s-resource",
-			"apply-yaml",
-			"deploy-kubernetes-manifest",
-			// Kubernetes Monitoring and Logging
-			"get-k8s-events",
-			"get-pod-logs",
-			// CloudWatch Integration
-			"get-cloudwatch-logs",
-			"get-cloudwatch-metrics",
-			// EKS Troubleshooting and Insights
-			"search-eks-troubleshoot-guide",
-			"get-eks-insights",
 		},
 	}
 }

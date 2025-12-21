@@ -2,1036 +2,701 @@ package tools
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/versus-control/ai-infrastructure-agent/internal/logging"
-	awsclient "github.com/versus-control/ai-infrastructure-agent/pkg/aws"
+	"github.com/versus-control/ai-infrastructure-agent/pkg/aws"
 	"github.com/versus-control/ai-infrastructure-agent/pkg/interfaces"
 )
 
-// Helper function to create error results
-func createErrorResult(message string) *mcp.CallToolResult {
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.NewTextContent(fmt.Sprintf("Error: %s", message)),
-		},
-		IsError: true,
-	}
-}
-
-// ========== EKS Cluster Tools ==========
-
-// CreateEKSClusterTool creates a new EKS cluster
+// CreateEKSClusterTool implements MCPTool for creating EKS clusters
 type CreateEKSClusterTool struct {
-	client     *awsclient.Client
-	actionType string
-	logger     *logging.Logger
+	*BaseTool
+	client *aws.Client
 }
 
-func NewCreateEKSClusterTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{
-		client:     client,
-		actionType: actionType,
-		logger:     logger,
-	}
-}
-
-func (t *CreateEKSClusterTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
-	t.logger.Info("Creating EKS cluster")
-
-	// Parse arguments
-	name, ok := args["name"].(string)
-	if !ok || name == "" {
-		return createErrorResult("name is required and must be a string"), nil
-	}
-
-	version, ok := args["version"].(string)
-	if !ok || version == "" {
-		version = "1.28" // Default to a stable version
-	}
-
-	roleArn, ok := args["roleArn"].(string)
-	if !ok || roleArn == "" {
-		return createErrorResult("roleArn is required and must be a string"), nil
-	}
-
-	// Parse VPC configuration
-	vpcConfig := &types.VpcConfigRequest{}
-	if vpcConfigRaw, exists := args["vpcConfig"]; exists {
-		if vpcConfigMap, ok := vpcConfigRaw.(map[string]interface{}); ok {
-			if subnetIds, exists := vpcConfigMap["subnetIds"]; exists {
-				if subnetList, ok := subnetIds.([]interface{}); ok {
-					for _, subnet := range subnetList {
-						if subnetStr, ok := subnet.(string); ok {
-							vpcConfig.SubnetIds = append(vpcConfig.SubnetIds, subnetStr)
-						}
-					}
-				}
-			}
-			if securityGroupIds, exists := vpcConfigMap["securityGroupIds"]; exists {
-				if sgList, ok := securityGroupIds.([]interface{}); ok {
-					for _, sg := range sgList {
-						if sgStr, ok := sg.(string); ok {
-							vpcConfig.SecurityGroupIds = append(vpcConfig.SecurityGroupIds, sgStr)
-						}
-					}
-				}
-			}
-			if endpointConfigPublic, exists := vpcConfigMap["endpointConfigPublic"]; exists {
-				if publicAccess, ok := endpointConfigPublic.(bool); ok {
-					vpcConfig.EndpointPublicAccess = &publicAccess
-				}
-			}
-		}
-	}
-
-	// Parse tags
-	tags := make(map[string]string)
-	if tagsRaw, exists := args["tags"]; exists {
-		if tagsMap, ok := tagsRaw.(map[string]interface{}); ok {
-			for key, value := range tagsMap {
-				if valueStr, ok := value.(string); ok {
-					tags[key] = valueStr
-				}
-			}
-		}
-	}
-
-	// Create cluster input
-	input := &eks.CreateClusterInput{
-		Name:               aws.String(name),
-		Version:            aws.String(version),
-		RoleArn:            aws.String(roleArn),
-		ResourcesVpcConfig: vpcConfig,
-		Tags:               tags,
-	}
-
-	// Parse optional encryption config
-	if encryptionRaw, exists := args["encryptionConfig"]; exists {
-		if encryptionList, ok := encryptionRaw.([]interface{}); ok {
-			for _, encItem := range encryptionList {
-				if encMap, ok := encItem.(map[string]interface{}); ok {
-					encConfig := types.EncryptionConfig{}
-					if resources, exists := encMap["resources"]; exists {
-						if resourceList, ok := resources.([]interface{}); ok {
-							for _, resource := range resourceList {
-								if resourceStr, ok := resource.(string); ok {
-									encConfig.Resources = append(encConfig.Resources, resourceStr)
-								}
-							}
-						}
-					}
-					if provider, exists := encMap["provider"]; exists {
-						if providerMap, ok := provider.(map[string]interface{}); ok {
-							if keyArn, exists := providerMap["keyArn"]; exists {
-								if keyArnStr, ok := keyArn.(string); ok {
-									encConfig.Provider = &types.Provider{
-										KeyArn: aws.String(keyArnStr),
-									}
-								}
-							}
-						}
-					}
-					input.EncryptionConfig = append(input.EncryptionConfig, encConfig)
-				}
-			}
-		}
-	}
-
-	// Parse logging configuration
-	if loggingRaw, exists := args["logging"]; exists {
-		if loggingMap, ok := loggingRaw.(map[string]interface{}); ok {
-			logging := &types.Logging{}
-			if enable, exists := loggingMap["enable"]; exists {
-				if enableList, ok := enable.([]interface{}); ok {
-					for _, logType := range enableList {
-						if logTypeStr, ok := logType.(string); ok {
-							logSetup := &types.LogSetup{
-								Enabled: aws.Bool(true),
-								Types:   []types.LogType{types.LogType(logTypeStr)},
-							}
-							logging.ClusterLogging = append(logging.ClusterLogging, *logSetup)
-						}
-					}
-				}
-			}
-			input.Logging = logging
-		}
-	}
-
-	// Create the cluster
-	_, err := t.client.CreateEKSCluster(ctx, input)
-	if err != nil {
-		t.logger.WithError(err).Error("Failed to create EKS cluster")
-		return createErrorResult(fmt.Sprintf("Failed to create EKS cluster: %v", err)), nil
-	}
-
-	// Return success result
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.NewTextContent(fmt.Sprintf("EKS cluster '%s' creation initiated successfully", name)),
-		},
-		IsError: false,
-	}, nil
-}
-
-func (t *CreateEKSClusterTool) GetSchema() map[string]interface{} {
-	return map[string]interface{}{
+// NewCreateEKSClusterTool creates a new EKS cluster creation tool
+func NewCreateEKSClusterTool(client *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
 		"type": "object",
 		"properties": map[string]interface{}{
 			"name": map[string]interface{}{
 				"type":        "string",
-				"description": "Name of the EKS cluster",
-			},
-			"version": map[string]interface{}{
-				"type":        "string",
-				"description": "Kubernetes version for the cluster (e.g., '1.28')",
+				"description": "The unique name to give to your cluster",
 			},
 			"roleArn": map[string]interface{}{
 				"type":        "string",
-				"description": "ARN of the IAM role for the EKS cluster service",
+				"description": "The Amazon Resource Name (ARN) of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf",
 			},
-			"vpcConfig": map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"subnetIds": map[string]interface{}{
-						"type": "array",
-						"items": map[string]interface{}{
-							"type": "string",
-						},
-						"description": "List of subnet IDs for the cluster",
-					},
-					"securityGroupIds": map[string]interface{}{
-						"type": "array",
-						"items": map[string]interface{}{
-							"type": "string",
-						},
-						"description": "List of security group IDs for the cluster",
-					},
-					"endpointConfigPublic": map[string]interface{}{
-						"type":        "boolean",
-						"description": "Whether the API server endpoint is publicly accessible",
-					},
-				},
-				"description": "VPC configuration for the cluster",
+			"subnetIds": map[string]interface{}{
+				"type":        "array",
+				"items":       map[string]interface{}{"type": "string"},
+				"description": "The VPC subnets to use for the cluster control plane. Must be in at least two different availability zones",
 			},
-			"tags": map[string]interface{}{
-				"type": "object",
-				"additionalProperties": map[string]interface{}{
-					"type": "string",
-				},
-				"description": "Tags to apply to the cluster",
+			"securityGroupIds": map[string]interface{}{
+				"type":        "array",
+				"items":       map[string]interface{}{"type": "string"},
+				"description": "Security groups for the cluster control plane communication",
 			},
-			"encryptionConfig": map[string]interface{}{
-				"type": "array",
-				"items": map[string]interface{}{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"resources": map[string]interface{}{
-							"type": "array",
-							"items": map[string]interface{}{
-								"type": "string",
-							},
-						},
-						"provider": map[string]interface{}{
-							"type": "object",
-							"properties": map[string]interface{}{
-								"keyArn": map[string]interface{}{
-									"type": "string",
+			"version": map[string]interface{}{
+				"type":        "string",
+				"description": "The desired Kubernetes version (e.g., '1.30')",
+			},
+		},
+		"required": []interface{}{"name", "roleArn", "subnetIds"},
+	}
+
+	baseTool := NewBaseTool(
+		"create-eks-cluster",
+		"Create a new AWS EKS (Elastic Kubernetes Service) cluster",
+		"eks",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	return &CreateEKSClusterTool{
+		BaseTool: baseTool,
+		client:   client,
+	}
+}
+
+// Execute creates an EKS cluster
+func (t *CreateEKSClusterTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	name, _ := arguments["name"].(string)
+	roleArn, _ := arguments["roleArn"].(string)
+	version, _ := arguments["version"].(string)
+
+	// Validate and potentially fix roleArn
+	var roleName string
+	if roleArn != "" {
+		accountID, err := t.client.GetAccountID(ctx)
+		if err == nil {
+			if !strings.HasPrefix(roleArn, "arn:") {
+				roleName = roleArn
+				// It's likely a role name, construct full ARN
+				roleArn = fmt.Sprintf("arn:aws:iam::%s:role/%s", accountID, roleArn)
+				t.GetLogger().Infof("Constructed ARN from role name: %s", roleArn)
+			} else {
+				// Try to extract role name from ARN
+				parts := strings.Split(roleArn, "/")
+				if len(parts) > 0 {
+					roleName = parts[len(parts)-1]
+				}
+
+				// Check if ARN has correct account ID
+				arnParts := strings.Split(roleArn, ":")
+				if len(arnParts) >= 5 {
+					arnAccountID := arnParts[4]
+					// Check if account ID matches (and is not empty/wildcard)
+					if arnAccountID != "" && arnAccountID != "aws" && arnAccountID != accountID {
+						t.GetLogger().Warnf("Role ARN account ID %s does not match current account %s. Attempting to correct.", arnAccountID, accountID)
+						arnParts[4] = accountID
+						roleArn = strings.Join(arnParts, ":")
+						t.GetLogger().Infof("Corrected Role ARN: %s", roleArn)
+					}
+				}
+			}
+
+			// Check if role exists and auto-create if missing
+			if roleName != "" {
+				_, err := t.client.GetIAMRole(ctx, roleName)
+				if err != nil {
+					t.GetLogger().Warnf("Role %s not found or error accessing it: %v. Attempting to create it.", roleName, err)
+
+					assumeRolePolicy := `{
+						"Version": "2012-10-17",
+						"Statement": [
+							{
+								"Effect": "Allow",
+								"Principal": {
+									"Service": "eks.amazonaws.com"
 								},
-							},
-						},
-					},
-				},
-				"description": "Encryption configuration for the cluster",
-			},
-			"logging": map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"enable": map[string]interface{}{
-						"type": "array",
-						"items": map[string]interface{}{
-							"type": "string",
-							"enum": []string{"api", "audit", "authenticator", "controllerManager", "scheduler"},
-						},
-						"description": "List of log types to enable",
-					},
-				},
-				"description": "Logging configuration for the cluster",
-			},
-		},
-		"required": []string{"name", "roleArn"},
-	}
-}
+								"Action": "sts:AssumeRole"
+							}
+						]
+					}`
 
-func (t *CreateEKSClusterTool) Name() string {
-	return "create-eks-cluster"
-}
+					createParams := aws.CreateIAMRoleParams{
+						RoleName:                 roleName,
+						AssumeRolePolicyDocument: assumeRolePolicy,
+						Description:              "Auto-created EKS Cluster Role",
+					}
 
-func (t *CreateEKSClusterTool) Description() string {
-	return "Creates a new Amazon EKS cluster with specified configuration"
-}
+					_, createErr := t.client.CreateIAMRole(ctx, createParams)
+					if createErr != nil {
+						t.GetLogger().Errorf("Failed to auto-create role %s: %v", roleName, createErr)
+					} else {
+						t.GetLogger().Infof("Successfully created role %s", roleName)
 
-func (t *CreateEKSClusterTool) Category() string {
-	return "eks-mcp"
-}
-
-func (t *CreateEKSClusterTool) ActionType() string {
-	return t.actionType
-}
-
-func (t *CreateEKSClusterTool) GetInputSchema() map[string]interface{} {
-	return t.GetSchema()
-}
-
-func (t *CreateEKSClusterTool) GetOutputSchema() map[string]interface{} {
-	return map[string]interface{}{
-		"type": "object",
-		"properties": map[string]interface{}{
-			"success": map[string]interface{}{
-				"type":        "boolean",
-				"description": "Whether the operation was successful",
-			},
-			"message": map[string]interface{}{
-				"type":        "string",
-				"description": "Human-readable message about the operation",
-			},
-		},
-		"required": []string{"success", "message"},
-	}
-}
-
-func (t *CreateEKSClusterTool) GetExamples() []interfaces.ToolExample {
-	return []interfaces.ToolExample{}
-}
-
-func (t *CreateEKSClusterTool) ValidateArguments(arguments map[string]interface{}) error {
-	// Basic validation
-	if name, exists := arguments["name"]; !exists || name == "" {
-		return fmt.Errorf("name is required")
-	}
-	if roleArn, exists := arguments["roleArn"]; !exists || roleArn == "" {
-		return fmt.Errorf("roleArn is required")
-	}
-	return nil
-}
-
-// ========== Kubernetes Resource Management Tools ==========
-
-// ManageK8sResourceTool manages Kubernetes resources (create, update, delete)
-type ManageK8sResourceTool struct {
-	client     *awsclient.Client
-	actionType string
-	logger     *logging.Logger
-}
-
-func NewManageK8sResourceTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &ManageK8sResourceTool{
-		client:     client,
-		actionType: actionType,
-		logger:     logger,
-	}
-}
-
-func (t *ManageK8sResourceTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
-	t.logger.Info("Managing Kubernetes resource")
-
-	// Parse arguments
-	clusterName, ok := args["clusterName"].(string)
-	if !ok || clusterName == "" {
-		return createErrorResult("clusterName is required and must be a string"), nil
-	}
-
-	action, ok := args["action"].(string)
-	if !ok || action == "" {
-		return createErrorResult("action is required and must be a string (create, update, delete, get)"), nil
-	}
-
-	resourceType, ok := args["resourceType"].(string)
-	if !ok || resourceType == "" {
-		return createErrorResult("resourceType is required and must be a string"), nil
-	}
-
-	resourceName, ok := args["resourceName"].(string)
-	if !ok || resourceName == "" {
-		return createErrorResult("resourceName is required and must be a string"), nil
-	}
-
-	// Verify cluster exists
-	_, err := t.client.DescribeEKSCluster(ctx, clusterName)
-	if err != nil {
-		return createErrorResult(fmt.Sprintf("Failed to verify cluster: %v", err)), nil
-	}
-
-	switch action {
-	case "create", "update", "delete", "get":
-		// Valid actions - continue
-	default:
-		return createErrorResult("Invalid action. Must be one of: create, update, delete, get"), nil
-	}
-
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.NewTextContent(fmt.Sprintf("Kubernetes resource management prepared for %s %s/%s in cluster '%s'", action, resourceType, resourceName, clusterName)),
-		},
-		IsError: false,
-	}, nil
-}
-
-func (t *ManageK8sResourceTool) Name() string {
-	return "manage-k8s-resource"
-}
-
-func (t *ManageK8sResourceTool) Description() string {
-	return "Manages Kubernetes resources (create, update, delete, get)"
-}
-
-func (t *ManageK8sResourceTool) Category() string {
-	return "eks-mcp"
-}
-
-func (t *ManageK8sResourceTool) ActionType() string {
-	return t.actionType
-}
-
-func (t *ManageK8sResourceTool) GetInputSchema() map[string]interface{} {
-	return map[string]interface{}{
-		"type": "object",
-		"properties": map[string]interface{}{
-			"clusterName": map[string]interface{}{
-				"type":        "string",
-				"description": "Name of the EKS cluster",
-			},
-			"action": map[string]interface{}{
-				"type":        "string",
-				"enum":        []string{"create", "update", "delete", "get"},
-				"description": "Action to perform on the resource",
-			},
-			"resourceType": map[string]interface{}{
-				"type":        "string",
-				"description": "Type of Kubernetes resource (e.g., deployment, service, pod)",
-			},
-			"resourceName": map[string]interface{}{
-				"type":        "string",
-				"description": "Name of the resource",
-			},
-			"namespace": map[string]interface{}{
-				"type":        "string",
-				"description": "Kubernetes namespace",
-				"default":     "default",
-			},
-		},
-		"required": []string{"clusterName", "action", "resourceType", "resourceName"},
-	}
-}
-
-func (t *ManageK8sResourceTool) GetOutputSchema() map[string]interface{} {
-	return map[string]interface{}{
-		"type": "object",
-		"properties": map[string]interface{}{
-			"success": map[string]interface{}{
-				"type":        "boolean",
-				"description": "Whether the operation was successful",
-			},
-			"message": map[string]interface{}{
-				"type":        "string",
-				"description": "Human-readable message about the operation",
-			},
-		},
-		"required": []string{"success", "message"},
-	}
-}
-
-func (t *ManageK8sResourceTool) GetExamples() []interfaces.ToolExample {
-	return []interfaces.ToolExample{}
-}
-
-func (t *ManageK8sResourceTool) ValidateArguments(arguments map[string]interface{}) error {
-	required := []string{"clusterName", "action", "resourceType", "resourceName"}
-	for _, field := range required {
-		if val, exists := arguments[field]; !exists || val == "" {
-			return fmt.Errorf("%s is required", field)
+						// Attach AmazonEKSClusterPolicy
+						policyArn := "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+						if attachErr := t.client.AttachRolePolicy(ctx, roleName, policyArn); attachErr != nil {
+							t.GetLogger().Errorf("Failed to attach policy %s to role %s: %v", policyArn, roleName, attachErr)
+						}
+					}
+				}
+			}
+		} else {
+			t.GetLogger().Warnf("Could not get account ID to validate role ARN: %v", err)
 		}
 	}
-	return nil
-}
 
-// ApplyYamlTool applies YAML manifests to a Kubernetes cluster
-type ApplyYamlTool struct {
-	client     *awsclient.Client
-	actionType string
-	logger     *logging.Logger
-}
-
-func NewApplyYamlTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &ApplyYamlTool{
-		client:     client,
-		actionType: actionType,
-		logger:     logger,
-	}
-}
-
-func (t *ApplyYamlTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
-	t.logger.Info("Applying YAML to Kubernetes cluster")
-
-	// Parse arguments
-	clusterName, ok := args["clusterName"].(string)
-	if !ok || clusterName == "" {
-		return createErrorResult("clusterName is required and must be a string"), nil
-	}
-
-	yamlContent, ok := args["yamlContent"].(string)
-	if !ok || yamlContent == "" {
-		return createErrorResult("yamlContent is required and must be a string"), nil
-	}
-
-	// Verify cluster exists
-	_, err := t.client.DescribeEKSCluster(ctx, clusterName)
-	if err != nil {
-		return createErrorResult(fmt.Sprintf("Failed to verify cluster: %v", err)), nil
-	}
-
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.NewTextContent(fmt.Sprintf("YAML application prepared for cluster '%s'", clusterName)),
-		},
-		IsError: false,
-	}, nil
-}
-
-func (t *ApplyYamlTool) Name() string {
-	return "apply-yaml"
-}
-
-func (t *ApplyYamlTool) Description() string {
-	return "Applies YAML manifests to a Kubernetes cluster"
-}
-
-func (t *ApplyYamlTool) Category() string {
-	return "eks-mcp"
-}
-
-func (t *ApplyYamlTool) ActionType() string {
-	return t.actionType
-}
-
-func (t *ApplyYamlTool) GetInputSchema() map[string]interface{} {
-	return map[string]interface{}{
-		"type": "object",
-		"properties": map[string]interface{}{
-			"clusterName": map[string]interface{}{
-				"type":        "string",
-				"description": "Name of the EKS cluster",
-			},
-			"yamlContent": map[string]interface{}{
-				"type":        "string",
-				"description": "YAML content to apply",
-			},
-			"namespace": map[string]interface{}{
-				"type":        "string",
-				"description": "Kubernetes namespace",
-				"default":     "default",
-			},
-		},
-		"required": []string{"clusterName", "yamlContent"},
-	}
-}
-
-func (t *ApplyYamlTool) GetOutputSchema() map[string]interface{} {
-	return map[string]interface{}{
-		"type": "object",
-		"properties": map[string]interface{}{
-			"success": map[string]interface{}{
-				"type":        "boolean",
-				"description": "Whether the operation was successful",
-			},
-			"message": map[string]interface{}{
-				"type":        "string",
-				"description": "Human-readable message about the operation",
-			},
-		},
-		"required": []string{"success", "message"},
-	}
-}
-
-func (t *ApplyYamlTool) GetExamples() []interfaces.ToolExample {
-	return []interfaces.ToolExample{}
-}
-
-func (t *ApplyYamlTool) ValidateArguments(arguments map[string]interface{}) error {
-	required := []string{"clusterName", "yamlContent"}
-	for _, field := range required {
-		if val, exists := arguments[field]; !exists || val == "" {
-			return fmt.Errorf("%s is required", field)
+	var subnetIDs []string
+	if val, ok := arguments["subnetIds"]; ok {
+		if subnets, ok := val.([]interface{}); ok {
+			for _, s := range subnets {
+				if str, ok := s.(string); ok {
+					subnetIDs = append(subnetIDs, str)
+				}
+			}
+		} else if subnetStr, ok := val.(string); ok {
+			// Handle both comma and underscore (agent internal format) delimiters
+			normalized := strings.ReplaceAll(subnetStr, "_", ",")
+			parts := strings.Split(normalized, ",")
+			for _, p := range parts {
+				if trimmed := strings.TrimSpace(p); trimmed != "" {
+					subnetIDs = append(subnetIDs, trimmed)
+				}
+			}
 		}
 	}
-	return nil
-}
 
-// GetK8sEventsTool gets Kubernetes events from a cluster
-type GetK8sEventsTool struct {
-	client     *awsclient.Client
-	actionType string
-	logger     *logging.Logger
-}
-
-func NewGetK8sEventsTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &GetK8sEventsTool{
-		client:     client,
-		actionType: actionType,
-		logger:     logger,
-	}
-}
-
-func (t *GetK8sEventsTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
-	t.logger.Info("Getting Kubernetes events")
-
-	// Parse arguments
-	clusterName, ok := args["clusterName"].(string)
-	if !ok || clusterName == "" {
-		return createErrorResult("clusterName is required and must be a string"), nil
-	}
-
-	// Verify cluster exists
-	_, err := t.client.DescribeEKSCluster(ctx, clusterName)
-	if err != nil {
-		return createErrorResult(fmt.Sprintf("Failed to verify cluster: %v", err)), nil
-	}
-
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.NewTextContent(fmt.Sprintf("Kubernetes events retrieval prepared for cluster '%s'", clusterName)),
-		},
-		IsError: false,
-	}, nil
-}
-
-func (t *GetK8sEventsTool) Name() string {
-	return "get-k8s-events"
-}
-
-func (t *GetK8sEventsTool) Description() string {
-	return "Gets Kubernetes events from an EKS cluster"
-}
-
-func (t *GetK8sEventsTool) Category() string {
-	return "eks-mcp"
-}
-
-func (t *GetK8sEventsTool) ActionType() string {
-	return t.actionType
-}
-
-func (t *GetK8sEventsTool) GetInputSchema() map[string]interface{} {
-	return map[string]interface{}{
-		"type": "object",
-		"properties": map[string]interface{}{
-			"clusterName": map[string]interface{}{
-				"type":        "string",
-				"description": "Name of the EKS cluster",
-			},
-			"namespace": map[string]interface{}{
-				"type":        "string",
-				"description": "Kubernetes namespace (optional, defaults to 'default')",
-				"default":     "default",
-			},
-		},
-		"required": []string{"clusterName"},
-	}
-}
-
-func (t *GetK8sEventsTool) GetOutputSchema() map[string]interface{} {
-	return map[string]interface{}{
-		"type": "object",
-		"properties": map[string]interface{}{
-			"success": map[string]interface{}{
-				"type":        "boolean",
-				"description": "Whether the operation was successful",
-			},
-			"message": map[string]interface{}{
-				"type":        "string",
-				"description": "Human-readable message about the operation",
-			},
-		},
-		"required": []string{"success", "message"},
-	}
-}
-
-func (t *GetK8sEventsTool) GetExamples() []interfaces.ToolExample {
-	return []interfaces.ToolExample{}
-}
-
-func (t *GetK8sEventsTool) ValidateArguments(arguments map[string]interface{}) error {
-	if clusterName, exists := arguments["clusterName"]; !exists || clusterName == "" {
-		return fmt.Errorf("clusterName is required")
-	}
-	return nil
-}
-
-// GetPodLogsTool gets logs from Kubernetes pods
-type GetPodLogsTool struct {
-	client     *awsclient.Client
-	actionType string
-	logger     *logging.Logger
-}
-
-func NewGetPodLogsTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &GetPodLogsTool{
-		client:     client,
-		actionType: actionType,
-		logger:     logger,
-	}
-}
-
-func (t *GetPodLogsTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
-	t.logger.Info("Getting pod logs")
-
-	// Parse arguments
-	clusterName, ok := args["clusterName"].(string)
-	if !ok || clusterName == "" {
-		return createErrorResult("clusterName is required and must be a string"), nil
-	}
-
-	podName, ok := args["podName"].(string)
-	if !ok || podName == "" {
-		return createErrorResult("podName is required and must be a string"), nil
-	}
-
-	// Verify cluster exists
-	_, err := t.client.DescribeEKSCluster(ctx, clusterName)
-	if err != nil {
-		return createErrorResult(fmt.Sprintf("Failed to verify cluster: %v", err)), nil
-	}
-
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.NewTextContent(fmt.Sprintf("Pod logs retrieval prepared for pod '%s' in cluster '%s'", podName, clusterName)),
-		},
-		IsError: false,
-	}, nil
-}
-
-func (t *GetPodLogsTool) Name() string {
-	return "get-pod-logs"
-}
-
-func (t *GetPodLogsTool) Description() string {
-	return "Gets logs from Kubernetes pods in an EKS cluster"
-}
-
-func (t *GetPodLogsTool) Category() string {
-	return "eks-mcp"
-}
-
-func (t *GetPodLogsTool) ActionType() string {
-	return t.actionType
-}
-
-func (t *GetPodLogsTool) GetInputSchema() map[string]interface{} {
-	return map[string]interface{}{
-		"type": "object",
-		"properties": map[string]interface{}{
-			"clusterName": map[string]interface{}{
-				"type":        "string",
-				"description": "Name of the EKS cluster",
-			},
-			"podName": map[string]interface{}{
-				"type":        "string",
-				"description": "Name of the pod",
-			},
-			"namespace": map[string]interface{}{
-				"type":        "string",
-				"description": "Kubernetes namespace",
-				"default":     "default",
-			},
-			"containerName": map[string]interface{}{
-				"type":        "string",
-				"description": "Name of the container (optional for single-container pods)",
-			},
-			"tailLines": map[string]interface{}{
-				"type":        "number",
-				"description": "Number of lines to tail from the end of the logs",
-				"default":     100,
-			},
-		},
-		"required": []string{"clusterName", "podName"},
-	}
-}
-
-func (t *GetPodLogsTool) GetOutputSchema() map[string]interface{} {
-	return map[string]interface{}{
-		"type": "object",
-		"properties": map[string]interface{}{
-			"success": map[string]interface{}{
-				"type":        "boolean",
-				"description": "Whether the operation was successful",
-			},
-			"message": map[string]interface{}{
-				"type":        "string",
-				"description": "Human-readable message about the operation",
-			},
-		},
-		"required": []string{"success", "message"},
-	}
-}
-
-func (t *GetPodLogsTool) GetExamples() []interfaces.ToolExample {
-	return []interfaces.ToolExample{}
-}
-
-func (t *GetPodLogsTool) ValidateArguments(arguments map[string]interface{}) error {
-	required := []string{"clusterName", "podName"}
-	for _, field := range required {
-		if val, exists := arguments[field]; !exists || val == "" {
-			return fmt.Errorf("%s is required", field)
+	var securityGroupIDs []string
+	if val, ok := arguments["securityGroupIds"]; ok {
+		if sgs, ok := val.([]interface{}); ok {
+			for _, sg := range sgs {
+				if str, ok := sg.(string); ok {
+					securityGroupIDs = append(securityGroupIDs, str)
+				}
+			}
+		} else if sgStr, ok := val.(string); ok {
+			// Handle both comma and underscore (agent internal format) delimiters
+			normalized := strings.ReplaceAll(sgStr, "_", ",")
+			parts := strings.Split(normalized, ",")
+			for _, p := range parts {
+				if trimmed := strings.TrimSpace(p); trimmed != "" {
+					securityGroupIDs = append(securityGroupIDs, trimmed)
+				}
+			}
 		}
 	}
-	return nil
+
+	params := aws.CreateEKSClusterParams{
+		Name:             name,
+		RoleArn:          roleArn,
+		SubnetIDs:        subnetIDs,
+		SecurityGroupIDs: securityGroupIDs,
+		Version:          version,
+	}
+
+	resource, err := t.client.CreateEKSCluster(ctx, params)
+	if err != nil {
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to create EKS cluster: %s", err.Error()))
+	}
+
+	message := fmt.Sprintf("Successfully initiated creation of EKS cluster %s", resource.ID)
+	data := map[string]interface{}{
+		"clusterName": resource.ID,
+		"state":       resource.State,
+		"details":     resource.Details,
+	}
+
+	return t.CreateSuccessResponse(message, data)
 }
 
-// ========== Additional EKS Tools ==========
-
-// ListEKSClustersTool lists EKS clusters
+// ListEKSClustersTool implements MCPTool for listing EKS clusters
 type ListEKSClustersTool struct {
-	client     *awsclient.Client
-	actionType string
-	logger     *logging.Logger
+	*BaseTool
+	client *aws.Client
 }
 
-func NewListEKSClustersTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &ListEKSClustersTool{
-		client:     client,
-		actionType: actionType,
-		logger:     logger,
-	}
-}
-
-func (t *ListEKSClustersTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
-	t.logger.Info("Listing EKS clusters")
-
-	clusters, err := t.client.ListEKSClusters(ctx)
-	if err != nil {
-		return createErrorResult(fmt.Sprintf("Failed to list EKS clusters: %v", err)), nil
-	}
-
-	clusterCount := 0
-	if clusters != nil && clusters.Clusters != nil {
-		clusterCount = len(clusters.Clusters)
-	}
-
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.NewTextContent(fmt.Sprintf("Found %d EKS clusters", clusterCount)),
-		},
-		IsError: false,
-	}, nil
-}
-
-func (t *ListEKSClustersTool) Name() string {
-	return "list-eks-clusters"
-}
-
-func (t *ListEKSClustersTool) Description() string {
-	return "Lists all EKS clusters in the region"
-}
-
-func (t *ListEKSClustersTool) Category() string {
-	return "eks-mcp"
-}
-
-func (t *ListEKSClustersTool) ActionType() string {
-	return t.actionType
-}
-
-func (t *ListEKSClustersTool) GetInputSchema() map[string]interface{} {
-	return map[string]interface{}{
+// NewListEKSClustersTool creates a tool for listing EKS clusters
+func NewListEKSClustersTool(client *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
 		"type":       "object",
 		"properties": map[string]interface{}{},
 	}
+
+	baseTool := NewBaseTool(
+		"list-eks-clusters",
+		"List all EKS clusters in the current region",
+		"eks",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	return &ListEKSClustersTool{
+		BaseTool: baseTool,
+		client:   client,
+	}
 }
 
-func (t *ListEKSClustersTool) GetOutputSchema() map[string]interface{} {
-	return map[string]interface{}{
+// Execute lists EKS clusters
+func (t *ListEKSClustersTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	clusters, err := t.client.ListEKSClusters(ctx)
+	if err != nil {
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to list EKS clusters: %s", err.Error()))
+	}
+
+	message := fmt.Sprintf("Found %d EKS clusters", len(clusters))
+	data := map[string]interface{}{
+		"clusters": clusters,
+		"count":    len(clusters),
+	}
+
+	return t.CreateSuccessResponse(message, data)
+}
+
+// GetEKSClusterTool implements MCPTool for getting EKS cluster details
+type GetEKSClusterTool struct {
+	*BaseTool
+	client *aws.Client
+}
+
+// NewGetEKSClusterTool creates a tool for getting EKS cluster details
+func NewGetEKSClusterTool(client *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
 		"type": "object",
 		"properties": map[string]interface{}{
-			"success": map[string]interface{}{
-				"type":        "boolean",
-				"description": "Whether the operation was successful",
-			},
-			"message": map[string]interface{}{
+			"name": map[string]interface{}{
 				"type":        "string",
-				"description": "Human-readable message about the operation",
+				"description": "The name of the EKS cluster",
 			},
 		},
-		"required": []string{"success", "message"},
+		"required": []interface{}{"name"},
+	}
+
+	baseTool := NewBaseTool(
+		"get-eks-cluster",
+		"Get details of a specific EKS cluster",
+		"eks",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	return &GetEKSClusterTool{
+		BaseTool: baseTool,
+		client:   client,
 	}
 }
 
-func (t *ListEKSClustersTool) GetExamples() []interfaces.ToolExample {
-	return []interfaces.ToolExample{}
-}
-
-func (t *ListEKSClustersTool) ValidateArguments(arguments map[string]interface{}) error {
-	return nil
-}
-
-// DescribeEKSClusterTool describes an EKS cluster
-type DescribeEKSClusterTool struct {
-	client     *awsclient.Client
-	actionType string
-	logger     *logging.Logger
-}
-
-func NewDescribeEKSClusterTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &DescribeEKSClusterTool{
-		client:     client,
-		actionType: actionType,
-		logger:     logger,
-	}
-}
-
-func (t *DescribeEKSClusterTool) Execute(ctx context.Context, args map[string]interface{}) (*mcp.CallToolResult, error) {
-	t.logger.Info("Describing EKS cluster")
-
-	clusterName, ok := args["clusterName"].(string)
-	if !ok || clusterName == "" {
-		return createErrorResult("clusterName is required and must be a string"), nil
+// Execute gets EKS cluster details
+func (t *GetEKSClusterTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	name, _ := arguments["name"].(string)
+	if name == "" {
+		return t.CreateErrorResponse("name is required")
 	}
 
-	cluster, err := t.client.DescribeEKSCluster(ctx, clusterName)
+	resource, err := t.client.DescribeEKSCluster(ctx, name)
 	if err != nil {
-		return createErrorResult(fmt.Sprintf("Failed to describe EKS cluster: %v", err)), nil
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to describe EKS cluster: %s", err.Error()))
 	}
 
-	status := "unknown"
-	if cluster != nil && cluster.Cluster != nil && cluster.Cluster.Status != "" {
-		status = string(cluster.Cluster.Status)
+	message := fmt.Sprintf("Successfully retrieved details for cluster %s", name)
+	data := map[string]interface{}{
+		"cluster":     resource,
+		"clusterName": resource.ID,
 	}
 
-	return &mcp.CallToolResult{
-		Content: []mcp.Content{
-			mcp.NewTextContent(fmt.Sprintf("EKS cluster '%s' details retrieved successfully. Status: %s", clusterName, status)),
-		},
-		IsError: false,
-	}, nil
+	return t.CreateSuccessResponse(message, data)
 }
 
-func (t *DescribeEKSClusterTool) Name() string {
-	return "describe-eks-cluster"
+// CreateEKSNodeGroupTool implements MCPTool for creating EKS node groups
+type CreateEKSNodeGroupTool struct {
+	*BaseTool
+	client *aws.Client
 }
 
-func (t *DescribeEKSClusterTool) Description() string {
-	return "Describes an EKS cluster"
-}
-
-func (t *DescribeEKSClusterTool) Category() string {
-	return "eks-mcp"
-}
-
-func (t *DescribeEKSClusterTool) ActionType() string {
-	return t.actionType
-}
-
-func (t *DescribeEKSClusterTool) GetInputSchema() map[string]interface{} {
-	return map[string]interface{}{
+// NewCreateEKSNodeGroupTool creates a tool for creating EKS node groups
+func NewCreateEKSNodeGroupTool(client *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
 		"type": "object",
 		"properties": map[string]interface{}{
 			"clusterName": map[string]interface{}{
 				"type":        "string",
-				"description": "Name of the EKS cluster",
+				"description": "The name of the EKS cluster",
+			},
+			"nodeGroupName": map[string]interface{}{
+				"type":        "string",
+				"description": "The unique name to give to your node group",
+			},
+			"nodeRoleArn": map[string]interface{}{
+				"type":        "string",
+				"description": "The Amazon Resource Name (ARN) of the IAM role to associate with your node group",
+			},
+			"subnetIds": map[string]interface{}{
+				"type":        "array",
+				"items":       map[string]interface{}{"type": "string"},
+				"description": "The subnets to use for the Auto Scaling group that is created for your node group",
+			},
+			"instanceTypes": map[string]interface{}{
+				"type":        "array",
+				"items":       map[string]interface{}{"type": "string"},
+				"description": "The instance types to use for your node group",
+			},
+			"minSize": map[string]interface{}{
+				"type":        "integer",
+				"description": "The minimum number of nodes that the managed node group can scale in to",
+			},
+			"maxSize": map[string]interface{}{
+				"type":        "integer",
+				"description": "The maximum number of nodes that the managed node group can scale out to",
+			},
+			"desiredSize": map[string]interface{}{
+				"type":        "integer",
+				"description": "The current number of nodes that the managed node group should maintain",
 			},
 		},
-		"required": []string{"clusterName"},
+		"required": []interface{}{"clusterName", "nodeGroupName", "nodeRoleArn", "subnetIds"},
+	}
+
+	baseTool := NewBaseTool(
+		"create-eks-node-group",
+		"Create a managed node group for an EKS cluster",
+		"eks",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	return &CreateEKSNodeGroupTool{
+		BaseTool: baseTool,
+		client:   client,
 	}
 }
 
-func (t *DescribeEKSClusterTool) GetOutputSchema() map[string]interface{} {
-	return map[string]interface{}{
+// Execute creates an EKS node group
+func (t *CreateEKSNodeGroupTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	clusterName, _ := arguments["clusterName"].(string)
+	nodeGroupName, _ := arguments["nodeGroupName"].(string)
+	nodeRoleArn, _ := arguments["nodeRoleArn"].(string)
+
+	// Validate and potentially fix nodeRoleArn
+	var roleName string
+	if nodeRoleArn != "" {
+		accountID, err := t.client.GetAccountID(ctx)
+		if err == nil {
+			if !strings.HasPrefix(nodeRoleArn, "arn:") {
+				roleName = nodeRoleArn
+				// It's likely a role name, construct full ARN
+				nodeRoleArn = fmt.Sprintf("arn:aws:iam::%s:role/%s", accountID, nodeRoleArn)
+				t.GetLogger().Infof("Constructed ARN from role name: %s", nodeRoleArn)
+			} else {
+				// Try to extract role name from ARN
+				parts := strings.Split(nodeRoleArn, "/")
+				if len(parts) > 0 {
+					roleName = parts[len(parts)-1]
+				}
+
+				// Check if ARN has correct account ID
+				arnParts := strings.Split(nodeRoleArn, ":")
+				if len(arnParts) >= 5 {
+					arnAccountID := arnParts[4]
+					// Check if account ID matches (and is not empty/wildcard)
+					if arnAccountID != "" && arnAccountID != "aws" && arnAccountID != accountID {
+						t.GetLogger().Warnf("Role ARN account ID %s does not match current account %s. Attempting to correct.", arnAccountID, accountID)
+						arnParts[4] = accountID
+						nodeRoleArn = strings.Join(arnParts, ":")
+						t.GetLogger().Infof("Corrected Role ARN: %s", nodeRoleArn)
+					}
+				}
+			}
+
+			// Check if role exists and auto-create if missing
+			if roleName != "" {
+				_, err := t.client.GetIAMRole(ctx, roleName)
+				if err != nil {
+					t.GetLogger().Warnf("Role %s not found or error accessing it: %v. Attempting to create it.", roleName, err)
+
+					assumeRolePolicy := `{
+						"Version": "2012-10-17",
+						"Statement": [
+							{
+								"Effect": "Allow",
+								"Principal": {
+									"Service": "ec2.amazonaws.com"
+								},
+								"Action": "sts:AssumeRole"
+							}
+						]
+					}`
+
+					createParams := aws.CreateIAMRoleParams{
+						RoleName:                 roleName,
+						AssumeRolePolicyDocument: assumeRolePolicy,
+						Description:              "Auto-created EKS Node Group Role",
+					}
+
+					_, createErr := t.client.CreateIAMRole(ctx, createParams)
+					if createErr != nil {
+						t.GetLogger().Errorf("Failed to auto-create role %s: %v", roleName, createErr)
+					} else {
+						t.GetLogger().Infof("Successfully created role %s", roleName)
+
+						policies := []string{
+							"arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+							"arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+							"arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+						}
+
+						for _, policyArn := range policies {
+							if attachErr := t.client.AttachRolePolicy(ctx, roleName, policyArn); attachErr != nil {
+								t.GetLogger().Errorf("Failed to attach policy %s to role %s: %v", policyArn, roleName, attachErr)
+							}
+						}
+					}
+				}
+			}
+		} else {
+			t.GetLogger().Warnf("Could not get account ID to validate role ARN: %v", err)
+		}
+	}
+
+	var subnetIDs []string
+	if val, ok := arguments["subnetIds"]; ok {
+		if subnets, ok := val.([]interface{}); ok {
+			for _, s := range subnets {
+				if str, ok := s.(string); ok {
+					subnetIDs = append(subnetIDs, str)
+				}
+			}
+		} else if subnetStr, ok := val.(string); ok {
+			// Handle both comma and underscore (agent internal format) delimiters
+			normalized := strings.ReplaceAll(subnetStr, "_", ",")
+			parts := strings.Split(normalized, ",")
+			for _, p := range parts {
+				if trimmed := strings.TrimSpace(p); trimmed != "" {
+					subnetIDs = append(subnetIDs, trimmed)
+				}
+			}
+		}
+	}
+
+	var instanceTypes []string
+	if val, ok := arguments["instanceTypes"]; ok {
+		if types, ok := val.([]interface{}); ok {
+			for _, typ := range types {
+				if str, ok := typ.(string); ok {
+					instanceTypes = append(instanceTypes, str)
+				}
+			}
+		} else if typeStr, ok := val.(string); ok {
+			parts := strings.Split(typeStr, ",")
+			for _, p := range parts {
+				if trimmed := strings.TrimSpace(p); trimmed != "" {
+					instanceTypes = append(instanceTypes, trimmed)
+				}
+			}
+		}
+	}
+
+	minSize, _ := arguments["minSize"].(float64)
+	maxSize, _ := arguments["maxSize"].(float64)
+	desiredSize, _ := arguments["desiredSize"].(float64)
+
+	params := aws.CreateEKSNodeGroupParams{
+		ClusterName:   clusterName,
+		NodeGroupName: nodeGroupName,
+		NodeRoleArn:   nodeRoleArn,
+		SubnetIDs:     subnetIDs,
+		InstanceTypes: instanceTypes,
+		MinSize:       int32(minSize),
+		MaxSize:       int32(maxSize),
+		DesiredSize:   int32(desiredSize),
+	}
+
+	resource, err := t.client.CreateEKSNodeGroup(ctx, params)
+	if err != nil {
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to create EKS node group: %s", err.Error()))
+	}
+
+	message := fmt.Sprintf("Successfully initiated creation of EKS node group %s", resource.ID)
+	data := map[string]interface{}{
+		"nodeGroupName": resource.ID,
+		"clusterName":   clusterName,
+		"state":         resource.State,
+		"details":       resource.Details,
+	}
+
+	return t.CreateSuccessResponse(message, data)
+}
+
+// ListEKSNodeGroupsTool implements MCPTool for listing EKS node groups
+type ListEKSNodeGroupsTool struct {
+	*BaseTool
+	client *aws.Client
+}
+
+// NewListEKSNodeGroupsTool creates a tool for listing EKS node groups
+func NewListEKSNodeGroupsTool(client *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
 		"type": "object",
 		"properties": map[string]interface{}{
-			"success": map[string]interface{}{
-				"type":        "boolean",
-				"description": "Whether the operation was successful",
-			},
-			"message": map[string]interface{}{
+			"clusterName": map[string]interface{}{
 				"type":        "string",
-				"description": "Human-readable message about the operation",
+				"description": "The name of the EKS cluster",
 			},
 		},
-		"required": []string{"success", "message"},
+		"required": []interface{}{"clusterName"},
+	}
+
+	baseTool := NewBaseTool(
+		"list-eks-node-groups",
+		"List node groups in a specific EKS cluster",
+		"eks",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	return &ListEKSNodeGroupsTool{
+		BaseTool: baseTool,
+		client:   client,
 	}
 }
 
-func (t *DescribeEKSClusterTool) GetExamples() []interfaces.ToolExample {
-	return []interfaces.ToolExample{}
-}
-
-func (t *DescribeEKSClusterTool) ValidateArguments(arguments map[string]interface{}) error {
-	if clusterName, exists := arguments["clusterName"]; !exists || clusterName == "" {
-		return fmt.Errorf("clusterName is required")
+// Execute lists EKS node groups
+func (t *ListEKSNodeGroupsTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	clusterName, _ := arguments["clusterName"].(string)
+	if clusterName == "" {
+		return t.CreateErrorResponse("clusterName is required")
 	}
-	return nil
-}
 
-// Placeholder tools for the remaining missing functions
-func NewDeleteEKSClusterTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewCreateEKSNodeGroupTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewDeployKubernetesManifestTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewAddInlinePolicyTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewGetPoliciesForRoleTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewListK8sResourcesTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewListApiVersionsTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewGetCloudWatchLogsTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewGetCloudWatchMetricsTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewSearchEKSTroubleshootGuideTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewGetEKSInsightsTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-func NewGetEKSVpcConfigTool(client *awsclient.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
-	return &CreateEKSClusterTool{client: client, actionType: actionType, logger: logger} // Placeholder
-}
-
-// Helper function for JSON marshaling
-func mustMarshalJSON(v interface{}) string {
-	data, err := json.MarshalIndent(v, "", "  ")
+	nodeGroups, err := t.client.ListEKSNodeGroups(ctx, clusterName)
 	if err != nil {
-		return fmt.Sprintf(`{"error": "Failed to marshal JSON: %v"}`, err)
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to list EKS node groups: %s", err.Error()))
 	}
-	return string(data)
+
+	message := fmt.Sprintf("Found %d node groups in cluster %s", len(nodeGroups), clusterName)
+	data := map[string]interface{}{
+		"nodeGroups":  nodeGroups,
+		"clusterName": clusterName,
+		"count":       len(nodeGroups),
+	}
+
+	return t.CreateSuccessResponse(message, data)
+}
+
+// DeleteEKSClusterTool implements MCPTool for deleting EKS clusters
+type DeleteEKSClusterTool struct {
+	*BaseTool
+	client *aws.Client
+}
+
+// NewDeleteEKSClusterTool creates a tool for deleting EKS clusters
+func NewDeleteEKSClusterTool(client *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"name": map[string]interface{}{
+				"type":        "string",
+				"description": "The name of the EKS cluster to delete",
+			},
+		},
+		"required": []interface{}{"name"},
+	}
+
+	baseTool := NewBaseTool(
+		"delete-eks-cluster",
+		"Delete an AWS EKS cluster",
+		"eks",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	return &DeleteEKSClusterTool{
+		BaseTool: baseTool,
+		client:   client,
+	}
+}
+
+// Execute deletes an EKS cluster
+func (t *DeleteEKSClusterTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	name, _ := arguments["name"].(string)
+	if name == "" {
+		return t.CreateErrorResponse("name is required")
+	}
+
+	err := t.client.DeleteEKSCluster(ctx, name)
+	if err != nil {
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to delete EKS cluster: %s", err.Error()))
+	}
+
+	message := fmt.Sprintf("Successfully initiated deletion of EKS cluster %s", name)
+	data := map[string]interface{}{
+		"clusterName": name,
+		"status":      "deleting",
+	}
+
+	return t.CreateSuccessResponse(message, data)
+}
+
+// ApplyKubernetesYAMLTool implements MCPTool for applying Kubernetes YAML to an EKS cluster
+type ApplyKubernetesYAMLTool struct {
+	*BaseTool
+	client *aws.Client
+}
+
+// NewApplyKubernetesYAMLTool creates a tool for applying Kubernetes YAML
+func NewApplyKubernetesYAMLTool(client *aws.Client, actionType string, logger *logging.Logger) interfaces.MCPTool {
+	inputSchema := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"clusterName": map[string]interface{}{
+				"type":        "string",
+				"description": "The name of the EKS cluster",
+			},
+			"yaml": map[string]interface{}{
+				"type":        "string",
+				"description": "The YAML configuration to apply",
+			},
+		},
+		"required": []interface{}{"clusterName", "yaml"},
+	}
+
+	baseTool := NewBaseTool(
+		"apply-yaml",
+		"Apply a Kubernetes YAML configuration to an EKS cluster",
+		"eks",
+		actionType,
+		inputSchema,
+		logger,
+	)
+
+	return &ApplyKubernetesYAMLTool{
+		BaseTool: baseTool,
+		client:   client,
+	}
+}
+
+// Execute applies Kubernetes YAML
+func (t *ApplyKubernetesYAMLTool) Execute(ctx context.Context, arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	clusterName, _ := arguments["clusterName"].(string)
+	yamlContent, _ := arguments["yaml"].(string)
+
+	if clusterName == "" {
+		return t.CreateErrorResponse("clusterName is required")
+	}
+	if yamlContent == "" {
+		return t.CreateErrorResponse("yaml is required")
+	}
+
+	err := t.client.ApplyKubernetesYAML(ctx, clusterName, yamlContent)
+	if err != nil {
+		return t.CreateErrorResponse(fmt.Sprintf("Failed to apply Kubernetes YAML: %s", err.Error()))
+	}
+
+	message := fmt.Sprintf("Successfully applied YAML to cluster %s", clusterName)
+	data := map[string]interface{}{
+		"clusterName": clusterName,
+		"status":      "applied",
+	}
+
+	return t.CreateSuccessResponse(message, data)
 }

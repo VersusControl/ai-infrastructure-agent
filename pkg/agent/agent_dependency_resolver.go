@@ -65,7 +65,31 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 	var requestedField string
 	var lenReference int = -1
 
-	if len(parts) == 3 {
+	if len(parts) == 4 {
+		// Format: {{step-1.field.index.subfield}} - mainly to support .id or .resourceId access on array items
+		// We treat this equivalent to {{step-1.field.index}} since the resolver returns IDs
+		if parts[3] == "id" || parts[3] == "resourceId" {
+			stepID = parts[0]
+			requestedField = parts[1]
+
+			// Handle index: "0" or "[0]"
+			indexPart := parts[2]
+			if strings.HasPrefix(indexPart, "[") && strings.HasSuffix(indexPart, "]") {
+				indexStr := strings.TrimPrefix(strings.TrimSuffix(indexPart, "]"), "[")
+				if idx, err := strconv.Atoi(indexStr); err == nil {
+					lenReference = idx
+				} else {
+					return "", fmt.Errorf("invalid array index in reference: %s (expected numeric index)", reference)
+				}
+			} else if idx, err := strconv.Atoi(indexPart); err == nil {
+				lenReference = idx
+			} else {
+				return "", fmt.Errorf("invalid array index in reference: %s (expected numeric index)", reference)
+			}
+		} else {
+			return "", fmt.Errorf("invalid reference format: %s (nested property access not supported, expected .id or .resourceId)", reference)
+		}
+	} else if len(parts) == 3 {
 		// Format: {{step-1.resourceId.0}} or {{step-1.resourceId.[0]}} - array indexing
 		stepID = parts[0]
 		requestedField = parts[1]
@@ -149,6 +173,20 @@ func (a *StateAwareAgent) resolveDependencyReference(reference string) (string, 
 	// Resolve from infrastructure state (handles both missing mappings and specific field requests)
 	resolvedID, err := a.resolveFromInfrastructureState(stepID, lenReference)
 	if err != nil {
+		// Hotfix for missing dependency steps that map to known roles
+		// This handles cases where the role creation step is missing from state but we can fallback to the standard role name
+		// The EKS tools have been enhanced to handle role names and auto-create them if missing
+		if requestedField == "roleArn" {
+			if stepID == "step-create-iam-role-for-eks-node" {
+				a.Logger.Warn("Applying hotfix for missing step-create-iam-role-for-eks-node, returning 'eks-nodegroup-role'")
+				return "eks-nodegroup-role", nil
+			}
+			if stepID == "step-create-iam-role-for-eks-cluster" {
+				a.Logger.Warn("Applying hotfix for missing step-create-iam-role-for-eks-cluster, returning 'eks-cluster-role'")
+				return "eks-cluster-role", nil
+			}
+		}
+
 		return "", fmt.Errorf("failed to resolve dependency %s for step %s: %w", reference, stepID, err)
 	}
 

@@ -10,7 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 
 	"github.com/versus-control/ai-infrastructure-agent/internal/logging"
 )
@@ -18,10 +20,12 @@ import (
 type Client struct {
 	cfg         aws.Config
 	ec2         *ec2.Client
+	eks         *eks.Client
+	iam         *iam.Client
+	sts         *sts.Client
 	autoscaling *autoscaling.Client
 	elbv2       *elasticloadbalancingv2.Client
 	rds         *rds.Client
-	eks         *eks.Client
 	logger      *logging.Logger
 }
 
@@ -37,12 +41,24 @@ func NewClient(region string, logger *logging.Logger) (*Client, error) {
 	return &Client{
 		cfg:         cfg,
 		ec2:         ec2.NewFromConfig(cfg),
+		eks:         eks.NewFromConfig(cfg),
+		iam:         iam.NewFromConfig(cfg),
+		sts:         sts.NewFromConfig(cfg),
 		autoscaling: autoscaling.NewFromConfig(cfg),
 		elbv2:       elasticloadbalancingv2.NewFromConfig(cfg),
 		rds:         rds.NewFromConfig(cfg),
-		eks:         eks.NewFromConfig(cfg),
 		logger:      logger,
 	}, nil
+}
+
+// GetAccountID returns the AWS Account ID of the caller
+func (c *Client) GetAccountID(ctx context.Context) (string, error) {
+	input := &sts.GetCallerIdentityInput{}
+	result, err := c.sts.GetCallerIdentity(ctx, input)
+	if err != nil {
+		return "", fmt.Errorf("failed to get caller identity: %w", err)
+	}
+	return aws.ToString(result.Account), nil
 }
 
 // HealthCheck verifies AWS connectivity

@@ -17,7 +17,7 @@ func (ws *WebServer) RequestPlanRecoveryDecision(
 	context *agent.PlanFailureContext,
 	strategy *agent.PlanRecoveryStrategy,
 ) (approved bool, err error) {
-	ws.aiAgent.Logger.WithFields(map[string]interface{}{
+	ws.logger.WithFields(map[string]interface{}{
 		"execution_id": executionID,
 		"failed_step":  context.FailedStepID,
 		"attempt":      context.AttemptNumber,
@@ -93,14 +93,14 @@ func (ws *WebServer) RequestPlanRecoveryDecision(
 	if len(strategy.ExecutionPlan) > 0 {
 		// Marshal the complete strategy JSON (including full execution plan with parameters)
 		if strategyFullJSON, err := json.MarshalIndent(strategyJSON, "", "  "); err == nil {
-			ws.aiAgent.Logger.WithFields(map[string]interface{}{
+			ws.logger.WithFields(map[string]interface{}{
 				"execution_id": executionID,
 				"total_steps":  len(strategy.ExecutionPlan),
 			}).Infof("📋 Complete strategy sent to front-end:\n%s", string(strategyFullJSON))
 		}
 	}
 
-	ws.aiAgent.Logger.WithField("execution_id", executionID).Info("Plan recovery request sent to UI, waiting for response")
+	ws.logger.WithField("execution_id", executionID).Info("Plan recovery request sent to UI, waiting for response")
 
 	// Wait for user response with timeout
 	select {
@@ -110,7 +110,7 @@ func (ws *WebServer) RequestPlanRecoveryDecision(
 		delete(ws.planRecoveryRequests, executionID)
 		ws.planRecoveryMutex.Unlock()
 
-		ws.aiAgent.Logger.WithFields(map[string]interface{}{
+		ws.logger.WithFields(map[string]interface{}{
 			"execution_id": executionID,
 			"approved":     response.Approved,
 		}).Info("Plan recovery decision received from user")
@@ -123,7 +123,7 @@ func (ws *WebServer) RequestPlanRecoveryDecision(
 		delete(ws.planRecoveryRequests, executionID)
 		ws.planRecoveryMutex.Unlock()
 
-		ws.aiAgent.Logger.WithField("execution_id", executionID).Error("Plan recovery decision timeout")
+		ws.logger.WithField("execution_id", executionID).Error("Plan recovery decision timeout")
 		return false, fmt.Errorf("plan recovery decision timeout after 15 minutes")
 	}
 }
@@ -136,7 +136,7 @@ func (ws *WebServer) NotifyRecoveryAnalyzing(
 	completedCount int,
 	totalSteps int,
 ) error {
-	ws.aiAgent.Logger.WithFields(map[string]interface{}{
+	ws.logger.WithFields(map[string]interface{}{
 		"execution_id":    executionID,
 		"failed_step":     failedStepID,
 		"failed_index":    failedIndex,
@@ -160,7 +160,7 @@ func (ws *WebServer) NotifyRecoveryAnalyzing(
 
 // NotifyRecoveryExecuting implements PlanRecoveryCoordinator interface
 func (ws *WebServer) NotifyRecoveryExecuting(executionID string, strategy *agent.PlanRecoveryStrategy) error {
-	ws.aiAgent.Logger.WithFields(map[string]interface{}{
+	ws.logger.WithFields(map[string]interface{}{
 		"execution_id": executionID,
 		"action":       strategy.Action,
 		"total_steps":  strategy.TotalSteps,
@@ -181,7 +181,7 @@ func (ws *WebServer) NotifyRecoveryExecuting(executionID string, strategy *agent
 
 // NotifyRecoveryCompleted implements PlanRecoveryCoordinator interface
 func (ws *WebServer) NotifyRecoveryCompleted(executionID string) error {
-	ws.aiAgent.Logger.WithField("execution_id", executionID).Info("Notifying UI: Recovery completed")
+	ws.logger.WithField("execution_id", executionID).Info("Notifying UI: Recovery completed")
 
 	ws.broadcastUpdate(map[string]interface{}{
 		"type":        "plan_recovery_completed",
@@ -195,7 +195,7 @@ func (ws *WebServer) NotifyRecoveryCompleted(executionID string) error {
 
 // NotifyRecoveryFailed implements PlanRecoveryCoordinator interface
 func (ws *WebServer) NotifyRecoveryFailed(executionID string, reason string) error {
-	ws.aiAgent.Logger.WithFields(map[string]interface{}{
+	ws.logger.WithFields(map[string]interface{}{
 		"execution_id": executionID,
 		"reason":       reason,
 	}).Warn("Notifying UI: Recovery failed")
