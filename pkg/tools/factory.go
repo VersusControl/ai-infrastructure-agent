@@ -194,6 +194,28 @@ func (f *ToolFactoryImpl) CreateTool(toolType string, actionType string, depende
 	case "export-infrastructure-state":
 		return NewExportStateTool(deps, deps.AWSClient, actionType, f.logger), nil
 
+	// EKS Tools
+	case "create-eks-cluster":
+		return NewCreateEKSClusterTool(deps.AWSClient, actionType, f.logger), nil
+	case "delete-eks-cluster":
+		return NewDeleteEKSClusterTool(deps.AWSClient, actionType, f.logger), nil
+	case "get-eks-cluster":
+		return NewGetEKSClusterTool(deps.AWSClient, actionType, f.logger), nil
+	case "list-eks-clusters":
+		return NewListEKSClustersTool(deps.AWSClient, actionType, f.logger), nil
+	case "create-eks-node-group":
+		return NewCreateEKSNodeGroupTool(deps.AWSClient, actionType, f.logger), nil
+	case "list-eks-node-groups":
+		return NewListEKSNodeGroupsTool(deps.AWSClient, actionType, f.logger), nil
+	case "apply-yaml":
+		return NewApplyKubernetesYAMLTool(deps.AWSClient, actionType, f.logger), nil
+
+	// IAM Tools
+	case "create-iam-role":
+		return NewCreateIAMRoleTool(deps.AWSClient, actionType, f.logger), nil
+	case "list-iam-roles":
+		return NewListIAMRolesTool(deps.AWSClient, actionType, f.logger), nil
+
 	// State-Aware Tools
 	case "visualize-dependency-graph":
 		return NewVisualizeDependencyGraphTool(deps, actionType, f.logger), nil
@@ -238,6 +260,9 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"create-db-subnet-group",
 			"create-db-instance",
 			"create-db-snapshot",
+			"create-eks-cluster",
+			"create-eks-node-group",
+			"create-iam-role",
 		},
 		"query": {
 			"list-ec2-instances",
@@ -263,6 +288,10 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"list-db-instances",
 			"list-db-snapshots",
 			"describe-db-instance",
+			"list-eks-clusters",
+			"get-eks-cluster",
+			"list-eks-node-groups",
+			"list-iam-roles",
 		},
 		"modification": {
 			"start-ec2-instance",
@@ -271,11 +300,13 @@ func (f *ToolFactoryImpl) GetSupportedToolTypes() map[string][]string {
 			"start-db-instance",
 			"stop-db-instance",
 			"update-auto-scaling-group",
+			"apply-yaml",
 		},
 		"deletion": {
 			"terminate-ec2-instance",
 			"delete-security-group",
 			"delete-db-instance",
+			"delete-eks-cluster",
 		},
 		"association": {
 			"associate-route-table",

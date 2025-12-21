@@ -32,7 +32,7 @@ func (ws *WebServer) getStateHandler(w http.ResponseWriter, r *http.Request) {
 		includeManaged = false
 	}
 
-	ws.aiAgent.Logger.WithFields(map[string]interface{}{
+	ws.logger.WithFields(map[string]interface{}{
 		"include_discovered": includeDiscovered,
 		"include_managed":    includeManaged,
 	}).Info("Getting infrastructure state")
@@ -40,7 +40,7 @@ func (ws *WebServer) getStateHandler(w http.ResponseWriter, r *http.Request) {
 	// Use MCP server to get state with fresh discovery
 	stateJSON, err := ws.aiAgent.ExportInfrastructureStateWithOptions(r.Context(), includeDiscovered, includeManaged)
 	if err != nil {
-		ws.aiAgent.Logger.WithError(err).Error("Failed to get state from MCP server")
+		ws.logger.WithError(err).Error("Failed to get state from MCP server")
 		http.Error(w, "Failed to get state", http.StatusInternalServerError)
 		return
 	}
@@ -61,7 +61,7 @@ func (ws *WebServer) exportStateHandler(w http.ResponseWriter, r *http.Request) 
 	// Use MCP server to export infrastructure state
 	stateJSON, err := ws.aiAgent.ExportInfrastructureStateWithOptions(ctx, includeDiscovered, includeManaged)
 	if err != nil {
-		ws.aiAgent.Logger.WithError(err).Error("Failed to export infrastructure state")
+		ws.logger.WithError(err).Error("Failed to export infrastructure state")
 		http.Error(w, "Export failed", http.StatusInternalServerError)
 		return
 	}
