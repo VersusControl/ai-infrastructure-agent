@@ -21,6 +21,10 @@
 - **Tutorials**
   - [Tutorial](https://github.com/VersusControl/devops-ai-guidelines/blob/main/04-ai-agent-for-aws/00-toc.md)
 
+- **Community**
+  - [Project Governance](/governance.md)
+  - [Contributing](../CONTRIBUTING.md)
+
 - **Resources**
   - [GitHub Repository](https://github.com/VersusControl/ai-infrastructure-agent)
   - [Issues](https://github.com/VersusControl/ai-infrastructure-agent/issues)
