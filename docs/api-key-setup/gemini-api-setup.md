@@ -30,9 +30,9 @@ This guide will help you obtain a Google Gemini API key for use with the AI Infr
 For enterprise use or more control:
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create or select a project
-3. Enable the "Generative Language API" 
+3. Enable the **Gemini API**
 4. Go to "Credentials" → "Create Credentials" → "API Key"
-5. Restrict the API key to "Generative Language API" for security
+5. Restrict the API key to "Gemini API" for security
 
 ### 3. Choose Your Model
 
@@ -40,13 +40,11 @@ Available Gemini models for infrastructure tasks:
 
 | Model | Best For | Speed | Capabilities |
 |-------|----------|-------|-------------|
-| `gemini-2.0-flash-exp` | Latest experimental features, cutting-edge | Very Fast | Most advanced, multimodal |
-| `gemini-1.5-pro-002` | Complex reasoning, production-ready | Medium | 2M token context, most reliable |
-| `gemini-1.5-flash-002` | Fast responses, balanced performance | Fast | 1M token context, cost-effective |
-| `gemini-1.5-flash-8b` | Ultra-fast responses, simple tasks | Very Fast | 1M token context, lowest cost |
-| `gemini-1.0-pro` | Legacy stable model | Medium | Standard context, deprecated |
+| `gemini-2.5-pro` | Complex reasoning, production-ready | Medium | Multimodal (audio/images/video/text/PDF), caching, code execution, function calling, search grounding, structured outputs, thinking, URL context |
+| `gemini-2.5-flash` | Fast responses, balanced performance | Fast | Multimodal (text/images/video/audio), caching, code execution, function calling, search grounding, structured outputs, thinking, URL context |
+| `gemini-2.5-flash-lite` | Ultra-fast, cost-efficient for simple tasks | Very Fast | Multimodal (text/image/video/audio/PDF), caching, code execution, function calling, search grounding, structured outputs, thinking, URL context |
 
-**Recommended**: Use `gemini-1.5-pro-002` for production infrastructure tasks, or `gemini-1.5-flash-002` for development and testing.
+**Recommended**: Use `gemini-2.5-pro` for production, `gemini-2.5-flash` or `gemini-2.5-flash-lite` for development/testing.
 
 ### 4. Configure Google Cloud (Optional but Recommended)
 
@@ -75,7 +73,7 @@ Update your `config.yaml`:
 ```yaml
 agent:
   provider: "gemini"
-  model: "gemini-1.5-flash-002"    # Recommended for balanced performance and cost
+  model: "gemini-2.5-flash"    # Recommended for balanced performance and cost
   max_tokens: 4000
   temperature: 0.1
 ```
@@ -92,14 +90,13 @@ Google AI Studio provides generous free tier limits:
 
 ### Current Pricing (USD per 1M tokens)
 
-| Model | Input Tokens | Output Tokens | Free Tier RPM |
-|-------|-------------|---------------|----------------|
-| `gemini-1.5-pro-002` | $1.25 | $5.00 | 2 requests/min |
-| `gemini-1.5-flash-002` | $0.075 | $0.30 | 15 requests/min |
-| `gemini-1.5-flash-8b` | $0.0375 | $0.15 | 15 requests/min |
-| `gemini-2.0-flash-exp` | Free | Free | Limited availability |
+| Model | Input Tokens | Output Tokens |
+|-------|-------------|---------------|
+| `gemini-2.5-pro` | $1.25 | $10.00 |
+| `gemini-2.5-flash` | $0.30 | $2.50 |
+| `gemini-2.5-flash-lite` | $0.10 | $0.40 |
 
-💡 **Tip**: Infrastructure tasks typically cost $0.0002-0.003 per request with `gemini-1.5-flash-002`.
+💡 **Tip**: Infrastructure tasks typically cost $0.0003-0.003 per request with `gemini-2.5-flash`. Check [Google AI pricing](https://ai.google.dev/pricing) for the latest rates and free tier limits.
 
 ### Paid Usage
 
@@ -148,7 +145,7 @@ echo "config.yaml" >> .gitignore
 ```yaml
 agent:
   provider: "gemini"
-  model: "gemini-1.5-pro"
+  model: "gemini-2.5-pro"
   max_tokens: 8000
   temperature: 0.2
   # Gemini-specific settings
@@ -176,7 +173,7 @@ echo $GEMINI_API_KEY
 # Test with curl
 curl -H "Content-Type: application/json" \
      -d '{"contents":[{"parts":[{"text":"Hello"}]}]}' \
-     "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$GEMINI_API_KEY"
+     "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=$GEMINI_API_KEY"
 ```
 
 #### "Quota exceeded"
@@ -206,7 +203,7 @@ curl -H "Content-Type: application/json" \
          "parts": [{"text": "Respond with: API key working correctly"}]
        }]
      }' \
-     "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=$GEMINI_API_KEY"
+     "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=$GEMINI_API_KEY"
 ```
 
 Successful response should include generated text.
@@ -215,7 +212,7 @@ Successful response should include generated text.
 
 ### Optimize for Infrastructure Tasks
 
-- **Use specific models**: `gemini-1.5-pro` for complex planning
+- **Use specific models**: `gemini-2.5-pro` for complex planning
 - **Adjust temperature**: Lower values (0.1-0.3) for consistent outputs
 - **Set appropriate token limits**: 4000-8000 for infrastructure tasks
 - **Use system instructions**: Provide context about AWS infrastructure
@@ -225,7 +222,7 @@ Successful response should include generated text.
 ```yaml
 agent:
   provider: "gemini"
-  model: "gemini-1.5-flash-002"    # Updated model with better performance
+  model: "gemini-2.5-flash"    # Updated model with better performance
   max_tokens: 6000
   temperature: 0.15
   dry_run: true
@@ -238,14 +235,14 @@ agent:
 # For cost-sensitive development
 agent:
   provider: "gemini"
-  model: "gemini-1.5-flash-8b"    # Most cost-effective
+  model: "gemini-2.5-flash-lite"    # Most cost-effective
   max_tokens: 4000
   temperature: 0.1
 
 # For complex infrastructure planning
 agent:
-  provider: "gemini" 
-  model: "gemini-1.5-pro-002"     # Most capable for complex tasks
+  provider: "gemini"
+  model: "gemini-2.5-pro"     # Most capable for complex tasks
   max_tokens: 8000
   temperature: 0.1
 ```
