@@ -289,6 +289,24 @@ All operations can be run in "dry-run" mode first:
 - Maintains accurate infrastructure state
 - Detects drift from expected configuration
 
+### v2.0 Enhanced Safety Layer
+- **Simulation Modes**: Full simulation, validation-only, or disabled
+- **Validation Framework**: Parameter validation, dependency validation, quota checks
+- **Audit Logging**: Complete operation audit trail
+- **Dry-Run Decorator**: Transparent operation wrapping for safety
+
+### v2.0 Plugin Architecture
+- **Dynamic Registration**: Register and unregister resource handlers at runtime
+- **Middleware Chain**: Cross-cutting concerns (logging, recovery, metrics, timeouts)
+- **Hook System**: Before/after execution callbacks
+- **Lifecycle Management**: Dependency-aware initialization and health monitoring
+
+### v2.0 Enhanced Reasoning
+- **Multi-Step Verification**: Pre-flight, dependency, safety, and impact phases
+- **Risk Assessment**: Automatic risk level evaluation with mitigations
+- **Rollback Planning**: Each operation includes rollback strategies
+- **Cost Estimation**: Automatic cost calculation for planned resources
+
 ### Contributing
 
 1. Fork the repository
@@ -401,6 +419,14 @@ agent:
 - ✅ MCP protocol support
 - ✅ ReAct Agent
 - ✅ Better UX/UI
+
+### v2.0 Enhancements (Latest)
+- ✅ Plugin Architecture for resource handlers
+- ✅ Safety Layer with simulation mode and validation
+- ✅ Enhanced reasoning with multi-step verification
+- ✅ Dry-run decorator pattern
+- ✅ Audit logging framework
+- ✅ Cost estimation integration
 
 ### Upcoming Features (v0.1.*)
 - 🔄 Cost optimization recommendations
