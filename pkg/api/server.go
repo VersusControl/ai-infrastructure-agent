@@ -22,6 +22,7 @@ type WebServer struct {
 
 	upgrader websocket.Upgrader
 	aiAgent  *agent.StateAwareAgent
+	logger   *logging.Logger
 
 	// WebSocket connection management
 	connections map[string]*wsConnection
@@ -41,6 +42,7 @@ func NewWebServer(cfg *config.Config, awsClient *aws.Client, logger *logging.Log
 	ws := &WebServer{
 		router:               mux.NewRouter(),
 		config:               cfg,
+		logger:               logger,
 		connections:          make(map[string]*wsConnection),
 		decisions:            make(map[string]*StoredDecision),
 		planRecoveryRequests: make(map[string]*PlanRecoveryRequest),

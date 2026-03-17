@@ -221,6 +221,21 @@ tool_resource_patterns:
   availability_zone:
     - '^get-availability-zones$'
 
+  eks_cluster:
+    - '^create-eks-cluster$'
+    - '^delete-eks-cluster$'
+    - '^get-eks-cluster$'
+    - '^apply-yaml$'
+
+  eks_clusters:
+    - '^list-eks-clusters$'
+
+  eks_node_group:
+    - '^create-eks-node-group$'
+
+  eks_node_groups:
+    - '^list-eks-node-groups$'
+
 # Resource hierarchy and relationships
 resource_relationships:
   # Parent -> Children mapping
@@ -300,5 +315,9 @@ tool_categories:
     - db_subnet_group
     - db_snapshot
     
+  container:
+    - eks_cluster
+    - eks_node_group
+
   discovery:
     - availability_zone

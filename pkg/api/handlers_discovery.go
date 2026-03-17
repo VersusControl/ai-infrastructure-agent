@@ -19,7 +19,7 @@ func (ws *WebServer) discoverInfrastructureHandler(w http.ResponseWriter, r *htt
 	// Use MCP server to analyze infrastructure state
 	_, discoveredResources, _, err := ws.aiAgent.AnalyzeInfrastructureState(ctx, true)
 	if err != nil {
-		ws.aiAgent.Logger.WithError(err).Error("Failed to discover infrastructure")
+		ws.logger.WithError(err).Error("Failed to discover infrastructure")
 		http.Error(w, "Discovery failed", http.StatusInternalServerError)
 		return
 	}
@@ -31,7 +31,7 @@ func (ws *WebServer) discoverInfrastructureHandler(w http.ResponseWriter, r *htt
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		ws.aiAgent.Logger.WithError(err).Error("Failed to encode discovery response")
+		ws.logger.WithError(err).Error("Failed to encode discovery response")
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
@@ -66,7 +66,7 @@ func (ws *WebServer) getGraphHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if AI agent is available
 	if ws.aiAgent == nil {
-		ws.aiAgent.Logger.Error("AI agent not available for graph visualization")
+		ws.logger.Error("AI agent not available for graph visualization")
 		http.Error(w, "Graph visualization requires AI agent", http.StatusServiceUnavailable)
 		return
 	}
@@ -74,7 +74,7 @@ func (ws *WebServer) getGraphHandler(w http.ResponseWriter, r *http.Request) {
 	// Use MCP server to visualize dependency graph with source parameter
 	graphData, err := ws.aiAgent.VisualizeDependencyGraph(ctx, format, true, source)
 	if err != nil {
-		ws.aiAgent.Logger.WithError(err).Error("Failed to visualize dependency graph")
+		ws.logger.WithError(err).Error("Failed to visualize dependency graph")
 		http.Error(w, "Graph visualization failed", http.StatusInternalServerError)
 		return
 	}
@@ -102,7 +102,7 @@ func (ws *WebServer) getGraphHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		ws.aiAgent.Logger.WithError(err).Error("Failed to encode graph response")
+		ws.logger.WithError(err).Error("Failed to encode graph response")
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
@@ -122,7 +122,7 @@ func (ws *WebServer) getConflictsHandler(w http.ResponseWriter, r *http.Request)
 	// Use MCP server to detect conflicts
 	conflicts, err := ws.aiAgent.DetectInfrastructureConflicts(ctx, autoResolve)
 	if err != nil {
-		ws.aiAgent.Logger.WithError(err).Error("Failed to detect conflicts")
+		ws.logger.WithError(err).Error("Failed to detect conflicts")
 		http.Error(w, "Conflict detection failed", http.StatusInternalServerError)
 		return
 	}
@@ -135,7 +135,7 @@ func (ws *WebServer) getConflictsHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		ws.aiAgent.Logger.WithError(err).Error("Failed to encode conflicts response")
+		ws.logger.WithError(err).Error("Failed to encode conflicts response")
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}

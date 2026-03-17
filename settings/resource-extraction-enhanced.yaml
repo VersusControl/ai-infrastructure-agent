@@ -95,6 +95,16 @@ resource_id_extraction:
         resource_types: ["route_table_association"]
         priority: 1
         
+      # EKS Cluster - returns clusterName at top level
+      - field_paths: ["clusterName"]
+        resource_types: ["eks_cluster"]
+        priority: 1
+        
+      # EKS Node Group - returns nodeGroupName at top level
+      - field_paths: ["nodeGroupName"]
+        resource_types: ["eks_node_group"]
+        priority: 1
+
       # Universal fallback for any creation tool - try resourceId or id
       - field_paths: ["resourceId", "id"]
         resource_types: ["*"]
@@ -139,6 +149,11 @@ resource_id_extraction:
         resource_types: ["rds_instance"]
         priority: 1
         
+      # EKS Cluster modification (apply-yaml) - returns clusterName
+      - field_paths: ["clusterName"]
+        resource_types: ["eks_cluster"]
+        priority: 1
+
       # Universal fallback for modification tools
       - field_paths: ["resourceId", "id"]
         resource_types: ["*"]
@@ -172,6 +187,11 @@ resource_id_extraction:
         resource_types: ["rds_instance"]
         priority: 1
         
+      # EKS Cluster deletion
+      - field_paths: ["clusterName"]
+        resource_types: ["eks_cluster"]
+        priority: 1
+
       # Universal fallback for deletion tools
       - field_paths: ["resourceId", "id"]
         resource_types: ["*"]  
@@ -192,6 +212,16 @@ resource_id_extraction:
       # For get-ec2-instance - returns single EC2 instance
       - field_paths: ["instanceId"]
         resource_types: ["ec2_instance"]
+        priority: 1
+
+      # For list-ec2-instances - returns array of instances
+      - field_paths: ["instances"]
+        resource_types: ["ec2_instance"]
+        priority: 1
+
+      # For list-iam-roles - returns array of roles
+      - field_paths: ["roles"]
+        resource_types: ["iam_role"]
         priority: 1
 
       # For get-vpc - returns single VPC
@@ -227,6 +257,21 @@ resource_id_extraction:
       # For list array of sg IDs
       - field_paths: ["securityGroupIds"]
         resource_types: ["security_groups"]
+        priority: 1
+
+      # For list-eks-clusters
+      - field_paths: ["clusters"]
+        resource_types: ["eks_clusters"]
+        priority: 1
+
+      # For get-eks-cluster
+      - field_paths: ["clusterName"]
+        resource_types: ["eks_cluster"]
+        priority: 1
+
+      # For list-eks-node-groups
+      - field_paths: ["nodeGroups"]
+        resource_types: ["eks_node_groups"]
         priority: 1
 
       # Universal fallback for query tools

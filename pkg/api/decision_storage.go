@@ -39,5 +39,5 @@ func (ws *WebServer) removeStoredDecision(decisionID string) {
 
 	delete(ws.decisions, decisionID)
 
-	ws.aiAgent.Logger.WithField("decision_id", decisionID).Debug("Removed stored decision")
+	ws.logger.WithField("decision_id", decisionID).Debug("Removed stored decision")
 }

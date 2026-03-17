@@ -18,7 +18,7 @@ import (
 func (ws *WebServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := ws.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		ws.aiAgent.Logger.WithError(err).Error("Failed to upgrade WebSocket")
+		ws.logger.WithError(err).Error("Failed to upgrade WebSocket")
 		return
 	}
 
@@ -33,7 +33,7 @@ func (ws *WebServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	ws.connMutex.Unlock()
 
-	ws.aiAgent.Logger.WithField("conn_id", connID).Info("WebSocket connection established")
+	ws.logger.WithField("conn_id", connID).Info("WebSocket connection established")
 
 	// Setup connection cleanup
 	defer func() {
@@ -41,7 +41,7 @@ func (ws *WebServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 		delete(ws.connections, connID)
 		ws.connMutex.Unlock()
 		conn.Close()
-		ws.aiAgent.Logger.WithField("conn_id", connID).Info("WebSocket connection closed")
+		ws.logger.WithField("conn_id", connID).Info("WebSocket connection closed")
 	}()
 
 	// Configure connection timeouts
@@ -78,7 +78,7 @@ func (ws *WebServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 			_, msgData, err := conn.ReadMessage()
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					ws.aiAgent.Logger.WithError(err).WithField("conn_id", connID).Error("WebSocket read error")
+					ws.logger.WithError(err).WithField("conn_id", connID).Error("WebSocket read error")
 				}
 				return
 			}
@@ -112,13 +112,13 @@ func (ws *WebServer) websocketHandler(w http.ResponseWriter, r *http.Request) {
 			wsConn.writeMutex.Unlock()
 
 			if err != nil {
-				ws.aiAgent.Logger.WithError(err).WithField("conn_id", connID).Error("Failed to send ping")
+				ws.logger.WithError(err).WithField("conn_id", connID).Error("Failed to send ping")
 				return
 			}
 
 			// Check if we've received a recent pong
 			if time.Since(wsConn.lastPong) > 90*time.Second {
-				ws.aiAgent.Logger.WithField("conn_id", connID).Warn("Connection seems stale, closing")
+				ws.logger.WithField("conn_id", connID).Warn("Connection seems stale, closing")
 				return
 			}
 
@@ -141,10 +141,14 @@ func (ws *WebServer) sendStateUpdate(connID string) {
 		return
 	}
 
+	if ws.aiAgent == nil {
+		return
+	}
+
 	// Use MCP server to get current state with fresh discovery
 	stateJSON, err := ws.aiAgent.ExportInfrastructureStateWithOptions(context.Background(), true, true)
 	if err != nil {
-		ws.aiAgent.Logger.WithError(err).Error("Failed to get state for WebSocket update")
+		ws.logger.WithError(err).Error("Failed to get state for WebSocket update")
 		return
 	}
 
@@ -161,7 +165,7 @@ func (ws *WebServer) sendStateUpdate(connID string) {
 	wsConn.writeMutex.Unlock()
 
 	if err != nil {
-		ws.aiAgent.Logger.WithError(err).WithField("conn_id", connID).Debug("Failed to send state update, connection likely closed")
+		ws.logger.WithError(err).WithField("conn_id", connID).Debug("Failed to send state update, connection likely closed")
 		// Connection is broken, it will be cleaned up by the main handler
 	}
 }
@@ -185,7 +189,7 @@ func (ws *WebServer) broadcastUpdate(update map[string]interface{}) {
 		wsConn.writeMutex.Unlock()
 
 		if err != nil {
-			ws.aiAgent.Logger.WithError(err).WithField("conn_id", connID).Debug("Failed to broadcast update, removing connection")
+			ws.logger.WithError(err).WithField("conn_id", connID).Debug("Failed to broadcast update, removing connection")
 			// Remove broken connection
 			ws.connMutex.Lock()
 			delete(ws.connections, connID)
